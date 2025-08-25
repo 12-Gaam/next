@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// UserRole and Gender are now strings since SQLite doesn't support enums
+
+model User {
+  id       String   @id @default(cuid())
+  username String   @unique
+  password String
+  role     String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CountryMaster {
+  id      String @id @default(cuid())
+  name    String @unique
+  states  StateMaster[]
+  contacts Contact[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StateMaster {
+  id        String        @id @default(cuid())
+  name      String
+  countryId String
+  country   CountryMaster @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  cities    CityMaster[]
+  contacts  Contact[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model CityMaster {
+  id        String        @id @default(cuid())
+  name      String
+  stateId   String
+  state     StateMaster   @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  contacts  Contact[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model EducationMaster {
+  id      String @id @default(cuid())
+  name    String @unique
+  contacts Contact[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProfessionMaster {
+  id      String @id @default(cuid())
+  name    String @unique
+  contacts Contact[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id               String            @id @default(cuid())
+  firstname        String
+  middlename       String?
+  lastname         String?            @default("Patel")
+  spouseName       String?
+  fatherName       String
+  motherName       String
+  gender           String
+  gaam             String
+  currentAddress   String
+  countryId        String?
+  country          CountryMaster?    @relation(fields: [countryId], references: [id])
+  stateId          String?
+  state            StateMaster?      @relation(fields: [stateId], references: [id])
+  cityId           String?
+  city             CityMaster?       @relation(fields: [cityId], references: [id])
+  phone            String            @unique
+  email            String            @unique
+  dob              DateTime
+  educationId      String
+  education        EducationMaster   @relation(fields: [educationId], references: [id])
+  otherEducation   String?
+  professionId     String
+  profession       ProfessionMaster  @relation(fields: [professionId], references: [id])
+  otherProfession  String?
+  website          String?
+  profilePic       String?
+  fb               String?
+  linkedin         String?
+  insta            String?
+  tiktok           String?
+  twitter          String?
+  snapchat         String?
+  children         ContactChild[]
+  siblings         ContactSibling[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model ContactChild {
+  id         String  @id @default(cuid())
+  contactId  String
+  contact    Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  firstname  String
+  gender     String
+  age        Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ContactSibling {
+  id        String  @id @default(cuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  name      String
+  gender    String
+  age       Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
