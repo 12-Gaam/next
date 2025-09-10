@@ -1,6 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "./prisma";
+import { supabase } from "./supabase";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
@@ -17,13 +17,14 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const user = await prisma.user.findUnique({
-            where: {
-              username: credentials.username
-            }
-          });
+          const { data: user, error } = await supabase
+            .from('User')
+            .select('*')
+            .eq('username', credentials.username)
+            .single();
 
-          if (!user) {
+          if (error || !user) {
+            console.error("User not found:", error);
             return null;
           }
 
