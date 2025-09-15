@@ -3,39 +3,27 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
-  Form, 
-  Input, 
-  Select, 
-  DatePicker, 
-  Button, 
-  Card, 
-  Row, 
-  Col, 
-  Space, 
-  Typography,
-  Divider,
-  message,
-  Switch,
-  Upload
-} from 'antd'
-import { 
-  ArrowLeftOutlined,
-  SaveOutlined,
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  CalendarOutlined,
-  BookOutlined,
-  BankOutlined,
-  TeamOutlined,
-  HomeOutlined,
-  InboxOutlined
-} from '@ant-design/icons'
-import { Building2 } from 'lucide-react'
+  ArrowLeft,
+  Save,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  GraduationCap,
+  Briefcase,
+  Users,
+  Home,
+  Plus,
+  Trash2
+} from 'lucide-react'
 import Link from 'next/link'
-import dayjs from 'dayjs'
 
 interface Contact {
   id: string
@@ -46,8 +34,6 @@ interface Contact {
   fatherName?: string
   motherName?: string
   gender?: string
-  maritalStatus?: string
-  is18Plus?: boolean
   gaam?: string
   currentAddress?: string
   city?: string
@@ -56,7 +42,7 @@ interface Contact {
   state?: { name: string }
   country?: { name: string }
   phone: string
-  email?: string
+  email: string
   dob?: string
   educationId?: string
   otherEducation?: string
@@ -64,12 +50,8 @@ interface Contact {
   professionId?: string
   otherProfession?: string
   profession?: { name: string }
-  educationalLevel?: string
-  additionalProfessions?: any[]
   website?: string
   profile?: string
-  profilePic?: string
-  familyPhoto?: string
   children: any[]
   siblings: any[]
   createdAt: string
@@ -96,7 +78,6 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
     educations: [],
     professions: []
   })
-  const [maritalStatus, setMaritalStatus] = useState<string>('')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -123,7 +104,6 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
       if (response.ok) {
         const data = await response.json()
         setContact(data)
-        setMaritalStatus(data.maritalStatus || '')
       } else {
         alert('Failed to fetch contact')
         router.push('/admin/contacts')
@@ -183,16 +163,8 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
     setContact(prev => prev ? { ...prev, stateId, city: '' } : null)
   }
 
-  const handleMaritalStatusChange = (value: string) => {
-    setMaritalStatus(value)
-    if (value === 'single') {
-      setContact(prev => prev ? { ...prev, maritalStatus: value, spouseName: '' } : null)
-    } else {
-      setContact(prev => prev ? { ...prev, maritalStatus: value } : null)
-    }
-  }
-
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!contact) return
 
     setSaving(true)
@@ -202,19 +174,19 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...contact, ...values }),
+        body: JSON.stringify(contact),
       })
 
       if (response.ok) {
-        message.success('Contact updated successfully!')
+        alert('Contact updated successfully!')
         router.push(`/admin/contacts/${params.id}`)
       } else {
         const errorData = await response.json()
-        message.error(`Failed to update contact: ${errorData.error || 'Unknown error'}`)
+        alert(`Failed to update contact: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error updating contact:', error)
-      message.error('Failed to update contact. Please try again.')
+      alert('Failed to update contact. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -226,21 +198,11 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
-          <div style={{ textAlign: 'center', padding: '32px' }}>
-            <div style={{ 
-              width: '48px', 
-              height: '48px', 
-              border: '4px solid #f3f3f3',
-              borderTop: '4px solid #1890ff',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto'
-            }}></div>
-            <Typography.Text style={{ marginTop: '16px', color: '#8c8c8c' }}>
-              Loading contact...
-            </Typography.Text>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading contact...</p>
           </div>
         </div>
       </div>
@@ -249,16 +211,11 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
 
   if (!contact) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
-          <div style={{ textAlign: 'center', padding: '32px' }}>
-            <Typography.Text style={{ color: '#8c8c8c' }}>Contact not found</Typography.Text>
-            <br />
-            <Button 
-              type="primary" 
-              onClick={() => router.push('/admin/contacts')} 
-              style={{ marginTop: '16px' }}
-            >
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-8">
+            <p className="text-gray-600">Contact not found</p>
+            <Button onClick={() => router.push('/admin/contacts')} className="mt-4">
               Back to Contacts
             </Button>
           </div>
@@ -268,517 +225,361 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      <div style={{ 
-        backgroundColor: '#fff', 
-        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)',
-        borderBottom: '1px solid #f0f0f0'
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
               <Link href={`/admin/contacts/${params.id}`}>
-                <Button type="default" icon={<ArrowLeftOutlined />}>
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Contact
                 </Button>
               </Link>
               <div>
-                <Typography.Title level={2} style={{ margin: 0, color: '#262626' }}>
-                  Edit Contact
-                </Typography.Title>
-                <Typography.Text type="secondary">Update contact information</Typography.Text>
+                <h1 className="text-2xl font-bold text-gray-900">Edit Contact</h1>
+                <p className="text-gray-600">Update contact information</p>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
-        <Form
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{
-            firstname: contact.firstname,
-            middlename: contact.middlename,
-            lastname: contact.lastname,
-            gender: contact.gender,
-            maritalStatus: contact.maritalStatus,
-            is18Plus: contact.is18Plus,
-            dob: contact.dob ? dayjs(contact.dob) : null,
-            gaam: contact.gaam,
-            email: contact.email,
-            phone: contact.phone,
-            website: contact.website,
-            spouseName: contact.spouseName,
-            fatherName: contact.fatherName,
-            motherName: contact.motherName,
-            currentAddress: contact.currentAddress,
-            countryId: contact.countryId,
-            stateId: contact.stateId,
-            city: contact.city,
-            educationId: contact.educationId,
-            otherEducation: contact.otherEducation,
-            professionId: contact.professionId,
-            otherProfession: contact.otherProfession,
-            educationalLevel: contact.educationalLevel,
-            additionalProfessions: contact.additionalProfessions,
-            profile: contact.profile,
-            profilePic: contact.profilePic,
-            familyPhoto: contact.familyPhoto
-          }}
-        >
-          <Row gutter={[24, 24]}>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Personal Information */}
-            <Col xs={24} lg={12}>
-              <Card 
-                title={
-                  <Space>
-                    <UserOutlined style={{ color: '#1890ff' }} />
-                    Personal Information
-                  </Space>
-                }
-                style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}
-              >
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} md={12}>
-                    <Form.Item 
-                      label="First Name" 
-                      name="firstname"
-                      rules={[{ required: true, message: 'Please enter first name' }]}
-                    >
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Middle Name" name="middlename">
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Last Name" name="lastname">
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Gender" name="gender">
-                      <Select placeholder="Select gender">
-                        <Select.Option value="male">Male</Select.Option>
-                        <Select.Option value="female">Female</Select.Option>
-                        <Select.Option value="other">Other</Select.Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Marital Status" name="maritalStatus">
-                      <Select 
-                        placeholder="Select marital status"
-                        onChange={handleMaritalStatusChange}
-                      >
-                        <Select.Option value="single">Single</Select.Option>
-                        <Select.Option value="married">Married</Select.Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="18 Plus" name="is18Plus">
-                      <Switch 
-                        checkedChildren="Yes" 
-                        unCheckedChildren="No" 
-                        style={{ minWidth: '80px' }}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Date of Birth" name="dob">
-                      <DatePicker style={{ width: '100%' }} placeholder="Select date of birth (optional)" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Gaam" name="gaam">
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
-            </Col>
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                <CardTitle className="flex items-center text-blue-800">
+                  <User className="h-5 w-5 mr-2" />
+                  Personal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstname">First Name *</Label>
+                    <Input
+                      id="firstname"
+                      value={contact.firstname}
+                      onChange={(e) => updateField('firstname', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="middlename">Middle Name</Label>
+                    <Input
+                      id="middlename"
+                      value={contact.middlename || ''}
+                      onChange={(e) => updateField('middlename', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastname">Last Name</Label>
+                    <Input
+                      id="lastname"
+                      value={contact.lastname || ''}
+                      onChange={(e) => updateField('lastname', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select value={contact.gender || ''} onValueChange={(value) => updateField('gender', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="dob">Date of Birth</Label>
+                    <Input
+                      id="dob"
+                      type="date"
+                      value={contact.dob ? contact.dob.split('T')[0] : ''}
+                      onChange={(e) => updateField('dob', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="gaam">Gaam</Label>
+                    <Input
+                      id="gaam"
+                      value={contact.gaam || ''}
+                      onChange={(e) => updateField('gaam', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Contact Information */}
-            <Col xs={24} lg={12}>
-              <Card 
-                title={
-                  <Space>
-                    <PhoneOutlined style={{ color: '#52c41a' }} />
-                    Contact Information
-                  </Space>
-                }
-                style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}
-              >
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                  <Form.Item 
-                    label="Email" 
-                    name="email"
-                    rules={[
-                      { type: 'email', message: 'Please enter a valid email' }
-                    ]}
-                  >
-                    <Input placeholder="Enter email address (optional)" />
-                  </Form.Item>
-                  <Form.Item 
-                    label="Phone" 
-                    name="phone"
-                    rules={[{ required: true, message: 'Please enter phone number' }]}
-                  >
-                    <Input />
-                  </Form.Item>
-                  <Form.Item label="Website" name="website">
-                    <Input placeholder="https://example.com" />
-                  </Form.Item>
-                </Space>
-              </Card>
-            </Col>
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
+                <CardTitle className="flex items-center text-green-800">
+                  <Phone className="h-5 w-5 mr-2" />
+                  Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={contact.email}
+                      onChange={(e) => updateField('email', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone *</Label>
+                    <Input
+                      id="phone"
+                      value={contact.phone}
+                      onChange={(e) => updateField('phone', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      value={contact.website || ''}
+                      onChange={(e) => updateField('website', e.target.value)}
+                      placeholder="https://example.com"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Family Information */}
-            <Col xs={24} lg={12}>
-              <Card 
-                title={
-                  <Space>
-                    <TeamOutlined style={{ color: '#722ed1' }} />
-                    Family Information
-                  </Space>
-                }
-                style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}
-              >
-                <Row gutter={[16, 16]}>
-                  {maritalStatus === 'married' && (
-                    <Col xs={24} md={12}>
-                      <Form.Item label="Spouse Name" name="spouseName">
-                        <Input />
-                      </Form.Item>
-                    </Col>
-                  )}
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Father's Name" name="fatherName">
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Mother's Name" name="motherName">
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
-            </Col>
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200">
+                <CardTitle className="flex items-center text-purple-800">
+                  <Users className="h-5 w-5 mr-2" />
+                  Family Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="spouseName">Spouse Name</Label>
+                    <Input
+                      id="spouseName"
+                      value={contact.spouseName || ''}
+                      onChange={(e) => updateField('spouseName', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="fatherName">Father's Name</Label>
+                    <Input
+                      id="fatherName"
+                      value={contact.fatherName || ''}
+                      onChange={(e) => updateField('fatherName', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="motherName">Mother's Name</Label>
+                    <Input
+                      id="motherName"
+                      value={contact.motherName || ''}
+                      onChange={(e) => updateField('motherName', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Location Information */}
-            <Col xs={24} lg={12}>
-              <Card 
-                title={
-                  <Space>
-                    <EnvironmentOutlined style={{ color: '#fa8c16' }} />
-                    Location Information
-                  </Space>
-                }
-                style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}
-              >
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                  <Form.Item label="Current Address" name="currentAddress">
-                    <Input />
-                  </Form.Item>
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24} md={12}>
-                      <Form.Item label="Country" name="countryId">
-                        <Select 
-                          placeholder="Select country"
-                          onChange={handleCountryChange}
-                        >
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200">
+                <CardTitle className="flex items-center text-orange-800">
+                  <MapPin className="h-5 w-5 mr-2" />
+                  Location Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="currentAddress">Current Address</Label>
+                    <Input
+                      id="currentAddress"
+                      value={contact.currentAddress || ''}
+                      onChange={(e) => updateField('currentAddress', e.target.value)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="country">Country</Label>
+                      <Select value={contact.countryId || ''} onValueChange={handleCountryChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
                           {masterData.countries.map((country) => (
-                            <Select.Option key={country.id} value={country.id}>
+                            <SelectItem key={country.id} value={country.id}>
                               {country.name}
-                            </Select.Option>
+                            </SelectItem>
                           ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Form.Item label="State" name="stateId">
-                        <Select 
-                          placeholder="Select state"
-                          disabled={!contact.countryId}
-                          onChange={handleStateChange}
-                        >
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="state">State</Label>
+                      <Select 
+                        value={contact.stateId || ''} 
+                        onValueChange={handleStateChange}
+                        disabled={!contact.countryId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent>
                           {masterData.states.map((state) => (
-                            <Select.Option key={state.id} value={state.id}>
+                            <SelectItem key={state.id} value={state.id}>
                               {state.name}
-                            </Select.Option>
+                            </SelectItem>
                           ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                  <Form.Item label="City" name="city">
-                    <Input placeholder="Enter city (optional)" />
-                  </Form.Item>
-                </Space>
-              </Card>
-            </Col>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      value={contact.city || ''}
+                      onChange={(e) => updateField('city', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Education & Profession */}
-            <Col xs={24}>
-              <Card 
-                title={
-                  <Space>
-                    <BookOutlined style={{ color: '#531dab' }} />
-                    Education & Profession
-                  </Space>
-                }
-                style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}
-              >
-                <Row gutter={[32, 16]}>
-                  <Col xs={24} md={12}>
-                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                      <Typography.Title level={5} style={{ margin: 0 }}>
-                        <BookOutlined style={{ marginRight: 8 }} />
-                        Education
-                      </Typography.Title>
-                      <Form.Item label="Education Level" name="educationId">
-                        <Select placeholder="Select education (optional)">
-                          {masterData?.educations?.map((education) => (
-                            <Select.Option key={education.id} value={education.id}>
+            <Card className="shadow-lg border-0 lg:col-span-2">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-indigo-100 border-b border-indigo-200">
+                <CardTitle className="flex items-center text-indigo-800">
+                  <GraduationCap className="h-5 w-5 mr-2" />
+                  Education & Profession
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-800 flex items-center">
+                      <GraduationCap className="h-4 w-4 mr-2" />
+                      Education
+                    </h4>
+                    <div>
+                      <Label htmlFor="education">Education Level</Label>
+                      <Select value={contact.educationId || ''} onValueChange={(value) => updateField('educationId', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select education" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {masterData.educations.map((education) => (
+                            <SelectItem key={education.id} value={education.id}>
                               {education.name}
-                            </Select.Option>
+                            </SelectItem>
                           ))}
-                        </Select>
-                      </Form.Item>
-                      <Form.Item label="Educational Level" name="educationalLevel">
-                        <Select placeholder="Select educational level (optional)">
-                          {masterData?.educations?.map((education) => (
-                            <Select.Option key={education.id} value={education.id}>
-                              {education.name}
-                            </Select.Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                      <Form.Item label="Other Education" name="otherEducation">
-                        <Input placeholder="Specify if not in list" />
-                      </Form.Item>
-                    </Space>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                      <Typography.Title level={5} style={{ margin: 0 }}>
-                        <BankOutlined style={{ marginRight: 8 }} />
-                        Profession
-                      </Typography.Title>
-                      <Form.Item label="Profession" name="professionId">
-                        <Select placeholder="Select profession (optional)">
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="otherEducation">Other Education</Label>
+                      <Input
+                        id="otherEducation"
+                        value={contact.otherEducation || ''}
+                        onChange={(e) => updateField('otherEducation', e.target.value)}
+                        placeholder="Specify if not in list"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-800 flex items-center">
+                      <Briefcase className="h-4 w-4 mr-2" />
+                      Profession
+                    </h4>
+                    <div>
+                      <Label htmlFor="profession">Profession</Label>
+                      <Select value={contact.professionId || ''} onValueChange={(value) => updateField('professionId', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select profession" />
+                        </SelectTrigger>
+                        <SelectContent>
                           {masterData.professions.map((profession) => (
-                            <Select.Option key={profession.id} value={profession.id}>
+                            <SelectItem key={profession.id} value={profession.id}>
                               {profession.name}
-                            </Select.Option>
+                            </SelectItem>
                           ))}
-                        </Select>
-                      </Form.Item>
-                      <Form.Item label="Other Profession" name="otherProfession">
-                        <Input placeholder="Specify if not in list" />
-                      </Form.Item>
-                    </Space>
-                  </Col>
-                </Row>
-              </Card>
-            </Col>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="otherProfession">Other Profession</Label>
+                      <Input
+                        id="otherProfession"
+                        value={contact.otherProfession || ''}
+                        onChange={(e) => updateField('otherProfession', e.target.value)}
+                        placeholder="Specify if not in list"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Additional Information */}
-            <Col xs={24}>
-              <Card 
-                title="Additional Information"
-                style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}
-              >
-                <Form.Item label="Profile" name="profile">
-                  <Input.TextArea 
-                    rows={4}
+            <Card className="shadow-lg border-0 lg:col-span-2">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                <CardTitle className="text-gray-800">Additional Information</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div>
+                  <Label htmlFor="profile">Profile</Label>
+                  <textarea
+                    id="profile"
+                    value={contact.profile || ''}
+                    onChange={(e) => updateField('profile', e.target.value)}
+                    className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Tell us about yourself..."
                   />
-                </Form.Item>
-              </Card>
-            </Col>
-
-            {/* Photos */}
-            <Col xs={24}>
-              <Card 
-                title="Photos"
-                style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}
-              >
-                <Row gutter={[24, 24]}>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Profile Photo" name="profilePic">
-                      <Upload
-                        name="profilePhoto"
-                        listType="picture-card"
-                        showUploadList={true}
-                        beforeUpload={(file) => {
-                          const isImage = file.type.startsWith('image/');
-                          if (!isImage) {
-                            message.error('You can only upload image files!');
-                            return false;
-                          }
-                          const isLt5M = file.size / 1024 / 1024 < 5;
-                          if (!isLt5M) {
-                            message.error('Image must be smaller than 5MB!');
-                            return false;
-                          }
-                          return false; // Prevent auto upload
-                        }}
-                        onChange={(info) => {
-                          if (info.file.status === 'done') {
-                            message.success(`${info.file.name} file uploaded successfully`);
-                          } else if (info.file.status === 'error') {
-                            message.error(`${info.file.name} file upload failed.`);
-                          }
-                        }}
-                        customRequest={async ({ file, onSuccess, onError }) => {
-                          try {
-                            const formData = new FormData();
-                            formData.append('file', file);
-                            formData.append('folder', 'profile-photos');
-
-                            const response = await fetch('/api/upload', {
-                              method: 'POST',
-                              body: formData,
-                            });
-
-                            const result = await response.json();
-
-                            if (response.ok) {
-                              updateField('profilePic', result.url);
-                              onSuccess?.(result);
-                            } else {
-                              throw new Error(result.error || 'Upload failed');
-                            }
-                          } catch (error) {
-                            console.error('Upload error:', error);
-                            onError?.(error as Error);
-                          }
-                        }}
-                      >
-                        {contact.profilePic ? (
-                          <img src={contact.profilePic} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <div>
-                            <InboxOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
-                            <div style={{ marginTop: 8 }}>Upload Profile Photo</div>
-                          </div>
-                        )}
-                      </Upload>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="Family Photo" name="familyPhoto">
-                      <Upload
-                        name="familyPhoto"
-                        listType="picture-card"
-                        showUploadList={true}
-                        beforeUpload={(file) => {
-                          const isImage = file.type.startsWith('image/');
-                          if (!isImage) {
-                            message.error('You can only upload image files!');
-                            return false;
-                          }
-                          const isLt5M = file.size / 1024 / 1024 < 5;
-                          if (!isLt5M) {
-                            message.error('Image must be smaller than 5MB!');
-                            return false;
-                          }
-                          return false; // Prevent auto upload
-                        }}
-                        onChange={(info) => {
-                          if (info.file.status === 'done') {
-                            message.success(`${info.file.name} file uploaded successfully`);
-                          } else if (info.file.status === 'error') {
-                            message.error(`${info.file.name} file upload failed.`);
-                          }
-                        }}
-                        customRequest={async ({ file, onSuccess, onError }) => {
-                          try {
-                            const formData = new FormData();
-                            formData.append('file', file);
-                            formData.append('folder', 'family-photos');
-
-                            const response = await fetch('/api/upload', {
-                              method: 'POST',
-                              body: formData,
-                            });
-
-                            const result = await response.json();
-
-                            if (response.ok) {
-                              updateField('familyPhoto', result.url);
-                              onSuccess?.(result);
-                            } else {
-                              throw new Error(result.error || 'Upload failed');
-                            }
-                          } catch (error) {
-                            console.error('Upload error:', error);
-                            onError?.(error as Error);
-                          }
-                        }}
-                      >
-                        {contact.familyPhoto ? (
-                          <img src={contact.familyPhoto} alt="family" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <div>
-                            <InboxOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
-                            <div style={{ marginTop: 8 }}>Upload Family Photo</div>
-                          </div>
-                        )}
-                      </Upload>
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
-            </Col>
-          </Row>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Submit Button */}
-          <div style={{ marginTop: 32, textAlign: 'center' }}>
+          <div className="mt-8 flex justify-center">
             <Button 
-              type="primary"
-              htmlType="submit"
-              loading={saving}
-              icon={<SaveOutlined />}
-              size="large"
-              style={{ 
-                padding: '8px 32px',
-                height: 'auto',
-                fontSize: '16px',
-                fontWeight: 600
-              }}
+              type="submit" 
+              disabled={saving}
+              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all"
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
             </Button>
           </div>
-        </Form>
+        </form>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-lg font-bold">12Gaam Community</span>
-            </div>
-            <div className="text-sm text-gray-400 mb-2">
-              © 2025 12Gaam Community. All rights reserved.
-            </div>
-            <div className="text-xs text-gray-500">
-              Bringing families together, one connection at a time
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

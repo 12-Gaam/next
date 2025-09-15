@@ -47,6 +47,7 @@ model CityMaster {
   name      String
   stateId   String
   state     StateMaster   @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  contacts  Contact[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 }
@@ -83,18 +84,18 @@ model Contact {
   stateId          String?
   state            StateMaster?      @relation(fields: [stateId], references: [id])
   cityId           String?
+  city             CityMaster?       @relation(fields: [cityId], references: [id])
   phone            String            @unique
   email            String            @unique
   dob              DateTime
-  educationId      String?
-  education        EducationMaster?  @relation(fields: [educationId], references: [id])
+  educationId      String
+  education        EducationMaster   @relation(fields: [educationId], references: [id])
   otherEducation   String?
-  professionId     String?
-  profession       ProfessionMaster? @relation(fields: [professionId], references: [id])
+  professionId     String
+  profession       ProfessionMaster  @relation(fields: [professionId], references: [id])
   otherProfession  String?
   website          String?
   profilePic       String?
-  familyPhoto      String?
   fb               String?
   linkedin         String?
   insta            String?
