@@ -9,7 +9,6 @@ export async function GET() {
     const professions = await prisma.professionMaster.findMany({
       orderBy: { name: 'asc' }
     });
-
     return NextResponse.json(professions);
   } catch (error) {
     console.error('Error fetching professions:', error);

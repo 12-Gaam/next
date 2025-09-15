@@ -1,6 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "./prisma";
+import { getUserByUsername } from "./supabase-db";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
@@ -17,11 +17,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const user = await prisma.user.findUnique({
-            where: {
-              username: credentials.username
-            }
-          });
+          const user = await getUserByUsername(credentials.username);
 
           if (!user) {
             console.error("User not found:", credentials.username);
@@ -34,6 +30,7 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
+            console.error("Invalid password for user:", credentials.username);
             return null;
           }
 

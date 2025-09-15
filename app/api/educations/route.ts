@@ -9,7 +9,6 @@ export async function GET() {
     const educations = await prisma.educationMaster.findMany({
       orderBy: { name: 'asc' }
     });
-
     return NextResponse.json(educations);
   } catch (error) {
     console.error('Error fetching educations:', error);

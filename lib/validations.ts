@@ -8,12 +8,10 @@ export const contactFormSchema = z.object({
   fatherName: z.string().min(1, "Father's name is required"),
   motherName: z.string().min(1, "Mother's name is required"),
   gender: z.string().min(1, "Gender is required"),
-  maritalStatus: z.string().min(1, "Marital status is required"),
-  is18Plus: z.boolean().optional(),
   gaam: z.string().min(1, "Gaam is required"),
   currentAddress: z.string().min(1, "Current address is required"),
-  countryId: z.string().min(1, "Country is required"),
-  stateId: z.string().min(1, "State is required"),
+  countryId: z.string().optional().or(z.literal("")),
+  stateId: z.string().optional().or(z.literal("")),
   cityId: z.string().optional().or(z.literal("")),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
@@ -26,7 +24,6 @@ export const contactFormSchema = z.object({
     professionId: z.string().min(1, "Profession is required"),
     otherProfession: z.string().optional()
   })).default([]),
-  educationalLevel: z.string().optional().or(z.literal("")),
   website: z.string().optional().or(z.literal("")),
   profilePic: z.string().optional(),
   familyPhoto: z.string().optional(),
@@ -76,14 +73,6 @@ export const contactFormSchema = z.object({
     }
   });
 
-  // Check if spouse name is required when marital status is married
-  if (data.maritalStatus === 'married' && (!data.spouseName || data.spouseName.trim().length === 0)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Spouse name is required when marital status is married",
-      path: ["spouseName"]
-    });
-  }
 });
 
 export const masterDataSchema = z.object({
