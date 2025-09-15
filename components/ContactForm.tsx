@@ -91,7 +91,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   const watchedStateId = watch('stateId')
   const watchedEducationId = watch('educationId')
   const watchedProfessionId = watch('professionId')
-  const watchedMaritalStatus = watch('maritalStatus')
+  const watchedMaritalStatus = watch('maritalStatus') as unknown as string
 
   useEffect(() => {
     fetchMasterData()
@@ -238,11 +238,11 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
     switch (currentStep) {
       case 1:
-        let step1Valid: boolean = !!(formData.firstname && formData.gender && formData.maritalStatus &&
+        let step1Valid: boolean = !!(formData.firstname && formData.gender &&
           formData.fatherName && formData.motherName)
 
         // Check if spouse name is required when married
-        if (formData.maritalStatus === 'married' && (!formData.spouseName || formData.spouseName.trim().length === 0)) {
+        if (watchedMaritalStatus === 'married' && (!formData.spouseName || formData.spouseName.trim().length === 0)) {
           step1Valid = false
         }
 
@@ -262,14 +262,14 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         return true // Children and siblings are optional
       case 5:
         // For the final step, check if all required fields are filled
-        let step5Valid: boolean = !!(formData.firstname && formData.gender && formData.maritalStatus &&
+        let step5Valid: boolean = !!(formData.firstname && formData.gender &&
           formData.fatherName && formData.motherName &&
           formData.gaam && formData.currentAddress &&
           formData.countryId && formData.stateId &&
           formData.phone)
 
         // Check if spouse name is required when married
-        if (formData.maritalStatus === 'married' && (!formData.spouseName || formData.spouseName.trim().length === 0)) {
+        if (watchedMaritalStatus === 'married' && (!formData.spouseName || formData.spouseName.trim().length === 0)) {
           step5Valid = false
         }
 
@@ -394,8 +394,6 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
           <Form.Item
             label="Marital Status"
             required
-            validateStatus={errors.maritalStatus ? 'error' : ''}
-            help={errors.maritalStatus?.message}
           >
             <Select
               // value={watch('maritalStatus') || ''}
