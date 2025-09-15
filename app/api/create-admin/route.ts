@@ -10,7 +10,7 @@ export async function POST() {
     // Create admin user
     const user = await createUser({
       username: 'admin',
-      password_hash: hashedPassword,
+      password: hashedPassword,
       role: 'admin'
     });
 
