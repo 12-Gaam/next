@@ -78,14 +78,13 @@ export async function PUT(
           city: validatedData.cityId ? { connect: { id: validatedData.cityId } } : { disconnect: true },
           phone: validatedData.phone,
           email: validatedData.email,
-          dob: new Date(validatedData.dob || ''),
+          dob: new Date(validatedData.dob),
           educationId: validatedData.educationId,
           otherEducation: validatedData.otherEducation,
           professionId: validatedData.professionId,
           otherProfession: validatedData.otherProfession,
           website: validatedData.website,
           profilePic: validatedData.profilePic,
-          familyPhoto: validatedData.familyPhoto,
           children: {
             create: validatedData.children.map(child => ({
               ...child,
