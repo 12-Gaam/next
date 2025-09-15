@@ -75,11 +75,8 @@ export async function POST(request: NextRequest) {
     // Only admin users can view contacts
 
     const body = await request.json();
-    console.log('Received data:', body);
     
     const validatedData = contactFormSchema.parse(body);
-    console.log('Validated data:', validatedData);
-
     const contact = await prisma.contact.create({
       data: {
         firstname: validatedData.firstname,
@@ -95,20 +92,21 @@ export async function POST(request: NextRequest) {
         stateId: validatedData.stateId || null,
         cityId: validatedData.cityId || null,
         phone: validatedData.phone,
-        email: validatedData.email,
-        dob: new Date(validatedData.dob),
-        educationId: validatedData.educationId,
-        otherEducation: validatedData.otherEducation || null,
-        professionId: validatedData.professionId,
-        otherProfession: validatedData.otherProfession || null,
-        website: validatedData.website || null,
-        profilePic: validatedData.profilePic || null,
-        fb: validatedData.fb || null,
-        linkedin: validatedData.linkedin || null,
-        insta: validatedData.insta || null,
-        tiktok: validatedData.tiktok || null,
-        twitter: validatedData.twitter || null,
-        snapchat: validatedData.snapchat || null,
+        email: validatedData.email || '',
+        dob: validatedData.dob ? new Date(validatedData.dob) : new Date(),
+        educationId: validatedData.educationId || undefined,
+        otherEducation: validatedData.otherEducation || undefined,
+        professionId: validatedData.professionId || undefined,
+        otherProfession: validatedData.otherProfession || undefined,
+        website: validatedData.website || undefined,
+        profilePic: validatedData.profilePic || undefined,
+        familyPhoto: validatedData.familyPhoto || undefined,
+        fb: validatedData.fb || undefined,
+        linkedin: validatedData.linkedin || undefined,
+        insta: validatedData.insta || undefined,
+        tiktok: validatedData.tiktok || undefined,
+        twitter: validatedData.twitter || undefined,
+        snapchat: validatedData.snapchat || undefined,
         children: {
           create: validatedData.children.map(child => ({
             ...child,

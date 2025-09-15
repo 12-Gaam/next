@@ -266,44 +266,63 @@ export default function AdminDashboard() {
            </div>
          </div>
 
-         {/* System Status Card */}
-         <div className="mt-8">
-           <Card className="border-0 shadow-lg">
-             <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200">
-               <CardTitle className="text-lg font-semibold text-purple-800">System Status</CardTitle>
-               <CardDescription className="text-purple-600">
-                 Geographic coverage and system information
-               </CardDescription>
-             </CardHeader>
-             <CardContent className="p-6">
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 <div className="text-center p-4 bg-white rounded-lg border border-purple-200">
-                   <Building2 className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                   <p className="text-sm font-medium text-gray-600">Countries</p>
-                   <p className="text-2xl font-bold text-purple-600">{stats.totalCountries}</p>
-                 </div>
-                 <div className="text-center p-4 bg-white rounded-lg border border-purple-200">
-                   <BarChart3 className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                   <p className="text-sm font-medium text-gray-600">States</p>
-                   <p className="text-2xl font-bold text-purple-600">{stats.totalStates}</p>
-                 </div>
-                 <div className="text-center p-4 bg-white rounded-lg border border-purple-200">
-                   <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                   <p className="text-sm font-medium text-gray-600">Coverage</p>
-                   <p className="text-lg font-semibold text-purple-600">
-                     {stats.totalCountries > 0 && stats.totalStates > 0 
-                       ? `${Math.round((stats.totalStates / (stats.totalCountries * 10)) * 100)}%`
-                       : '0%'
-                     }
-                   </p>
-                 </div>
-               </div>
-             </CardContent>
-           </Card>
-         </div>
-
-
       </main>
+
+      {/* Footer */}
+      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Brand Section */}
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                  <Building2 className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-xl font-bold">12Gaam Community</span>
+              </div>
+              <p className="text-gray-300 mb-4 max-w-md">
+                Connecting families and friends across the 12Gaam community worldwide. 
+                Building stronger relationships and fostering community growth through meaningful connections.
+              </p>
+            </div>
+
+            {/* Community Info */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Our Community</h3>
+              <div className="space-y-2 text-sm text-gray-300">
+                <div className="flex justify-between">
+                  <span>Total Members:</span>
+                  <span className="font-semibold text-white">{stats.contacts}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Countries:</span>
+                  <span className="font-semibold text-white">{stats.totalCountries}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Regions:</span>
+                  <span className="font-semibold text-white">{stats.totalStates}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>New Members:</span>
+                  <span className="font-semibold text-green-400">{stats.newContactsThisMonth}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-gray-700 mt-8 pt-8">
+            <div className="text-center">
+              <div className="text-sm text-gray-400 mb-2">
+                © 2025 12Gaam Community. All rights reserved.
+              </div>
+              <div className="text-xs text-gray-500">
+                Bringing families together, one connection at a time
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
