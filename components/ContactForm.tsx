@@ -4,13 +4,27 @@ import { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { contactFormSchema, type ContactFormData } from '@/lib/validations'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Trash2, ArrowLeft, ArrowRight, Check } from 'lucide-react'
+import {
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Button,
+  Card,
+  Row,
+  Col,
+  Space,
+  Typography,
+  Divider,
+  notification,
+  Switch,
+  Upload,
+  message,
+  Image
+} from 'antd'
+import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, CheckOutlined, UploadOutlined, InboxOutlined } from '@ant-design/icons'
 import csc from 'countries-states-cities'
-import { notification } from 'antd'
+import dayjs from 'dayjs'
 
 
 interface ContactFormProps {
@@ -31,6 +45,11 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showOtherEducation, setShowOtherEducation] = useState(false)
   const [showOtherProfession, setShowOtherProfession] = useState(false)
+  const [fileList, setFileList] = useState<any[]>([])
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewImage, setPreviewImage] = useState('')
+  const [uploadedProfilePic, setUploadedProfilePic] = useState<string>('')
+  const [uploadedFamilyPhoto, setUploadedFamilyPhoto] = useState<string>('')
   const [masterData, setMasterData] = useState({
     countries: [] as any[],
     states: [] as any[],
@@ -45,7 +64,9 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
     watch,
     setValue,
     control,
-    formState: { errors, isValid }
+    formState: { errors, isValid },
+    clearErrors,
+    setError
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
     mode: 'onChange'
@@ -61,10 +82,16 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
     name: 'siblings'
   })
 
+  const { fields: additionalProfessionsFields, append: appendAdditionalProfession, remove: removeAdditionalProfession } = useFieldArray({
+    control,
+    name: 'additionalProfessions'
+  })
+
   const watchedCountryId = watch('countryId')
   const watchedStateId = watch('stateId')
   const watchedEducationId = watch('educationId')
   const watchedProfessionId = watch('professionId')
+  const watchedMaritalStatus = watch('maritalStatus') as unknown as string
 
   useEffect(() => {
     fetchMasterData()
@@ -81,21 +108,31 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   useEffect(() => {
     if (watchedStateId) {
       setValue('cityId', '')
-      fetchCities(watchedStateId)
     }
   }, [watchedStateId, setValue])
 
   useEffect(() => {
     // Check if "Other" is selected for education
-    const selectedEducation = masterData.educations.find(edu => edu.id === watchedEducationId)
-    setShowOtherEducation(selectedEducation?.name?.toLowerCase().includes('other') || false)
+    if (masterData.educations && Array.isArray(masterData.educations) && watchedEducationId) {
+      const selectedEducation = masterData.educations.find(edu => edu.id === watchedEducationId)
+      setShowOtherEducation(selectedEducation?.name?.toLowerCase().includes('other') || false)
+    }
   }, [watchedEducationId, masterData.educations])
 
   useEffect(() => {
     // Check if "Other" is selected for profession
-    const selectedProfession = masterData.professions.find(prof => prof.id === watchedProfessionId)
-    setShowOtherProfession(selectedProfession?.name?.toLowerCase().includes('other') || false)
+    if (masterData.professions && Array.isArray(masterData.professions) && watchedProfessionId) {
+      const selectedProfession = masterData.professions.find(prof => prof.id === watchedProfessionId)
+      setShowOtherProfession(selectedProfession?.name?.toLowerCase().includes('other') || false)
+    }
   }, [watchedProfessionId, masterData.professions])
+
+  useEffect(() => {
+    // Clear spouse name when marital status changes to single
+    if (watchedMaritalStatus === 'single') {
+      handleFieldChange('spouseName', '')
+    }
+  }, [watchedMaritalStatus])
 
   const fetchMasterData = async () => {
     try {
@@ -110,19 +147,19 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
       const educations = await educationsRes.json()
       const professions = await professionsRes.json()
 
-      setMasterData({ 
-        countries: countries || [], 
-        educations: educations || [], 
-        professions: professions || [], 
+      setMasterData({
+        countries: countries || [],
+        educations: educations || [],
+        professions: professions || [],
         states: [],
         cities: []
       })
     } catch (error) {
       console.error('Error fetching master data:', error)
-      setMasterData({ 
-        countries: [], 
-        educations: [], 
-        professions: [], 
+      setMasterData({
+        countries: [],
+        educations: [],
+        professions: [],
         states: [],
         cities: []
       })
@@ -141,17 +178,6 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
     }
   }
 
-  const fetchCities = async (stateId: string) => {
-    try {
-      // Get cities for the selected state from our API
-      const response = await fetch(`/api/cities?stateId=${stateId}`)
-      const cities = await response.json()
-      setMasterData(prev => ({ ...prev, cities: cities || [] }))
-    } catch (error) {
-      console.error('Error fetching cities:', error)
-      setMasterData(prev => ({ ...prev, cities: [] }))
-    }
-  }
 
 
 
@@ -159,11 +185,13 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
     // Fix website URL if it doesn't have protocol
     const processedData = {
       ...data,
-      website: data.website && !data.website.startsWith('http') 
-        ? `https://${data.website}` 
-        : data.website
+      website: data.website && !data.website.startsWith('http')
+        ? `https://${data.website}`
+        : data.website,
+      profilePic: uploadedProfilePic || data.profilePic,
+      familyPhoto: uploadedFamilyPhoto || data.familyPhoto
     }
-    
+
     console.log('Form data being submitted:', processedData)
     setIsLoading(true)
     try {
@@ -175,9 +203,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         body: JSON.stringify(processedData),
       })
 
-      console.log('Response status:', response.status)
       const responseData = await response.text()
-      console.log('Response data:', responseData)
 
       if (!response.ok) {
         throw new Error(`Failed to submit contact form: ${response.status} - ${responseData}`)
@@ -207,34 +233,44 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
   const isCurrentStepValid = () => {
     const formData = watch()
-    
+
     switch (currentStep) {
       case 1:
-        const step1Valid = formData.firstname && formData.gender && formData.dob && 
-               formData.fatherName && formData.motherName
-        console.log('Step 1 validation:', { step1Valid, formData: { firstname: formData.firstname, gender: formData.gender, dob: formData.dob, fatherName: formData.fatherName, motherName: formData.motherName } })
+        let step1Valid: boolean = !!(formData.firstname && formData.gender &&
+          formData.fatherName && formData.motherName)
+
+        // Check if spouse name is required when married
+        if (watchedMaritalStatus === 'married' && (!formData.spouseName || formData.spouseName.trim().length === 0)) {
+          step1Valid = false
+        }
+
+        console.log('Step 1 validation:', { step1Valid, formData: { firstname: formData.firstname, gender: formData.gender, maritalStatus: formData.maritalStatus, spouseName: formData.spouseName, fatherName: formData.fatherName, motherName: formData.motherName } })
         return step1Valid
       case 2:
-        const step2Valid = formData.gaam && formData.currentAddress && 
-               formData.countryId && formData.stateId && formData.cityId
+        const step2Valid = formData.gaam && formData.currentAddress &&
+          formData.countryId && formData.stateId
         console.log('Step 2 validation:', { step2Valid, formData: { gaam: formData.gaam, currentAddress: formData.currentAddress, countryId: formData.countryId, stateId: formData.stateId, cityId: formData.cityId } })
         return step2Valid
       case 3:
-        const step3Valid = formData.phone && formData.email && formData.educationId && 
-               formData.professionId
-        console.log('Step 3 validation:', { step3Valid, formData: { phone: formData.phone, email: formData.email, educationId: formData.educationId, professionId: formData.professionId } })
+        const step3Valid = formData.phone
+        console.log('Step 3 validation:', { step3Valid, formData: { phone: formData.phone } })
         return step3Valid
       case 4:
         console.log('Step 4 validation: true (optional)')
         return true // Children and siblings are optional
       case 5:
         // For the final step, check if all required fields are filled
-        const step5Valid = formData.firstname && formData.gender && formData.dob && 
-               formData.fatherName && formData.motherName &&
-               formData.gaam && formData.currentAddress && 
-               formData.countryId && formData.stateId && formData.cityId &&
-               formData.phone && formData.email && formData.educationId && 
-               formData.professionId
+        let step5Valid: boolean = !!(formData.firstname && formData.gender &&
+          formData.fatherName && formData.motherName &&
+          formData.gaam && formData.currentAddress &&
+          formData.countryId && formData.stateId &&
+          formData.phone)
+
+        // Check if spouse name is required when married
+        if (watchedMaritalStatus === 'married' && (!formData.spouseName || formData.spouseName.trim().length === 0)) {
+          step5Valid = false
+        }
+
         console.log('Step 5 validation:', { step5Valid, formData })
         return step5Valid
       default:
@@ -262,558 +298,992 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
     appendSibling({ name: '', gender: 'male', age: 0 })
   }
 
-  const renderStep1 = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label htmlFor="firstname">First Name *</Label>
-          <Input
-            id="firstname"
-            {...register('firstname')}
-            placeholder="Enter first name"
-          />
-          {errors.firstname && (
-            <p className="text-sm text-red-600 mt-1">{errors.firstname.message}</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="middlename">Middle Name</Label>
-          <Input
-            id="middlename"
-            {...register('middlename')}
-            placeholder="Enter middle name"
-          />
-        </div>
-        <div>
-          <Label htmlFor="lastname">Last Name</Label>
-          <Input
-            id="lastname"
-            {...register('lastname')}
-            placeholder="Enter last name"
-          />
-        </div>
-      </div>
+  const handleFieldChange = (fieldName: keyof ContactFormData, value: any) => {
+    setValue(fieldName, value, { shouldValidate: true })
+    // Clear validation error for this field
+    if (errors[fieldName]) {
+      clearErrors(fieldName)
+    }
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="gender">Gender *</Label>
-          <select 
-            {...register('gender')} 
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-          {errors.gender && (
-            <p className="text-sm text-red-600 mt-1">{errors.gender.message}</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="dob">Date of Birth *</Label>
-          <Input
-            id="dob"
-            type="date"
-            {...register('dob')}
-          />
-          {errors.dob && (
-            <p className="text-sm text-red-600 mt-1">{errors.dob.message}</p>
-          )}
-        </div>
-      </div>
+  const handlePreview = async (file: any) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj)
+    }
+    setPreviewImage(file.url || file.preview)
+    setPreviewOpen(true)
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="spouseName">Spouse Name</Label>
-          <Input
-            id="spouseName"
-            {...register('spouseName')}
-            placeholder="Enter spouse name"
-          />
-        </div>
-        <div>
-          <Label htmlFor="fatherName">Father's Name *</Label>
-          <Input
-            id="fatherName"
-            {...register('fatherName')}
-            placeholder="Enter father's name"
-            required
-          />
-          {errors.fatherName && (
-            <p className="text-sm text-red-600 mt-1">{errors.fatherName.message}</p>
-          )}
-        </div>
-      </div>
+  const handleChange = ({ fileList: newFileList }: any) => {
+    setFileList(newFileList)
+  }
 
-      <div>
-        <Label htmlFor="motherName">Mother's Name *</Label>
-        <Input
-          id="motherName"
-          {...register('motherName')}
-          placeholder="Enter mother's name"
-          required
-        />
-        {errors.motherName && (
-          <p className="text-sm text-red-600 mt-1">{errors.motherName.message}</p>
-        )}
-      </div>
+  const getBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = (error) => reject(error)
+    })
+
+  const uploadButton = (
+    <div>
+      <PlusOutlined />
+      <div style={{ marginTop: 8 }}>Upload</div>
     </div>
+  )
+
+  const renderStep1 = () => (
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
+          <Form.Item
+            label="First Name"
+            required
+            validateStatus={errors.firstname ? 'error' : ''}
+            help={errors.firstname?.message}
+          >
+            <Input
+              value={watch('firstname') || ''}
+              onChange={(e) => handleFieldChange('firstname', e.target.value)}
+              placeholder="Enter first name"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          <Form.Item label="Middle Name">
+            <Input
+              value={watch('middlename') || ''}
+              onChange={(e) => handleFieldChange('middlename', e.target.value)}
+              placeholder="Enter middle name"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          <Form.Item label="Last Name">
+            <Input
+              value={watch('lastname') || ''}
+              onChange={(e) => handleFieldChange('lastname', e.target.value)}
+              placeholder="Enter last name"
+            />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Gender"
+            required
+            validateStatus={errors.gender ? 'error' : ''}
+            help={errors.gender?.message}
+          >
+            <Select
+              // value={watch('gender') || ''}
+              onChange={(value) => handleFieldChange('gender', value)}
+              placeholder="Select gender"
+              options={[
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'other', label: 'Other' }
+              ]}
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Marital Status"
+            required
+          >
+            <Select
+              // value={watch('maritalStatus') || ''}
+              onChange={(value) => handleFieldChange('maritalStatus', value)}
+              placeholder="Select marital status"
+              options={[
+                { value: 'single', label: 'Single' },
+                { value: 'married', label: 'Married' }
+              ]}
+            />
+          </Form.Item>
+        </Col>
+       
+     
+        {watchedMaritalStatus === 'married' && (
+          <Col xs={24} md={6}>
+            <Form.Item
+              label="Spouse Name"
+              required
+              validateStatus={errors.spouseName ? 'error' : ''}
+              help={errors.spouseName?.message}
+            >
+              <Input
+                value={watch('spouseName') || ''}
+                onChange={(e) => handleFieldChange('spouseName', e.target.value)}
+                placeholder="Enter spouse name"
+              />
+            </Form.Item>
+          </Col>
+        )}
+           <Col xs={24} md={6}>
+          <Form.Item
+            label="Date of Birth"
+            validateStatus={errors.dob ? 'error' : ''}
+            help={errors.dob?.message}
+          >
+            <DatePicker
+              value={watch('dob') ? dayjs(watch('dob')) : null}
+              onChange={(date) => handleFieldChange('dob', date ? date.format('YYYY-MM-DD') : '')}
+              style={{ width: '100%' }}
+              placeholder="Select date of birth (optional)"
+            />
+          </Form.Item>
+        </Col>
+       
+      </Row>
+
+      <Row gutter={[16, 16]}>
+
+        <Col xs={24} md={8}>
+          <Form.Item
+            label="Father's Name"
+            required
+            validateStatus={errors.fatherName ? 'error' : ''}
+            help={errors.fatherName?.message}
+          >
+            <Input
+              value={watch('fatherName') || ''}
+              onChange={(e) => handleFieldChange('fatherName', e.target.value)}
+              placeholder="Enter father's name"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+
+          <Form.Item
+            label="Mother's Name"
+            required
+            validateStatus={errors.motherName ? 'error' : ''}
+            help={errors.motherName?.message}
+          >
+            <Input
+              value={watch('motherName') || ''}
+              onChange={(e) => handleFieldChange('motherName', e.target.value)}
+              placeholder="Enter mother's name"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Are you 18+ years old?"
+            validateStatus={errors.is18Plus ? 'error' : ''}
+            help={errors.is18Plus?.message}
+          >
+            <Switch
+              checked={watch('is18Plus') || false}
+              onChange={(checked) => handleFieldChange('is18Plus', checked)}
+              checkedChildren="Yes"
+              unCheckedChildren="No"
+              style={{ minWidth: '80px' }}
+            />
+          </Form.Item>
+        </Col>
+      </Row>
+    </Space>
   )
 
   const renderStep2 = () => (
-    <div className="space-y-4">
-      <div>
-        <Label htmlFor="gaam">Gaam *</Label>
-        <Input
-          id="gaam"
-          {...register('gaam')}
-          placeholder="Enter gaam"
-          required
-        />
-        {errors.gaam && (
-          <p className="text-sm text-red-600 mt-1">{errors.gaam.message}</p>
-        )}
-      </div>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+     
 
-      <div>
-        <Label htmlFor="currentAddress">Current Address *</Label>
-        <Input
-          id="currentAddress"
-          {...register('currentAddress')}
-          placeholder="Enter current address"
-          required
-        />
-        {errors.currentAddress && (
-          <p className="text-sm text-red-600 mt-1">{errors.currentAddress.message}</p>
-        )}
-      </div>
+      <Row gutter={[16, 16]}>
+      <Col xs={24} md={12}>
+          <Form.Item
+            label="Current Address"
+            required
+            validateStatus={errors.currentAddress ? 'error' : ''}
+            help={errors.currentAddress?.message}
+          >
+            <Input
+              value={watch('currentAddress') || ''}
+              onChange={(e) => handleFieldChange('currentAddress', e.target.value)}
+              placeholder="Enter current address"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Gaam"
+            required
+            validateStatus={errors.gaam ? 'error' : ''}
+            help={errors.gaam?.message}
+          >
+            <Input
+              value={watch('gaam') || ''}
+              onChange={(e) => handleFieldChange('gaam', e.target.value)}
+              placeholder="Enter gaam"
+            />
+          </Form.Item>
+        </Col>
+       
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Phone"
+            required
+            validateStatus={errors.phone ? 'error' : ''}
+            help={errors.phone?.message}
+          >
+            <Input
+              type="number"
+              value={watch('phone') || ''}
+              onChange={(e) => handleFieldChange('phone', e.target.value)}
+              placeholder="Enter phone number"
+            />
+          </Form.Item>
+        </Col>  
+      </Row>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Country"
+            required
+            validateStatus={errors.countryId ? 'error' : ''}
+            help={errors.countryId?.message}
+          >
+            <Select
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+              value={watch('countryId') || ''}
+              onChange={(value) => handleFieldChange('countryId', value)}
+              placeholder="Select country"
+              options={masterData.countries?.map((country: any) => ({
+                value: country.id,
+                label: country.name
+              })) || []}
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="State"
+            required
+            validateStatus={errors.stateId ? 'error' : ''}
+            help={errors.stateId?.message}
+          >
+            <Select
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              value={watch('stateId') || ''}
+              onChange={(value) => handleFieldChange('stateId', value)}
+              placeholder="Select state"
+              disabled={!watchedCountryId}
+              options={masterData.states?.map((state: any) => ({
+                value: state.id,
+                label: state.name
+              })) || []}
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="City"
+            validateStatus={errors.cityId ? 'error' : ''}
+            help={errors.cityId?.message}
+          >
+            <Input
+              value={watch('cityId') || ''}
+              onChange={(e) => handleFieldChange('cityId', e.target.value)}
+              placeholder="Enter city (optional)"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Email"
+            validateStatus={errors.email ? 'error' : ''}
+            help={errors.email?.message}
+          >
+            <Input
+              value={watch('email') || ''}
+              onChange={(e) => handleFieldChange('email', e.target.value)}
+              type="email"
+              placeholder="Enter email address (optional)"
+            />
+          </Form.Item>
+        </Col>
+      </Row>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label htmlFor="countryId">Country *</Label>
-          <select 
-            {...register('countryId')}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            required
-          >
-            <option value="">Select country</option>
-            {masterData.countries && masterData.countries.length > 0 ? masterData.countries.map((country: any) => (
-              <option key={country.id} value={country.id}>
-                {country.name}
-              </option>
-            )) : null}
-          </select>
-          {errors.countryId && (
-            <p className="text-sm text-red-600 mt-1">{errors.countryId.message}</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="stateId">State *</Label>
-          <select 
-            {...register('stateId')} 
-            disabled={!watchedCountryId}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            required
-          >
-            <option value="">Select state</option>
-            {masterData.states && masterData.states.length > 0 ? masterData.states.map((state: any) => (
-              <option key={state.id} value={state.id}>
-                {state.name}
-              </option>
-            )) : null}
-          </select>
-          {errors.stateId && (
-            <p className="text-sm text-red-600 mt-1">{errors.stateId.message}</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="cityId">City *</Label>
-          <select 
-            {...register('cityId')}
-            disabled={!watchedStateId}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            required
-          >
-            <option value="">Select city</option>
-            {masterData.cities && masterData.cities.length > 0 ? masterData.cities.map((city: any) => (
-              <option key={city.id} value={city.id}>
-                {city.name}
-              </option>
-            )) : null}
-          </select>
-          {errors.cityId && (
-            <p className="text-sm text-red-600 mt-1">{errors.cityId.message}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="phone">Phone *</Label>
-          <Input
-            id="phone"
-            {...register('phone')}
-            placeholder="Enter phone number"
-          />
-          {errors.phone && (
-            <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="email">Email *</Label>
-          <Input
-            id="email"
-            type="email"
-            {...register('email')}
-            placeholder="Enter email address"
-          />
-          {errors.email && (
-            <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
-          )}
-        </div>
-      </div>
-    </div>
+        
+     
+    </Space>
   )
 
   const renderStep3 = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="educationId">Education Level *</Label>
-          <select 
-            {...register('educationId')} 
-            required
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Education Level"
+            validateStatus={errors.educationId ? 'error' : ''}
+            help={errors.educationId?.message}
           >
-            <option value="">Select education level</option>
-            {masterData.educations && masterData.educations.length > 0 ? masterData.educations.map((education: any) => (
-              <option key={education.id} value={education.id}>
-                {education.name}
-              </option>
-            )) : null}
-          </select>
-          {errors.educationId && (
-            <p className="text-sm text-red-600 mt-1">{errors.educationId.message}</p>
-          )}
-        </div>
+            <Select
+              value={watch('educationId') || ''}
+              onChange={(value) => handleFieldChange('educationId', value)}
+              placeholder="Select education level (optional)"
+              options={masterData.educations?.map((education: any) => ({
+                value: education.id,
+                label: education.name
+              })) || []}
+            />
+          </Form.Item>
+        </Col>
         {showOtherEducation && (
-          <div>
-            <Label htmlFor="otherEducation">Other Education *</Label>
-            <Input
-              id="otherEducation"
-              {...register('otherEducation')}
-              placeholder="Please specify your education"
-              required={showOtherEducation}
-            />
-            {errors.otherEducation && (
-              <p className="text-sm text-red-600 mt-1">{String(errors.otherEducation.message || 'Invalid input')}</p>
-            )}
-          </div>
+          <Col xs={24} md={6}>
+            <Form.Item
+              label="Other Education"
+              required
+              validateStatus={errors.otherEducation ? 'error' : ''}
+              help={errors.otherEducation?.message}
+            >
+              <Input
+                value={watch('otherEducation') || ''}
+                onChange={(e) => handleFieldChange('otherEducation', e.target.value)}
+                placeholder="Please specify your education"
+              />
+            </Form.Item>
+          </Col>
         )}
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="professionId">Profession *</Label>
-          <select 
-            {...register('professionId')} 
-            required
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        {/* <Col xs={24} md={12}>
+          <Form.Item
+            label="Educational Level"
+            validateStatus={errors.educationalLevel ? 'error' : ''}
+            help={errors.educationalLevel?.message}
           >
-            <option value="">Select profession</option>
-            {masterData.professions && masterData.professions.length > 0 ? masterData.professions.map((profession: any) => (
-              <option key={profession.id} value={profession.id}>
-                {profession.name}
-              </option>
-            )) : null}
-          </select>
-          {errors.professionId && (
-            <p className="text-sm text-red-600 mt-1">{errors.professionId.message}</p>
-          )}
-        </div>
-        {showOtherProfession && (
-          <div>
-            <Label htmlFor="otherProfession">Other Profession *</Label>
-            <Input
-              id="otherProfession"
-              {...register('otherProfession')}
-              placeholder="Please specify your profession"
-              required={showOtherProfession}
+            <Select
+              value={watch('educationalLevel') || ''}
+              onChange={(value) => handleFieldChange('educationalLevel', value)}
+              placeholder="Select educational level (optional)"
+              options={masterData.educations?.map((education: any) => ({
+                value: education.id,
+                label: education.name
+              })) || []}
             />
-            {errors.otherProfession && (
-              <p className="text-sm text-red-600 mt-1">{String(errors.otherProfession.message || 'Invalid input')}</p>
-            )}
-          </div>
+          </Form.Item>
+        </Col> */}
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Profession"
+            validateStatus={errors.professionId ? 'error' : ''}
+            help={errors.professionId?.message}
+          >
+            <Select
+              value={watch('professionId') || ''}
+              onChange={(value) => handleFieldChange('professionId', value)}
+              placeholder="Select profession (optional)"
+              options={masterData.professions?.map((profession: any) => ({
+                value: profession.id,
+                label: profession.name
+              })) || []}
+            />
+          </Form.Item>
+        </Col>
+        {showOtherProfession && (
+          <Col xs={24} md={6}>
+            <Form.Item
+              label="Other Profession"
+              required
+              validateStatus={errors.otherProfession ? 'error' : ''}
+              help={errors.otherProfession?.message}
+            >
+              <Input
+                value={watch('otherProfession') || ''}
+                onChange={(e) => handleFieldChange('otherProfession', e.target.value)}
+                placeholder="Please specify your profession"
+              />
+            </Form.Item>
+          </Col>
         )}
-      </div>
+      </Row>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="website">Website</Label>
-          <Input
-            id="website"
-            {...register('website')}
-            placeholder="Enter website URL"
-          />
-        </div>
-        <div>
-          <Label htmlFor="profilePic">Profile Picture URL</Label>
-          <Input
-            id="profilePic"
-            {...register('profilePic')}
-            placeholder="Enter profile picture URL"
-          />
-        </div>
-      </div>
+      {/* Additional Professions Section */}
 
-      {/* Social Media Fields */}
-      <div className="space-y-4">
-        <h4 className="text-md font-medium text-gray-700">Social Media Profiles</h4>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="fb">Facebook</Label>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={12}>
+          <Form.Item label="Website">
             <Input
-              id="fb"
-              {...register('fb')}
+              value={watch('website') || ''}
+              onChange={(e) => handleFieldChange('website', e.target.value)}
+              placeholder="Enter website URL"
+            />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Divider orientation="left">
+        <Typography.Title level={5}>Social Media Profiles</Typography.Title>
+      </Divider>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
+          <Form.Item label="Facebook">
+            <Input
+              value={watch('fb') || ''}
+              onChange={(e) => handleFieldChange('fb', e.target.value)}
               placeholder="Facebook profile"
             />
-          </div>
-          <div>
-            <Label htmlFor="linkedin">LinkedIn</Label>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          <Form.Item label="LinkedIn">
             <Input
-              id="linkedin"
-              {...register('linkedin')}
+              value={watch('linkedin') || ''}
+              onChange={(e) => handleFieldChange('linkedin', e.target.value)}
               placeholder="LinkedIn profile"
             />
-          </div>
-          <div>
-            <Label htmlFor="insta">Instagram</Label>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          <Form.Item label="Instagram">
             <Input
-              id="insta"
-              {...register('insta')}
+              value={watch('insta') || ''}
+              onChange={(e) => handleFieldChange('insta', e.target.value)}
               placeholder="Instagram profile"
             />
-          </div>
-          <div>
-            <Label htmlFor="tiktok">TikTok</Label>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          <Form.Item label="TikTok">
             <Input
-              id="tiktok"
-              {...register('tiktok')}
+              value={watch('tiktok') || ''}
+              onChange={(e) => handleFieldChange('tiktok', e.target.value)}
               placeholder="TikTok profile"
             />
-          </div>
-          <div>
-            <Label htmlFor="twitter">Twitter</Label>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          <Form.Item label="Twitter">
             <Input
-              id="twitter"
-              {...register('twitter')}
+              value={watch('twitter') || ''}
+              onChange={(e) => handleFieldChange('twitter', e.target.value)}
               placeholder="Twitter profile"
             />
-          </div>
-          <div>
-            <Label htmlFor="snapchat">Snapchat</Label>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          <Form.Item label="Snapchat">
             <Input
-              id="snapchat"
-              {...register('snapchat')}
+              value={watch('snapchat') || ''}
+              onChange={(e) => handleFieldChange('snapchat', e.target.value)}
               placeholder="Snapchat username"
             />
-          </div>
-        </div>
-      </div>
-    </div>
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Divider orientation="left">
+        <Typography.Title level={5}>Photos</Typography.Title>
+      </Divider>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={12}>
+          <Form.Item label="Profile Photo">
+            <Upload
+              name="profilePhoto"
+              listType="picture-card"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                const isImage = file.type.startsWith('image/');
+                if (!isImage) {
+                  message.error('You can only upload image files!');
+                  return false;
+                }
+                const isLt5M = file.size / 1024 / 1024 < 5;
+                if (!isLt5M) {
+                  message.error('Image must be smaller than 5MB!');
+                  return false;
+                }
+                return true; // Allow upload to proceed
+              }}
+              customRequest={async ({ file, onSuccess, onError }) => {
+                try {
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  formData.append('folder', 'profile-photos');
+
+                  const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                  });
+
+                  const result = await response.json();
+
+                  if (response.ok) {
+                    setUploadedProfilePic(result.url);
+                    handleFieldChange('profilePic', result.url);
+                    onSuccess?.(result);
+                    message.success(`${(file as File).name} uploaded successfully`);
+                  } else {
+                    throw new Error(result.error || 'Upload failed');
+                  }
+                } catch (error) {
+                  console.error('Upload error:', error);
+                  onError?.(error as Error);
+                  message.error(`${(file as File).name} upload failed`);
+                }
+              }}
+            >
+              <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                {uploadedProfilePic && (
+                  <img 
+                    src={uploadedProfilePic} 
+                    alt="profile" 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      zIndex: 1
+                    }} 
+                  />
+                )}
+                {!uploadedProfilePic && (
+                  <div style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    zIndex: 0
+                  }}>
+                    <InboxOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+                    <div style={{ marginTop: 8 }}>Upload Profile Photo</div>
+                  </div>
+                )}
+              </div>
+            </Upload>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="Family Photo">
+            <Upload
+              name="familyPhoto"
+              listType="picture-card"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                const isImage = file.type.startsWith('image/');
+                if (!isImage) {
+                  message.error('You can only upload image files!');
+                  return false;
+                }
+                const isLt5M = file.size / 1024 / 1024 < 5;
+                if (!isLt5M) {
+                  message.error('Image must be smaller than 5MB!');
+                  return false;
+                }
+                return true; // Allow upload to proceed
+              }}
+              customRequest={async ({ file, onSuccess, onError }) => {
+                try {
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  formData.append('folder', 'family-photos');
+
+                  const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                  });
+
+                  const result = await response.json();
+
+                  if (response.ok) {
+                    setUploadedFamilyPhoto(result.url);
+                    handleFieldChange('familyPhoto', result.url);
+                    onSuccess?.(result);
+                    message.success(`${(file as File).name} uploaded successfully`);
+                  } else {
+                    throw new Error(result.error || 'Upload failed');
+                  }
+                } catch (error) {
+                  console.error('Upload error:', error);
+                  onError?.(error as Error);
+                  message.error(`${(file as File).name} upload failed`);
+                }
+              }}
+            >
+              <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                {uploadedFamilyPhoto && (
+                  <img 
+                    src={uploadedFamilyPhoto} 
+                    alt="family" 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      zIndex: 1
+                    }} 
+                  />
+                )}
+                {!uploadedFamilyPhoto && (
+                  <div style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    zIndex: 0
+                  }}>
+                    <InboxOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+                    <div style={{ marginTop: 8 }}>Upload Family Photo</div>
+                  </div>
+                )}
+              </div>
+            </Upload>
+          </Form.Item>
+        </Col>
+      </Row>
+    </Space>
   )
 
   const renderStep4 = () => (
-    <div className="space-y-6">
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
       {/* Children Section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Children</h3>
-          <Button type="button" onClick={addChild} variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Child
-          </Button>
-        </div>
+      <Card title="Children" extra={
+        <Button type="primary" icon={<PlusOutlined />} onClick={addChild}>
+          Add Child
+        </Button>
+      }>
         {childrenFields.length === 0 ? (
-          <p className="text-gray-500 text-sm">No children added yet</p>
+          <Typography.Text type="secondary">No children added yet</Typography.Text>
         ) : (
-          <div className="space-y-3">
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             {childrenFields.map((field, index) => (
-              <Card key={field.id}>
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <Label>First Name</Label>
+              <Card key={field.id} size="small">
+                <Row gutter={[16, 16]} align="bottom">
+                  <Col xs={24} md={6}>
+                    <Form.Item label="First Name">
                       <Input
-                        {...register(`children.${index}.firstname`)}
+                        value={watch(`children.${index}.firstname`) || ''}
+                        onChange={(e) => {
+                          setValue(`children.${index}.firstname`, e.target.value)
+                          if (errors.children?.[index]?.firstname) {
+                            clearErrors(`children.${index}.firstname`)
+                          }
+                        }}
                         placeholder="Child's first name"
                       />
-                    </div>
-                    <div>
-                      <Label>Gender</Label>
-                                <select 
-            {...register(`children.${index}.gender`)}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label>Age</Label>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item label="Gender">
+                      <Select
+                        value={watch(`children.${index}.gender`) || ''}
+                        onChange={(value) => {
+                          setValue(`children.${index}.gender`, value)
+                          if (errors.children?.[index]?.gender) {
+                            clearErrors(`children.${index}.gender`)
+                          }
+                        }}
+                        options={[
+                          { value: 'male', label: 'Male' },
+                          { value: 'female', label: 'Female' },
+                          { value: 'other', label: 'Other' }
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item label="Age">
                       <Input
                         type="number"
-                        {...register(`children.${index}.age`, { valueAsNumber: true })}
+                        value={watch(`children.${index}.age`) || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? Number(e.target.value) : 0
+                          setValue(`children.${index}.age`, value)
+                          if (errors.children?.[index]?.age) {
+                            clearErrors(`children.${index}.age`)
+                          }
+                        }}
                         placeholder="Age"
                       />
-                    </div>
-                    <div className="flex items-end">
-                      <Button
-                        type="button"
-                        onClick={() => removeChild(index)}
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => removeChild(index)}
+                    >
+                      Remove
+                    </Button>
+                  </Col>
+                </Row>
               </Card>
             ))}
-          </div>
+          </Space>
         )}
-      </div>
+      </Card>
 
       {/* Siblings Section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Siblings</h3>
-          <Button type="button" onClick={addSibling} variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Sibling
-          </Button>
-        </div>
+      <Card title="Siblings" extra={
+        <Button type="primary" icon={<PlusOutlined />} onClick={addSibling}>
+          Add Sibling
+        </Button>
+      }>
         {siblingsFields.length === 0 ? (
-          <p className="text-gray-500 text-sm">No siblings added yet</p>
+          <Typography.Text type="secondary">No siblings added yet</Typography.Text>
         ) : (
-          <div className="space-y-3">
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             {siblingsFields.map((field, index) => (
-              <Card key={field.id}>
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <Label>Name</Label>
+              <Card key={field.id} size="small">
+                <Row gutter={[16, 16]} align="bottom">
+                  <Col xs={24} md={6}>
+                    <Form.Item label="Name">
                       <Input
-                        {...register(`siblings.${index}.name`)}
+                        value={watch(`siblings.${index}.name`) || ''}
+                        onChange={(e) => {
+                          setValue(`siblings.${index}.name`, e.target.value)
+                          if (errors.siblings?.[index]?.name) {
+                            clearErrors(`siblings.${index}.name`)
+                          }
+                        }}
                         placeholder="Sibling's name"
                       />
-                    </div>
-                    <div>
-                      <Label>Gender</Label>
-                                <select 
-            {...register(`siblings.${index}.gender`)}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label>Age</Label>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item label="Gender">
+                      <Select
+                        value={watch(`siblings.${index}.gender`) || ''}
+                        onChange={(value) => {
+                          setValue(`siblings.${index}.gender`, value)
+                          if (errors.siblings?.[index]?.gender) {
+                            clearErrors(`siblings.${index}.gender`)
+                          }
+                        }}
+                        options={[
+                          { value: 'male', label: 'Male' },
+                          { value: 'female', label: 'Female' },
+                          { value: 'other', label: 'Other' }
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item label="Age">
                       <Input
                         type="number"
-                        {...register(`siblings.${index}.age`, { valueAsNumber: true })}
+                        value={watch(`siblings.${index}.age`) || ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? Number(e.target.value) : 0
+                          setValue(`siblings.${index}.age`, value)
+                          if (errors.siblings?.[index]?.age) {
+                            clearErrors(`siblings.${index}.age`)
+                          }
+                        }}
                         placeholder="Age"
                       />
-                    </div>
-                    <div className="flex items-end">
-                      <Button
-                        type="button"
-                        onClick={() => removeSibling(index)}
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => removeSibling(index)}
+                    >
+                      Remove
+                    </Button>
+                  </Col>
+                </Row>
               </Card>
             ))}
-          </div>
+          </Space>
         )}
-      </div>
-    </div>
+      </Card>
+    </Space>
   )
 
   const renderStep5 = () => {
     const formData = watch()
-    
+
     // Get actual education and profession names
-    const selectedEducation = masterData.educations.find(edu => edu.id === formData.educationId)
-    const selectedProfession = masterData.professions.find(prof => prof.id === formData.professionId)
-    
+    const selectedEducation = masterData.educations?.find(edu => edu.id === formData.educationId)
+    const selectedProfession = masterData.professions?.find(prof => prof.id === formData.professionId)
+
     // Get location names
-    const selectedCountry = masterData.countries.find(country => country.id === formData.countryId)
-    const selectedState = masterData.states.find(state => state.id === formData.stateId)
-    const selectedCity = masterData.cities.find(city => city.id === formData.cityId)
-    
+    const selectedCountry = masterData.countries?.find(country => country.id === formData.countryId)
+    const selectedState = masterData.states?.find(state => state.id === formData.stateId)
+
     return (
-      <div className="space-y-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="font-medium mb-3">Review Your Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p><strong>Name:</strong> {formData.firstname} {formData.middlename} {formData.lastname}</p>
-              <p><strong>Gender:</strong> {formData.gender}</p>
-              <p><strong>Date of Birth:</strong> {formData.dob}</p>
-              <p><strong>Phone:</strong> {formData.phone}</p>
-              <p><strong>Email:</strong> {formData.email}</p>
-              <p><strong>Gaam:</strong> {formData.gaam}</p>
-              <p><strong>Current Address:</strong> {formData.currentAddress}</p>
-            </div>
-            <div>
-              <p><strong>Country:</strong> {selectedCountry?.name || 'Not specified'}</p>
-              <p><strong>State:</strong> {selectedState?.name || 'Not specified'}</p>
-              <p><strong>City:</strong> {selectedCity?.name || 'Not specified'}</p>
-              <p><strong>Education:</strong> {selectedEducation?.name || 'Not specified'}</p>
-              {selectedEducation?.name?.toLowerCase().includes('other') && formData.otherEducation && (
-                <p><strong>Other Education:</strong> {formData.otherEducation}</p>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Card title="Review Your Information">
+          <Row gutter={[24, 16]}>
+            <Col xs={24} md={12}>
+              <Space direction="vertical" size="small">
+                <Typography.Text strong>Name:</Typography.Text>
+                <Typography.Text>{formData.firstname} {formData.middlename} {formData.lastname}</Typography.Text>
+
+                <Typography.Text strong>Gender:</Typography.Text>
+                <Typography.Text>{formData.gender}</Typography.Text>
+
+                <Typography.Text strong>Marital Status:</Typography.Text>
+                <Typography.Text>{formData.maritalStatus}</Typography.Text>
+
+                <Typography.Text strong>18 Plus:</Typography.Text>
+                <Typography.Text>{formData.is18Plus ? 'Yes' : 'No'}</Typography.Text>
+
+                <Typography.Text strong>Date of Birth:</Typography.Text>
+                <Typography.Text>{formData.dob || 'Not specified'}</Typography.Text>
+
+                {formData.maritalStatus === 'married' && formData.spouseName && (
+                  <>
+                    <Typography.Text strong>Spouse Name:</Typography.Text>
+                    <Typography.Text>{formData.spouseName}</Typography.Text>
+                  </>
+                )}
+
+                <Typography.Text strong>Phone:</Typography.Text>
+                <Typography.Text>{formData.phone}</Typography.Text>
+
+                <Typography.Text strong>Email:</Typography.Text>
+                <Typography.Text>{formData.email || 'Not specified'}</Typography.Text>
+
+                <Typography.Text strong>Gaam:</Typography.Text>
+                <Typography.Text>{formData.gaam}</Typography.Text>
+
+                <Typography.Text strong>Current Address:</Typography.Text>
+                <Typography.Text>{formData.currentAddress}</Typography.Text>
+              </Space>
+            </Col>
+            <Col xs={24} md={12}>
+              <Space direction="vertical" size="small">
+                <Typography.Text strong>Country:</Typography.Text>
+                <Typography.Text>{selectedCountry?.name || 'Not specified'}</Typography.Text>
+
+                <Typography.Text strong>State:</Typography.Text>
+                <Typography.Text>{selectedState?.name || 'Not specified'}</Typography.Text>
+
+                <Typography.Text strong>City:</Typography.Text>
+                <Typography.Text>{formData.cityId || 'Not specified'}</Typography.Text>
+
+                <Typography.Text strong>Education:</Typography.Text>
+                <Typography.Text>{selectedEducation?.name || 'Not specified'}</Typography.Text>
+
+                {selectedEducation?.name?.toLowerCase().includes('other') && formData.otherEducation && (
+                  <>
+                    <Typography.Text strong>Other Education:</Typography.Text>
+                    <Typography.Text>{formData.otherEducation}</Typography.Text>
+                  </>
+                )}
+
+                <Typography.Text strong>Educational Level:</Typography.Text>
+                <Typography.Text>{formData.educationalLevel || 'Not specified'}</Typography.Text>
+
+                <Typography.Text strong>Profession:</Typography.Text>
+                <Typography.Text>{selectedProfession?.name || 'Not specified'}</Typography.Text>
+
+                {selectedProfession?.name?.toLowerCase().includes('other') && formData.otherProfession && (
+                  <>
+                    <Typography.Text strong>Other Profession:</Typography.Text>
+                    <Typography.Text>{formData.otherProfession}</Typography.Text>
+                  </>
+                )}
+
+                {formData.additionalProfessions && formData.additionalProfessions.length > 0 && (
+                  <>
+                    <Typography.Text strong>Additional Professions:</Typography.Text>
+                    {formData.additionalProfessions.map((prof, index) => {
+                      const selectedProf = masterData.professions?.find(p => p.id === prof.professionId)
+                      return (
+                        <Typography.Text key={index} style={{ display: 'block', marginLeft: 16 }}>
+                          {index + 1}. {selectedProf?.name || 'Not specified'}
+                          {selectedProf?.name?.toLowerCase().includes('other') && prof.otherProfession &&
+                            ` (${prof.otherProfession})`
+                          }
+                        </Typography.Text>
+                      )
+                    })}
+                  </>
+                )}
+
+                <Typography.Text strong>Children:</Typography.Text>
+                <Typography.Text>{formData.children?.length || 0}</Typography.Text>
+
+                <Typography.Text strong>Siblings:</Typography.Text>
+                <Typography.Text>{formData.siblings?.length || 0}</Typography.Text>
+              </Space>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* Photos Section */}
+        {(uploadedProfilePic || uploadedFamilyPhoto) && (
+          <Card title="Photos">
+            <Row gutter={[16, 16]}>
+              {uploadedProfilePic && (
+                <Col xs={24} md={12}>
+                  <div style={{ textAlign: 'center' }}>
+                    <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>Profile Photo</Typography.Text>
+                    <img 
+                      src={uploadedProfilePic} 
+                      alt="Profile" 
+                      style={{ 
+                        width: '100%', 
+                        maxWidth: '200px', 
+                        height: '200px', 
+                        objectFit: 'cover', 
+                        borderRadius: '8px',
+                        border: '1px solid #d9d9d9'
+                      }} 
+                    />
+                  </div>
+                </Col>
               )}
-              <p><strong>Profession:</strong> {selectedProfession?.name || 'Not specified'}</p>
-              {selectedProfession?.name?.toLowerCase().includes('other') && formData.otherProfession && (
-                <p><strong>Other Profession:</strong> {formData.otherProfession}</p>
+              {uploadedFamilyPhoto && (
+                <Col xs={24} md={12}>
+                  <div style={{ textAlign: 'center' }}>
+                    <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>Family Photo</Typography.Text>
+                    <img 
+                      src={uploadedFamilyPhoto} 
+                      alt="Family" 
+                      style={{ 
+                        width: '100%', 
+                        maxWidth: '200px', 
+                        height: '200px', 
+                        objectFit: 'cover', 
+                        borderRadius: '8px',
+                        border: '1px solid #d9d9d9'
+                      }} 
+                    />
+                  </div>
+                </Col>
               )}
-              <p><strong>Children:</strong> {formData.children?.length || 0}</p>
-              <p><strong>Siblings:</strong> {formData.siblings?.length || 0}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">
-            Please review all the information above. Once submitted, you can edit your profile later.
-          </p>
-          <Button 
-            type="button" 
-            onClick={() => {
-              const formData = watch()
-              console.log('Current form data:', formData)
-              console.log('Form errors:', errors)
-              console.log('Is form valid:', isCurrentStepValid())
-            }}
-            variant="outline"
-          >
-            Debug Form Data
-          </Button>
-        </div>
-      </div>
+            </Row>
+          </Card>
+        )}
+
+
+      </Space>
     )
   }
 
@@ -829,77 +1299,88 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
       {/* Progress Steps */}
-      <div className="flex items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         {steps.map((step, index) => (
-          <div key={step.id} className="flex items-center">
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-              currentStep >= step.id 
-                ? 'bg-blue-600 border-blue-600 text-white' 
-                : 'bg-white border-gray-300 text-gray-500'
-            }`}>
-              {currentStep > step.id ? <Check className="h-4 w-4" /> : step.id}
+          <div key={step.id} style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              border: '2px solid',
+              backgroundColor: currentStep >= step.id ? '#1890ff' : '#fff',
+              borderColor: currentStep >= step.id ? '#1890ff' : '#d9d9d9',
+              color: currentStep >= step.id ? '#fff' : '#8c8c8c'
+            }}>
+              {currentStep > step.id ? <CheckOutlined /> : step.id}
             </div>
             {index < steps.length - 1 && (
-              <div className={`w-16 h-0.5 mx-2 ${
-                currentStep > step.id ? 'bg-blue-600' : 'bg-gray-300'
-              }`} />
+              <div style={{
+                width: 64,
+                height: 2,
+                margin: '0 8px',
+                backgroundColor: currentStep > step.id ? '#1890ff' : '#d9d9d9'
+              }} />
             )}
           </div>
         ))}
       </div>
 
-      <div className="text-center mb-6">
-        <h2 className="text-xl font-semibold">{steps[currentStep - 1].title}</h2>
-        <p className="text-gray-600">{steps[currentStep - 1].description}</p>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <Typography.Title level={3}>{steps[currentStep - 1].title}</Typography.Title>
+        <Typography.Text type="secondary">{steps[currentStep - 1].description}</Typography.Text>
       </div>
 
       {/* Form Content */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <Form layout="vertical">
         {renderCurrentStep()}
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between pt-6">
+        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 24 }}>
           <div>
             {currentStep > 1 && (
-              <Button type="button" onClick={prevStep} variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+              <Button type="default" onClick={prevStep} icon={<LeftOutlined />}>
                 Previous
               </Button>
             )}
           </div>
-          
-          <div className="flex space-x-3">
+
+          <Space>
             {currentStep < steps.length ? (
-              <Button type="button" onClick={nextStep} disabled={!isCurrentStepValid()}>
+              <Button
+                type="primary"
+                onClick={nextStep}
+                disabled={!isCurrentStepValid()}
+                icon={<RightOutlined />}
+              >
                 Next
-                <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
-              <div className="flex space-x-3">
-                <Button 
-                  type="button" 
-                  onClick={() => {
-                    console.log('Manual submit test')
-                    const formData = watch()
-                    console.log('Form data for submission:', formData)
-                    onSubmit(formData)
-                  }}
-                  disabled={!isCurrentStepValid() || isLoading}
-                >
-                  Submit
-                </Button>
-            
-              </div>
+              <Button
+                type="primary"
+                onClick={() => {
+                  console.log('Manual submit test')
+                  const formData = watch()
+                  console.log('Form data for submission:', formData)
+                  onSubmit(formData)
+                }}
+                disabled={!isCurrentStepValid() || isLoading}
+                loading={isLoading}
+              >
+                Submit
+              </Button>
             )}
-            
-            <Button type="button" onClick={onCancel} variant="outline">
+
+            <Button type="default" onClick={onCancel}>
               Cancel
             </Button>
-          </div>
+          </Space>
         </div>
-      </form>
-    </div>
+      </Form>
+    </Space>
   )
 }

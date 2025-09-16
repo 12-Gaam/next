@@ -31,7 +31,7 @@ interface Contact {
   gender?: string
   gaam?: string
   currentAddress?: string
-  city?: string
+  cityId?: string
   state?: { name: string }
   country?: { name: string }
   phone: string
@@ -43,6 +43,8 @@ interface Contact {
   otherProfession?: string
   website?: string
   profile?: string
+  profilePic?: string
+  familyPhoto?: string
   children: any[]
   siblings: any[]
   createdAt: string
@@ -178,7 +180,7 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Personal Information */}
           <Card className="shadow-lg border-0">
@@ -314,7 +316,7 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">City</label>
-                    <p className="text-gray-900">{contact.city || '-'}</p>
+                    <p className="text-gray-900">{contact?.cityId || '-'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">State</label>
@@ -367,6 +369,62 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
             </CardContent>
           </Card>
 
+          {/* Children Information */}
+          {contact.children.length > 0 && (
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                <CardTitle className="flex items-center text-blue-800">
+                  <Users className="h-5 w-5 mr-2" />
+                  Children ({contact.children.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  {contact.children.map((child: any, index: number) => (
+                    <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium text-gray-900">{child.firstname}</p>
+                          <p className="text-sm text-gray-600">
+                            {child.gender} • Age {child.age}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Siblings Information */}
+          {contact.siblings.length > 0 && (
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
+                <CardTitle className="flex items-center text-green-800">
+                  <Users className="h-5 w-5 mr-2" />
+                  Siblings ({contact.siblings.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  {contact.siblings.map((sibling: any, index: number) => (
+                    <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium text-gray-900">{sibling.name}</p>
+                          <p className="text-sm text-gray-600">
+                            {sibling.gender} • Age {sibling.age}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Additional Information */}
           {contact.profile && (
             <Card className="shadow-lg border-0 lg:col-span-2">
@@ -377,6 +435,49 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                 <div>
                   <label className="text-sm font-medium text-gray-500">Profile</label>
                   <p className="text-gray-900 mt-1">{contact.profile}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Photos Section */}
+          {(contact.profilePic || contact.familyPhoto) && (
+            <Card className="shadow-lg border-0 lg:col-span-2">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-indigo-100 border-b border-indigo-200">
+                <CardTitle className="flex items-center text-indigo-800">
+                  <User className="h-5 w-5 mr-2" />
+                  Photos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Profile Photo */}
+                  {contact.profilePic && (
+                    <div className="text-center">
+                      <h4 className="font-semibold text-gray-800 mb-4">Profile Photo</h4>
+                      <div className="relative inline-block">
+                        <img
+                          src={contact.profilePic}
+                          alt="Profile"
+                          className="w-48 h-48 object-cover rounded-lg border border-gray-200 shadow-md"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Family Photo */}
+                  {contact.familyPhoto && (
+                    <div className="text-center">
+                      <h4 className="font-semibold text-gray-800 mb-4">Family Photo</h4>
+                      <div className="relative inline-block">
+                        <img
+                          src={contact.familyPhoto}
+                          alt="Family"
+                          className="w-48 h-48 object-cover rounded-lg border border-gray-200 shadow-md"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

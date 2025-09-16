@@ -20,7 +20,7 @@ export interface Contact {
   phone: string
   email: string
   dob: string
-  educationId: string
+  educationId: any
   education?: { name: string }
   otherEducation?: string
   professionId: string
@@ -71,7 +71,7 @@ export interface MasterData {
 // Master data functions
 export async function getCountries() {
   const { data, error } = await supabase
-    .from('country_master')
+    .from('CountryMaster')
     .select('*')
     .order('name')
   
@@ -81,7 +81,7 @@ export async function getCountries() {
 
 export async function getStates(countryId: string) {
   const { data, error } = await supabase
-    .from('state_master')
+    .from('StateMaster')
     .select('*')
     .eq('country_id', countryId)
     .order('name')
@@ -92,7 +92,7 @@ export async function getStates(countryId: string) {
 
 export async function getCities(stateId: string) {
   const { data, error } = await supabase
-    .from('city_master')
+    .from('CityMaster')
     .select('*')
     .eq('state_id', stateId)
     .order('name')
@@ -103,7 +103,7 @@ export async function getCities(stateId: string) {
 
 export async function getEducations() {
   const { data, error } = await supabase
-    .from('education_master')
+    .from('EducationMaster')
     .select('*')
     .order('name')
   
@@ -113,7 +113,7 @@ export async function getEducations() {
 
 export async function getProfessions() {
   const { data, error } = await supabase
-    .from('profession_master')
+    .from('ProfessionMaster')
     .select('*')
     .order('name')
   
@@ -123,27 +123,32 @@ export async function getProfessions() {
 
 // Contact functions
 export async function createContact(contactData: any) {
+  console.log('Creating contact with data:', contactData);
+  
   const { data, error } = await supabase
-    .from('contacts')
+    .from('Contact')
     .insert([contactData])
     .select()
     .single()
   
-  if (error) throw error
+  if (error) {
+    console.error('Supabase error:', error);
+    throw error;
+  }
   return data
 }
 
 export async function getContacts(page = 1, limit = 10, search = '') {
   let query = supabase
-    .from('contacts')
+    .from('Contact')
     .select(`
       *,
-      country:country_master(name),
-      state:state_master(name),
-      education:education_master(name),
-      profession:profession_master(name),
-      children:contact_children(*),
-      siblings:contact_siblings(*)
+      country:CountryMaster(name),
+      state:StateMaster(name),
+      education:EducationMaster(name),
+      profession:ProfessionMaster(name),
+      children:ContactChild(*),
+      siblings:ContactSibling(*)
     `, { count: 'exact' })
   
   if (search) {
@@ -160,15 +165,15 @@ export async function getContacts(page = 1, limit = 10, search = '') {
 
 export async function getContact(id: string) {
   const { data, error } = await supabase
-    .from('contacts')
+    .from('Contact')
     .select(`
       *,
-      country:country_master(name),
-      state:state_master(name),
-      education:education_master(name),
-      profession:profession_master(name),
-      children:contact_children(*),
-      siblings:contact_siblings(*)
+      country:CountryMaster(name),
+      state:StateMaster(name),
+      education:EducationMaster(name),
+      profession:ProfessionMaster(name),
+      children:ContactChild(*),
+      siblings:ContactSibling(*)
     `)
     .eq('id', id)
     .single()
@@ -179,7 +184,7 @@ export async function getContact(id: string) {
 
 export async function updateContact(id: string, contactData: any) {
   const { data, error } = await supabase
-    .from('contacts')
+    .from('Contact')
     .update(contactData)
     .eq('id', id)
     .select()
@@ -191,10 +196,37 @@ export async function updateContact(id: string, contactData: any) {
 
 export async function deleteContact(id: string) {
   const { error } = await supabase
-    .from('contacts')
+    .from('Contact')
     .delete()
     .eq('id', id)
   
   if (error) throw error
   return true
+}
+
+// User functions
+export async function getUserByUsername(username: string) {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('username', username)
+    .single()
+  
+  if (error) throw error
+  return data
+}
+
+export async function createUser(userData: { username: string; password: string; role: string }) {
+  const { data, error } = await supabase
+    .from('users')
+    .insert([{
+      username: userData.username,
+      password_hash: userData.password,
+      role: userData.role
+    }])
+    .select()
+    .single()
+  
+  if (error) throw error
+  return data
 }

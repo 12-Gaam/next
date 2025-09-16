@@ -5,7 +5,7 @@ export async function GET() {
   try {
     // Test basic connection
     const { data, error } = await supabase
-      .from('country_master')
+      .from('CountryMaster')
       .select('*')
       .limit(1)
     

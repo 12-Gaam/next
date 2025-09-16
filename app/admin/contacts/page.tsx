@@ -16,6 +16,7 @@ import {
   Plus
 } from 'lucide-react'
 import Link from 'next/link'
+import { notification } from 'antd'
 
 interface Contact {
   id: string
@@ -102,7 +103,7 @@ export default function AdminContactsPage() {
   }
 
   const handleDelete = async (contactId: string) => {
-    if (!confirm('Are you sure you want to delete this contact? This action cannot be undone.')) return
+    // if (!confirm('Are you sure you want to delete this contact? This action cannot be undone.')) return
 
     try {
       const response = await fetch(`/api/contacts/${contactId}`, {
@@ -111,15 +112,27 @@ export default function AdminContactsPage() {
 
       if (response.ok) {
         // Show success message
-        alert('Contact deleted successfully!')
+        notification.success({
+          message: 'Contact deleted successfully!',
+          placement: 'topRight',
+          duration: 4.5,
+        })
         fetchContacts()
       } else {
         const errorData = await response.json()
-        alert(`Failed to delete contact: ${errorData.error || 'Unknown error'}`)
+        notification.error({
+          message: `Failed to delete contact: ${errorData.error || 'Unknown error'}`,
+          placement: 'topRight',
+          duration: 4.5,
+        })
       }
     } catch (error) {
       console.error('Error deleting contact:', error)
-      alert('Failed to delete contact. Please try again.')
+      notification.error({
+        message: 'Failed to delete contact. Please try again.',
+        placement: 'topRight',
+        duration: 4.5,
+      })
     }
   }
 
@@ -324,7 +337,7 @@ export default function AdminContactsPage() {
                               <Eye className="h-4 w-4 mr-1" />
                               View
                             </Button>
-                            {/* <Button 
+                             {/* <Button 
                               size="sm" 
                               variant="outline"
                               onClick={() => handleEdit(contact.id)}
@@ -332,7 +345,7 @@ export default function AdminContactsPage() {
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
-                            </Button>
+                            </Button> */}
                             <Button 
                               size="sm" 
                               variant="outline"
@@ -341,7 +354,7 @@ export default function AdminContactsPage() {
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
                               Delete
-                            </Button> */}
+                            </Button> 
                           </div>
                         </td>
                       </tr>
