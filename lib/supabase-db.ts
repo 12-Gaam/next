@@ -207,7 +207,7 @@ export async function deleteContact(id: string) {
 // User functions
 export async function getUserByUsername(username: string) {
   const { data, error } = await supabase
-    .from('User')
+    .from('users')
     .select('*')
     .eq('username', username)
     .single()
@@ -218,8 +218,12 @@ export async function getUserByUsername(username: string) {
 
 export async function createUser(userData: { username: string; password: string; role: string }) {
   const { data, error } = await supabase
-    .from('User')
-    .insert([userData])
+    .from('users')
+    .insert([{
+      username: userData.username,
+      password_hash: userData.password,
+      role: userData.role
+    }])
     .select()
     .single()
   

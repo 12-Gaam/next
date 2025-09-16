@@ -355,7 +355,8 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         <Col xs={24} md={8}>
           <Form.Item label="Middle Name">
             <Input
-              {...register('middlename')}
+              value={watch('middlename') || ''}
+              onChange={(e) => handleFieldChange('middlename', e.target.value)}
               placeholder="Enter middle name"
             />
           </Form.Item>
@@ -363,7 +364,8 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         <Col xs={24} md={8}>
           <Form.Item label="Last Name">
             <Input
-              {...register('lastname')}
+              value={watch('lastname') || ''}
+              onChange={(e) => handleFieldChange('lastname', e.target.value)}
               placeholder="Enter last name"
             />
           </Form.Item>
