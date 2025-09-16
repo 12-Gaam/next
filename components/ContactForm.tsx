@@ -203,9 +203,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         body: JSON.stringify(processedData),
       })
 
-      console.log('Response status:', response.status)
       const responseData = await response.text()
-      console.log('Response data:', responseData)
 
       if (!response.ok) {
         throw new Error(`Failed to submit contact form: ${response.status} - ${responseData}`)
@@ -552,6 +550,10 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             help={errors.countryId?.message}
           >
             <Select
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
               value={watch('countryId') || ''}
               onChange={(value) => handleFieldChange('countryId', value)}
               placeholder="Select country"
@@ -570,6 +572,10 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             help={errors.stateId?.message}
           >
             <Select
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
               value={watch('stateId') || ''}
               onChange={(value) => handleFieldChange('stateId', value)}
               placeholder="Select state"
@@ -618,7 +624,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   const renderStep3 = () => (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Row gutter={[16, 16]}>
-        <Col xs={24} md={12}>
+        <Col xs={24} md={6}>
           <Form.Item
             label="Education Level"
             validateStatus={errors.educationId ? 'error' : ''}
@@ -636,7 +642,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
           </Form.Item>
         </Col>
         {showOtherEducation && (
-          <Col xs={24} md={12}>
+          <Col xs={24} md={6}>
             <Form.Item
               label="Other Education"
               required
@@ -651,9 +657,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             </Form.Item>
           </Col>
         )}
-      </Row>
 
-      <Row gutter={[16, 16]}>
         {/* <Col xs={24} md={12}>
           <Form.Item
             label="Educational Level"
@@ -671,7 +675,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             />
           </Form.Item>
         </Col> */}
-        <Col xs={24} md={12}>
+        <Col xs={24} md={6}>
           <Form.Item
             label="Profession"
             validateStatus={errors.professionId ? 'error' : ''}
@@ -689,7 +693,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
           </Form.Item>
         </Col>
         {showOtherProfession && (
-          <Col xs={24} md={12}>
+          <Col xs={24} md={6}>
             <Form.Item
               label="Other Profession"
               required
@@ -716,15 +720,6 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
               value={watch('website') || ''}
               onChange={(e) => handleFieldChange('website', e.target.value)}
               placeholder="Enter website URL"
-            />
-          </Form.Item>
-        </Col>
-        <Col xs={24} md={12}>
-          <Form.Item label="Profile Picture URL">
-            <Input
-              value={watch('profilePic') || ''}
-              onChange={(e) => handleFieldChange('profilePic', e.target.value)}
-              placeholder="Enter profile picture URL"
             />
           </Form.Item>
         </Col>
