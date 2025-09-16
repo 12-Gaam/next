@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       data: {
         firstname: validatedData.firstname,
         middlename: validatedData.middlename || null,
-        lastname: validatedData.lastname || "Patel",
+        lastname: validatedData.lastname || null,
         spouseName: validatedData.spouseName || null,
         fatherName: validatedData.fatherName,
         motherName: validatedData.motherName,
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         phone: validatedData.phone,
         email: validatedData.email || '',
         dob: validatedData.dob ? new Date(validatedData.dob) : new Date(),
-        educationId: validatedData.educationId || undefined,
+        educationId: validatedData.educationId,
         otherEducation: validatedData.otherEducation || undefined,
         professionId: validatedData.professionId || undefined,
         otherProfession: validatedData.otherProfession || undefined,

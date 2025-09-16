@@ -127,11 +127,7 @@ export default function SignInPage() {
               </p>
             </div>
 
-            <div className="mt-4 text-center">
-              <p className="text-xs text-gray-500">
-                Admin credentials: admin / Admin@123
-              </p>
-            </div>
+        
           </CardContent>
         </Card>
       </div>

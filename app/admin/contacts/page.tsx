@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { 
   Users, 
   Building2, 
@@ -17,6 +16,7 @@ import {
   Plus
 } from 'lucide-react'
 import Link from 'next/link'
+import { notification } from 'antd'
 
 interface Contact {
   id: string
@@ -42,9 +42,6 @@ export default function AdminContactsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalContacts, setTotalContacts] = useState(0)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [contactToDelete, setContactToDelete] = useState<Contact | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -105,41 +102,38 @@ export default function AdminContactsPage() {
     router.push(`/admin/contacts/${contactId}/edit`)
   }
 
-  const handleDeleteClick = (contact: Contact) => {
-    setContactToDelete(contact)
-    setDeleteDialogOpen(true)
-  }
+  const handleDelete = async (contactId: string) => {
+    // if (!confirm('Are you sure you want to delete this contact? This action cannot be undone.')) return
 
-  const handleDeleteConfirm = async () => {
-    if (!contactToDelete) return
-
-    setIsDeleting(true)
     try {
-      const response = await fetch(`/api/contacts/${contactToDelete.id}`, {
+      const response = await fetch(`/api/contacts/${contactId}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
-        setDeleteDialogOpen(false)
-        setContactToDelete(null)
-        fetchContacts()
         // Show success message
-        alert('Contact deleted successfully!')
+        notification.success({
+          message: 'Contact deleted successfully!',
+          placement: 'topRight',
+          duration: 4.5,
+        })
+        fetchContacts()
       } else {
         const errorData = await response.json()
-        alert(`Failed to delete contact: ${errorData.error || 'Unknown error'}`)
+        notification.error({
+          message: `Failed to delete contact: ${errorData.error || 'Unknown error'}`,
+          placement: 'topRight',
+          duration: 4.5,
+        })
       }
     } catch (error) {
       console.error('Error deleting contact:', error)
-      alert('Failed to delete contact. Please try again.')
-    } finally {
-      setIsDeleting(false)
+      notification.error({
+        message: 'Failed to delete contact. Please try again.',
+        placement: 'topRight',
+        duration: 4.5,
+      })
     }
-  }
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false)
-    setContactToDelete(null)
   }
 
   if (status === 'loading') {
@@ -343,7 +337,7 @@ export default function AdminContactsPage() {
                               <Eye className="h-4 w-4 mr-1" />
                               View
                             </Button>
-                            {/* <Button 
+                             {/* <Button 
                               size="sm" 
                               variant="outline"
                               onClick={() => handleEdit(contact.id)}
@@ -351,16 +345,16 @@ export default function AdminContactsPage() {
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
-                            </Button>
+                            </Button> */}
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => handleDeleteClick(contact)}
+                              onClick={() => handleDelete(contact.id)}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
                               Delete
-                            </Button> */}
+                            </Button> 
                           </div>
                         </td>
                       </tr>
@@ -410,56 +404,6 @@ export default function AdminContactsPage() {
           </CardContent>
         </Card>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-lg font-bold">12Gaam Community</span>
-            </div>
-            <div className="text-sm text-gray-400 mb-2">
-              © 2025 12Gaam Community. All rights reserved.
-            </div>
-            <div className="text-xs text-gray-500">
-              Bringing families together, one connection at a time
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Contact</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete <strong>{contactToDelete?.firstname} {contactToDelete?.lastname}</strong>? 
-              This action cannot be undone and will permanently remove all contact information.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={handleDeleteCancel}
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Contact'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

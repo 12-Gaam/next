@@ -20,7 +20,7 @@ export interface Contact {
   phone: string
   email: string
   dob: string
-  educationId: string
+  educationId: any
   education?: { name: string }
   otherEducation?: string
   professionId: string
