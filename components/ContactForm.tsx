@@ -214,7 +214,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         message: 'Success!',
         description: 'Details submitted successfully! Your information has been saved.',
         placement: 'topRight',
-        duration: 4.5,
+        duration: 3.5,
       })
       onSuccess()
     } catch (error) {
@@ -224,7 +224,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         message: 'Submission Failed',
         description: `Failed to submit form: ${errorMessage}`,
         placement: 'topRight',
-        duration: 4.5,
+        duration: 3.5,
       })
     } finally {
       setIsLoading(false)
@@ -406,8 +406,8 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             />
           </Form.Item>
         </Col>
-       
-     
+
+
         {watchedMaritalStatus === 'married' && (
           <Col xs={24} md={6}>
             <Form.Item
@@ -424,7 +424,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             </Form.Item>
           </Col>
         )}
-           <Col xs={24} md={6}>
+        <Col xs={24} md={6}>
           <Form.Item
             label="Date of Birth"
             validateStatus={errors.dob ? 'error' : ''}
@@ -438,7 +438,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             />
           </Form.Item>
         </Col>
-       
+
       </Row>
 
       <Row gutter={[16, 16]}>
@@ -493,10 +493,10 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
   const renderStep2 = () => (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-     
+
 
       <Row gutter={[16, 16]}>
-      <Col xs={24} md={12}>
+        <Col xs={24} md={12}>
           <Form.Item
             label="Current Address"
             required
@@ -524,7 +524,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             />
           </Form.Item>
         </Col>
-       
+
         <Col xs={24} md={6}>
           <Form.Item
             label="Phone"
@@ -539,7 +539,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
               placeholder="Enter phone number"
             />
           </Form.Item>
-        </Col>  
+        </Col>
       </Row>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
@@ -550,10 +550,10 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             help={errors.countryId?.message}
           >
             <Select
-            showSearch
-            filterOption={(input, option) =>
-              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-            }
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
               value={watch('countryId') || ''}
               onChange={(value) => handleFieldChange('countryId', value)}
               placeholder="Select country"
@@ -616,8 +616,8 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         </Col>
       </Row>
 
-        
-     
+
+
     </Space>
   )
 
@@ -840,27 +840,27 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             >
               <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                 {uploadedProfilePic && (
-                  <img 
-                    src={uploadedProfilePic} 
-                    alt="profile" 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
+                  <img
+                    src={uploadedProfilePic}
+                    alt="profile"
+                    style={{
+                      width: '100%',
+                      height: '100%',
                       objectFit: 'cover',
                       position: 'absolute',
                       top: 0,
                       left: 0,
                       zIndex: 1
-                    }} 
+                    }}
                   />
                 )}
                 {!uploadedProfilePic && (
-                  <div style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     position: 'absolute',
                     top: 0,
@@ -924,27 +924,27 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             >
               <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                 {uploadedFamilyPhoto && (
-                  <img 
-                    src={uploadedFamilyPhoto} 
-                    alt="family" 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
+                  <img
+                    src={uploadedFamilyPhoto}
+                    alt="family"
+                    style={{
+                      width: '100%',
+                      height: '100%',
                       objectFit: 'cover',
                       position: 'absolute',
                       top: 0,
                       left: 0,
                       zIndex: 1
-                    }} 
+                    }}
                   />
                 )}
                 {!uploadedFamilyPhoto && (
-                  <div style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     position: 'absolute',
                     top: 0,
@@ -1244,17 +1244,17 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                 <Col xs={24} md={12}>
                   <div style={{ textAlign: 'center' }}>
                     <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>Profile Photo</Typography.Text>
-                    <img 
-                      src={uploadedProfilePic} 
-                      alt="Profile" 
-                      style={{ 
-                        width: '100%', 
-                        maxWidth: '200px', 
-                        height: '200px', 
-                        objectFit: 'cover', 
+                    <img
+                      src={uploadedProfilePic}
+                      alt="Profile"
+                      style={{
+                        width: '100%',
+                        maxWidth: '200px',
+                        height: '200px',
+                        objectFit: 'cover',
                         borderRadius: '8px',
                         border: '1px solid #d9d9d9'
-                      }} 
+                      }}
                     />
                   </div>
                 </Col>
@@ -1263,17 +1263,17 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                 <Col xs={24} md={12}>
                   <div style={{ textAlign: 'center' }}>
                     <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>Family Photo</Typography.Text>
-                    <img 
-                      src={uploadedFamilyPhoto} 
-                      alt="Family" 
-                      style={{ 
-                        width: '100%', 
-                        maxWidth: '200px', 
-                        height: '200px', 
-                        objectFit: 'cover', 
+                    <img
+                      src={uploadedFamilyPhoto}
+                      alt="Family"
+                      style={{
+                        width: '100%',
+                        maxWidth: '200px',
+                        height: '200px',
+                        objectFit: 'cover',
                         borderRadius: '8px',
                         border: '1px solid #d9d9d9'
-                      }} 
+                      }}
                     />
                   </div>
                 </Col>
