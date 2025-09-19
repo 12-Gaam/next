@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
       where = {
         OR: [
           { firstname: { contains: search } },
+          { middlename: { contains: search } },
           { lastname: { contains: search } },
           { email: { contains: search } },
           { phone: { contains: search } }
@@ -82,16 +83,25 @@ export async function POST(request: NextRequest) {
         firstname: validatedData.firstname,
         middlename: validatedData.middlename || null,
         lastname: validatedData.lastname || null,
-        spouseName: validatedData.spouseName || null,
-        fatherName: validatedData.fatherName,
-        motherName: validatedData.motherName,
+        spouseFirstName: validatedData.spouseFirstName || null,
+        spouseMiddleName: validatedData.spouseMiddleName || null,
+        spouseLastName: validatedData.spouseLastName || null,
+        fatherFirstName: validatedData.fatherFirstName || '',
+        fatherMiddleName: validatedData.fatherMiddleName || null,
+        fatherLastName: validatedData.fatherLastName || null,
+        motherFirstName: validatedData.motherFirstName || '',
+        motherMiddleName: validatedData.motherMiddleName || null,
+        motherLastName: validatedData.motherLastName || null,
         gender: validatedData.gender,
+        maritalStatus: validatedData.maritalStatus || null,
+        is18Plus: validatedData.is18Plus || false,
         gaam: validatedData.gaam,
         currentAddress: validatedData.currentAddress,
         countryId: validatedData.countryId || null,
         stateId: validatedData.stateId || null,
         cityId: validatedData.cityId || null,
         phone: validatedData.phone,
+        countryCode: validatedData.countryCode || '+1',
         email: validatedData.email || '',
         dob: validatedData.dob ? new Date(validatedData.dob) : new Date(),
         educationId: validatedData.educationId,
@@ -109,14 +119,20 @@ export async function POST(request: NextRequest) {
         snapchat: validatedData.snapchat || undefined,
         children: {
           create: validatedData.children.map(child => ({
-            ...child,
-            gender: child.gender as any
+            firstName: child.firstName || '',
+            middleName: child.middleName || null,
+            lastName: child.lastName || null,
+            gender: child.gender as any,
+            age: child.age
           }))
         },
         siblings: {
           create: validatedData.siblings.map(sibling => ({
-            ...sibling,
-            gender: sibling.gender as any
+            firstName: sibling.firstName || '',
+            middleName: sibling.middleName || null,
+            lastName: sibling.lastName || null,
+            gender: sibling.gender as any,
+            age: sibling.age
           }))
         }
       },

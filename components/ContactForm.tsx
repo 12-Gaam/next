@@ -20,11 +20,13 @@ import {
   Switch,
   Upload,
   message,
-  Image
+  Image,
+  Flex
 } from 'antd'
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, CheckOutlined, UploadOutlined, InboxOutlined } from '@ant-design/icons'
 import csc from 'countries-states-cities'
 import dayjs from 'dayjs'
+import { countryCodes, countryCodeMap } from '@/lib/country-codes'
 
 
 interface ContactFormProps {
@@ -39,6 +41,7 @@ const steps = [
   { id: 4, title: 'Family Information', description: 'Children and siblings details' },
   { id: 5, title: 'Review & Submit', description: 'Review all information before submitting' }
 ]
+
 
 export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   const [currentStep, setCurrentStep] = useState(1)
@@ -128,11 +131,23 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   }, [watchedProfessionId, masterData.professions])
 
   useEffect(() => {
-    // Clear spouse name when marital status changes to single
+    // Clear spouse names when marital status changes to single
     if (watchedMaritalStatus === 'single') {
-      handleFieldChange('spouseName', '')
+      handleFieldChange('spouseFirstName', '')
+      handleFieldChange('spouseMiddleName', '')
+      handleFieldChange('spouseLastName', '')
     }
   }, [watchedMaritalStatus])
+
+  useEffect(() => {
+    // Auto-change country code when country is selected
+    if (watchedCountryId && masterData.countries.length > 0) {
+      const selectedCountry = masterData.countries.find(country => country.id === watchedCountryId)
+      if (selectedCountry && countryCodeMap[selectedCountry.name]) {
+        handleFieldChange('countryCode', countryCodeMap[selectedCountry.name])
+      }
+    }
+  }, [watchedCountryId, masterData.countries])
 
   const fetchMasterData = async () => {
     try {
@@ -236,15 +251,14 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
     switch (currentStep) {
       case 1:
-        let step1Valid: boolean = !!(formData.firstname && formData.gender &&
-          formData.fatherName && formData.motherName)
+        let step1Valid: boolean = !!(formData.firstname && formData.gender)
 
-        // Check if spouse name is required when married
-        if (watchedMaritalStatus === 'married' && (!formData.spouseName || formData.spouseName.trim().length === 0)) {
+        // Check if spouse first name is required when married
+        if (watchedMaritalStatus === 'married' && (!formData.spouseFirstName || formData.spouseFirstName.trim().length === 0)) {
           step1Valid = false
         }
 
-        console.log('Step 1 validation:', { step1Valid, formData: { firstname: formData.firstname, gender: formData.gender, maritalStatus: formData.maritalStatus, spouseName: formData.spouseName, fatherName: formData.fatherName, motherName: formData.motherName } })
+        console.log('Step 1 validation:', { step1Valid, formData: { firstname: formData.firstname, gender: formData.gender, maritalStatus: formData.maritalStatus, spouseFirstName: formData.spouseFirstName, fatherFirstName: formData.fatherFirstName, motherFirstName: formData.motherFirstName } })
         return step1Valid
       case 2:
         const step2Valid = formData.gaam && formData.currentAddress &&
@@ -261,13 +275,12 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
       case 5:
         // For the final step, check if all required fields are filled
         let step5Valid: boolean = !!(formData.firstname && formData.gender &&
-          formData.fatherName && formData.motherName &&
           formData.gaam && formData.currentAddress &&
           formData.countryId && formData.stateId &&
           formData.phone)
 
-        // Check if spouse name is required when married
-        if (watchedMaritalStatus === 'married' && (!formData.spouseName || formData.spouseName.trim().length === 0)) {
+        // Check if spouse first name is required when married
+        if (watchedMaritalStatus === 'married' && (!formData.spouseFirstName || formData.spouseFirstName.trim().length === 0)) {
           step5Valid = false
         }
 
@@ -291,11 +304,11 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   }
 
   const addChild = () => {
-    appendChild({ firstname: '', gender: 'male', age: 0 })
+    appendChild({ firstName: '', middleName: '', lastName: '', gender: 'male', age: 0 })
   }
 
   const addSibling = () => {
-    appendSibling({ name: '', gender: 'male', age: 0 })
+    appendSibling({ firstName: '', middleName: '', lastName: '', gender: 'male', age: 0 })
   }
 
   const handleFieldChange = (fieldName: keyof ContactFormData, value: any) => {
@@ -379,7 +392,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             help={errors.gender?.message}
           >
             <Select
-              // value={watch('gender') || ''}
+              value={watch('gender') || ''}
               onChange={(value) => handleFieldChange('gender', value)}
               placeholder="Select gender"
               options={[
@@ -396,7 +409,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             required
           >
             <Select
-              // value={watch('maritalStatus') || ''}
+              value={watch('maritalStatus') || ''}
               onChange={(value) => handleFieldChange('maritalStatus', value)}
               placeholder="Select marital status"
               options={[
@@ -406,24 +419,6 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             />
           </Form.Item>
         </Col>
-
-
-        {watchedMaritalStatus === 'married' && (
-          <Col xs={24} md={6}>
-            <Form.Item
-              label="Spouse Name"
-              required
-              validateStatus={errors.spouseName ? 'error' : ''}
-              help={errors.spouseName?.message}
-            >
-              <Input
-                value={watch('spouseName') || ''}
-                onChange={(e) => handleFieldChange('spouseName', e.target.value)}
-                placeholder="Enter spouse name"
-              />
-            </Form.Item>
-          </Col>
-        )}
         <Col xs={24} md={6}>
           <Form.Item
             label="Date of Birth"
@@ -435,40 +430,6 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
               onChange={(date) => handleFieldChange('dob', date ? date.format('YYYY-MM-DD') : '')}
               style={{ width: '100%' }}
               placeholder="Select date of birth (optional)"
-            />
-          </Form.Item>
-        </Col>
-
-      </Row>
-
-      <Row gutter={[16, 16]}>
-
-        <Col xs={24} md={8}>
-          <Form.Item
-            label="Father's Name"
-            required
-            validateStatus={errors.fatherName ? 'error' : ''}
-            help={errors.fatherName?.message}
-          >
-            <Input
-              value={watch('fatherName') || ''}
-              onChange={(e) => handleFieldChange('fatherName', e.target.value)}
-              placeholder="Enter father's name"
-            />
-          </Form.Item>
-        </Col>
-        <Col xs={24} md={8}>
-
-          <Form.Item
-            label="Mother's Name"
-            required
-            validateStatus={errors.motherName ? 'error' : ''}
-            help={errors.motherName?.message}
-          >
-            <Input
-              value={watch('motherName') || ''}
-              onChange={(e) => handleFieldChange('motherName', e.target.value)}
-              placeholder="Enter mother's name"
             />
           </Form.Item>
         </Col>
@@ -487,6 +448,116 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             />
           </Form.Item>
         </Col>
+
+        {watchedMaritalStatus === 'married' && (
+          <>
+            <Col xs={24} md={6}>
+              <Form.Item
+                label="Spouse First Name"
+                required
+                validateStatus={errors.spouseFirstName ? 'error' : ''}
+                help={errors.spouseFirstName?.message}
+              >
+                <Input
+                  value={watch('spouseFirstName') || ''}
+                  onChange={(e) => handleFieldChange('spouseFirstName', e.target.value)}
+                  placeholder="Enter spouse first name"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item label="Spouse Middle Name">
+                <Input
+                  value={watch('spouseMiddleName') || ''}
+                  onChange={(e) => handleFieldChange('spouseMiddleName', e.target.value)}
+                  placeholder="Enter spouse middle name"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item label="Spouse Last Name">
+                <Input
+                  value={watch('spouseLastName') || ''}
+                  onChange={(e) => handleFieldChange('spouseLastName', e.target.value)}
+                  placeholder="Enter spouse last name"
+                />
+              </Form.Item>
+            </Col>
+          </>
+        )}
+     
+
+      </Row>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={6}>
+          <Form.Item
+            label="Father's First Name"
+            required
+            validateStatus={errors.fatherFirstName ? 'error' : ''}
+            help={errors.fatherFirstName?.message}
+          >
+            <Input
+              value={watch('fatherFirstName') || ''}
+              onChange={(e) => handleFieldChange('fatherFirstName', e.target.value)}
+              placeholder="Enter father's first name"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item label="Father's Middle Name">
+            <Input
+              value={watch('fatherMiddleName') || ''}
+              onChange={(e) => handleFieldChange('fatherMiddleName', e.target.value)}
+              placeholder="Enter father's middle name"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item label="Father's Last Name">
+            <Input
+              value={watch('fatherLastName') || ''}
+              onChange={(e) => handleFieldChange('fatherLastName', e.target.value)}
+              placeholder="Enter father's last name"
+            />
+          </Form.Item>
+        </Col>
+
+      </Row>
+      <Row gutter={[16, 16]}>
+      <Col xs={24} md={6}>
+          <Form.Item
+            label="Mother's First Name"
+            required
+            validateStatus={errors.motherFirstName ? 'error' : ''}
+            help={errors.motherFirstName?.message}
+          >
+            <Input
+              value={watch('motherFirstName') || ''}
+              onChange={(e) => handleFieldChange('motherFirstName', e.target.value)}
+              placeholder="Enter mother's first name"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item label="Mother's Middle Name">
+            <Input
+              value={watch('motherMiddleName') || ''}
+              onChange={(e) => handleFieldChange('motherMiddleName', e.target.value)}
+              placeholder="Enter mother's middle name"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={6}>
+          <Form.Item label="Mother's Last Name">
+            <Input
+              value={watch('motherLastName') || ''}
+              onChange={(e) => handleFieldChange('motherLastName', e.target.value)}
+              placeholder="Enter mother's last name"
+            />
+          </Form.Item>
+        </Col>
+       
       </Row>
     </Space>
   )
@@ -517,26 +588,43 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             validateStatus={errors.gaam ? 'error' : ''}
             help={errors.gaam?.message}
           >
-            <Input
-              value={watch('gaam') || ''}
-              onChange={(e) => handleFieldChange('gaam', e.target.value)}
-              placeholder="Enter gaam"
+            <Select
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              onChange={(value) => handleFieldChange('gaam', value)}
+              placeholder="Select gaam"
+              options={[
+                { value: 'Pisai', label: 'Pisai' },
+                { value: 'Puniyad', label: 'Puniyad' },
+                { value: 'Sandha', label: 'Sandha' },
+                { value: 'Bhekhda', label: 'Bhekhda' },
+                { value: 'Avakhal', label: 'Avakhal' },
+                { value: 'Kukas', label: 'Kukas' },
+                { value: 'Manjrol', label: 'Manjrol' },
+                { value: 'Vemar', label: 'Vemar' },
+                { value: 'Malpur', label: 'Malpur' },
+                { value: 'Juni Jithardi', label: 'Juni Jithardi' },
+                { value: 'Someswarpura', label: 'Someswarpura' },
+                { value: 'Jaferpura', label: 'Jaferpura' },
+                { value: 'Alindra', label: 'Alindra' },
+                { value: 'Tarsana', label: 'Tarsana' }
+              ]}
             />
           </Form.Item>
         </Col>
-
         <Col xs={24} md={6}>
           <Form.Item
-            label="Phone"
-            required
-            validateStatus={errors.phone ? 'error' : ''}
-            help={errors.phone?.message}
+            label="Email"
+            validateStatus={errors.email ? 'error' : ''}
+            help={errors.email?.message}
           >
             <Input
-              type="number"
-              value={watch('phone') || ''}
-              onChange={(e) => handleFieldChange('phone', e.target.value)}
-              placeholder="Enter phone number"
+              value={watch('email') || ''}
+              onChange={(e) => handleFieldChange('email', e.target.value)}
+              type="email"
+              placeholder="Enter email address (optional)"
             />
           </Form.Item>
         </Col>
@@ -554,7 +642,6 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
               filterOption={(input, option) =>
                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
-              value={watch('countryId') || ''}
               onChange={(value) => handleFieldChange('countryId', value)}
               placeholder="Select country"
               options={masterData.countries?.map((country: any) => ({
@@ -576,7 +663,6 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
               filterOption={(input, option) =>
                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
-              value={watch('stateId') || ''}
               onChange={(value) => handleFieldChange('stateId', value)}
               placeholder="Select state"
               disabled={!watchedCountryId}
@@ -600,20 +686,32 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             />
           </Form.Item>
         </Col>
+
         <Col xs={24} md={6}>
           <Form.Item
-            label="Email"
-            validateStatus={errors.email ? 'error' : ''}
-            help={errors.email?.message}
+            label="Phone"
+            required
+            validateStatus={errors.phone ? 'error' : ''}
+            help={errors.phone?.message}
           >
-            <Input
-              value={watch('email') || ''}
-              onChange={(e) => handleFieldChange('email', e.target.value)}
-              type="email"
-              placeholder="Enter email address (optional)"
-            />
+            <Input.Group compact>
+              <Select
+                style={{ width: '30%' }}
+                value={watch('countryCode') || '+1'}
+                onChange={(value) => handleFieldChange('countryCode', value)}
+                options={countryCodes}
+              />
+              <Input
+                style={{ width: '70%' }}
+                type="number"
+                value={watch('phone') || ''}
+                onChange={(e) => handleFieldChange('phone', e.target.value)}
+                placeholder="Enter phone number"
+              />
+            </Input.Group>
           </Form.Item>
         </Col>
+     
       </Row>
 
 
@@ -622,7 +720,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   )
 
   const renderStep3 = () => (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Space direction="vertical" style={{ width: '100%' }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
           <Form.Item
@@ -792,7 +890,8 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} md={12}>
-          <Form.Item label="Profile Photo">
+          <Card title="Profile Photo">
+          <Form.Item className='upload_photo_box'>
             <Upload
               name="profilePhoto"
               listType="picture-card"
@@ -846,7 +945,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                     style={{
                       width: '100%',
                       height: '100%',
-                      objectFit: 'cover',
+                      objectFit: 'contain',
                       position: 'absolute',
                       top: 0,
                       left: 0,
@@ -874,9 +973,11 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
               </div>
             </Upload>
           </Form.Item>
+          </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Form.Item label="Family Photo">
+          <Card title="Family Photo">
+          <Form.Item className='upload_photo_box'>
             <Upload
               name="familyPhoto"
               listType="picture-card"
@@ -930,7 +1031,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                     style={{
                       width: '100%',
                       height: '100%',
-                      objectFit: 'cover',
+                      objectFit: 'contain',
                       position: 'absolute',
                       top: 0,
                       left: 0,
@@ -958,6 +1059,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
               </div>
             </Upload>
           </Form.Item>
+          </Card>
         </Col>
       </Row>
     </Space>
@@ -981,14 +1083,42 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                   <Col xs={24} md={6}>
                     <Form.Item label="First Name">
                       <Input
-                        value={watch(`children.${index}.firstname`) || ''}
+                        value={watch(`children.${index}.firstName`) || ''}
                         onChange={(e) => {
-                          setValue(`children.${index}.firstname`, e.target.value)
-                          if (errors.children?.[index]?.firstname) {
-                            clearErrors(`children.${index}.firstname`)
+                          setValue(`children.${index}.firstName`, e.target.value)
+                          if (errors.children?.[index]?.firstName) {
+                            clearErrors(`children.${index}.firstName`)
                           }
                         }}
                         placeholder="Child's first name"
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item label="Middle Name">
+                      <Input
+                        value={watch(`children.${index}.middleName`) || ''}
+                        onChange={(e) => {
+                          setValue(`children.${index}.middleName`, e.target.value)
+                          if (errors.children?.[index]?.middleName) {
+                            clearErrors(`children.${index}.middleName`)
+                          }
+                        }}
+                        placeholder="Child's middle name"
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item label="Last Name">
+                      <Input
+                        value={watch(`children.${index}.lastName`) || ''}
+                        onChange={(e) => {
+                          setValue(`children.${index}.lastName`, e.target.value)
+                          if (errors.children?.[index]?.lastName) {
+                            clearErrors(`children.${index}.lastName`)
+                          }
+                        }}
+                        placeholder="Child's last name"
                       />
                     </Form.Item>
                   </Col>
@@ -1027,14 +1157,15 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={6}>
+                  <Form.Item>
                     <Button
                       type="text"
                       danger
                       icon={<DeleteOutlined />}
                       onClick={() => removeChild(index)}
                     >
-                      Remove
                     </Button>
+                    </Form.Item>
                   </Col>
                 </Row>
               </Card>
@@ -1044,9 +1175,9 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
       </Card>
 
       {/* Siblings Section */}
-      <Card title="Siblings" extra={
+      <Card title="Siblings/Brother/sister" extra={
         <Button type="primary" icon={<PlusOutlined />} onClick={addSibling}>
-          Add Sibling
+          Add Siblings/Brother/sister
         </Button>
       }>
         {siblingsFields.length === 0 ? (
@@ -1057,16 +1188,44 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
               <Card key={field.id} size="small">
                 <Row gutter={[16, 16]} align="bottom">
                   <Col xs={24} md={6}>
-                    <Form.Item label="Name">
+                    <Form.Item label="First Name">
                       <Input
-                        value={watch(`siblings.${index}.name`) || ''}
+                        value={watch(`siblings.${index}.firstName`) || ''}
                         onChange={(e) => {
-                          setValue(`siblings.${index}.name`, e.target.value)
-                          if (errors.siblings?.[index]?.name) {
-                            clearErrors(`siblings.${index}.name`)
+                          setValue(`siblings.${index}.firstName`, e.target.value)
+                          if (errors.siblings?.[index]?.firstName) {
+                            clearErrors(`siblings.${index}.firstName`)
                           }
                         }}
-                        placeholder="Sibling's name"
+                        placeholder="Sibling's first name"
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item label="Middle Name">
+                      <Input
+                        value={watch(`siblings.${index}.middleName`) || ''}
+                        onChange={(e) => {
+                          setValue(`siblings.${index}.middleName`, e.target.value)
+                          if (errors.siblings?.[index]?.middleName) {
+                            clearErrors(`siblings.${index}.middleName`)
+                          }
+                        }}
+                        placeholder="Sibling's middle name"
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item label="Last Name">
+                      <Input
+                        value={watch(`siblings.${index}.lastName`) || ''}
+                        onChange={(e) => {
+                          setValue(`siblings.${index}.lastName`, e.target.value)
+                          if (errors.siblings?.[index]?.lastName) {
+                            clearErrors(`siblings.${index}.lastName`)
+                          }
+                        }}
+                        placeholder="Sibling's last name"
                       />
                     </Form.Item>
                   </Col>
@@ -1105,14 +1264,15 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={6}>
+                  <Form.Item>
                     <Button
                       type="text"
                       danger
                       icon={<DeleteOutlined />}
                       onClick={() => removeSibling(index)}
                     >
-                      Remove
                     </Button>
+                    </Form.Item>
                   </Col>
                 </Row>
               </Card>
@@ -1139,79 +1299,171 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         <Card title="Review Your Information">
           <Row gutter={[24, 16]}>
             <Col xs={24} md={12}>
-              <Space direction="vertical" size="small">
-                <Typography.Text strong>Name:</Typography.Text>
-                <Typography.Text>{formData.firstname} {formData.middlename} {formData.lastname}</Typography.Text>
-
-                <Typography.Text strong>Gender:</Typography.Text>
-                <Typography.Text>{formData.gender}</Typography.Text>
-
-                <Typography.Text strong>Marital Status:</Typography.Text>
-                <Typography.Text>{formData.maritalStatus}</Typography.Text>
-
-                <Typography.Text strong>18 Plus:</Typography.Text>
-                <Typography.Text>{formData.is18Plus ? 'Yes' : 'No'}</Typography.Text>
-
-                <Typography.Text strong>Date of Birth:</Typography.Text>
-                <Typography.Text>{formData.dob || 'Not specified'}</Typography.Text>
-
-                {formData.maritalStatus === 'married' && formData.spouseName && (
-                  <>
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <Row>
+                  <Col md={6}>
+                    <Typography.Text strong>Name:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                    <Typography.Text>{formData.firstname} {formData.middlename} {formData.lastname}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Gender:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.gender}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Marital Status:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.maritalStatus}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>18 Plus:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.is18Plus ? 'Yes' : 'No'}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Date of Birth:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.dob || 'Not specified'}</Typography.Text>
+                  </Col>
+                </Row>
+                {formData.maritalStatus === 'married' && formData.spouseFirstName && (
+                  <Row>
+                    <Col md={6}>
                     <Typography.Text strong>Spouse Name:</Typography.Text>
-                    <Typography.Text>{formData.spouseName}</Typography.Text>
-                  </>
-                )}
-
-                <Typography.Text strong>Phone:</Typography.Text>
-                <Typography.Text>{formData.phone}</Typography.Text>
-
-                <Typography.Text strong>Email:</Typography.Text>
-                <Typography.Text>{formData.email || 'Not specified'}</Typography.Text>
-
-                <Typography.Text strong>Gaam:</Typography.Text>
-                <Typography.Text>{formData.gaam}</Typography.Text>
-
-                <Typography.Text strong>Current Address:</Typography.Text>
-                <Typography.Text>{formData.currentAddress}</Typography.Text>
-              </Space>
+                    </Col>
+                    <Col md={18}>
+                    <Typography.Text>{formData.spouseFirstName} {formData.spouseMiddleName} {formData.spouseLastName}</Typography.Text>
+                    </Col>
+                  </Row>
+                  )}  
+                  <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Phone:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.countryCode || '+1'} {formData.phone}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Email:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.email || 'Not specified'}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Gaam:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.gaam}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Current Address:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.currentAddress}</Typography.Text>
+                  </Col>
+                </Row>
+                </Space>
             </Col>
             <Col xs={24} md={12}>
-              <Space direction="vertical" size="small">
-                <Typography.Text strong>Country:</Typography.Text>
-                <Typography.Text>{selectedCountry?.name || 'Not specified'}</Typography.Text>
-
-                <Typography.Text strong>State:</Typography.Text>
-                <Typography.Text>{selectedState?.name || 'Not specified'}</Typography.Text>
-
-                <Typography.Text strong>City:</Typography.Text>
-                <Typography.Text>{formData.cityId || 'Not specified'}</Typography.Text>
-
-                <Typography.Text strong>Education:</Typography.Text>
-                <Typography.Text>{selectedEducation?.name || 'Not specified'}</Typography.Text>
-
+              <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Country:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{selectedCountry?.name || 'Not specified'}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>State:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{selectedState?.name || 'Not specified'}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>City:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.cityId || 'Not specified'}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Education:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{selectedEducation?.name || 'Not specified'}</Typography.Text>
+                  </Col>
+                </Row>
                 {selectedEducation?.name?.toLowerCase().includes('other') && formData.otherEducation && (
-                  <>
-                    <Typography.Text strong>Other Education:</Typography.Text>
-                    <Typography.Text>{formData.otherEducation}</Typography.Text>
-                  </>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Other Education:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.otherEducation}</Typography.Text>
+                  </Col>
+                </Row>
                 )}
+                {/* <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Educational Level:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.educationalLevel || 'Not specified'}</Typography.Text>
+                  </Col>
+                </Row>                 */}
 
-                <Typography.Text strong>Educational Level:</Typography.Text>
-                <Typography.Text>{formData.educationalLevel || 'Not specified'}</Typography.Text>
-
-                <Typography.Text strong>Profession:</Typography.Text>
-                <Typography.Text>{selectedProfession?.name || 'Not specified'}</Typography.Text>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Profession:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{selectedProfession?.name || 'Not specified'}</Typography.Text>
+                  </Col>
+                </Row>
 
                 {selectedProfession?.name?.toLowerCase().includes('other') && formData.otherProfession && (
-                  <>
-                    <Typography.Text strong>Other Profession:</Typography.Text>
-                    <Typography.Text>{formData.otherProfession}</Typography.Text>
-                  </>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Other Profession:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.otherProfession}</Typography.Text>
+                  </Col>
+                </Row>
                 )}
 
+
                 {formData.additionalProfessions && formData.additionalProfessions.length > 0 && (
-                  <>
+                   <Row>
+                    <Col md={6}>
                     <Typography.Text strong>Additional Professions:</Typography.Text>
+                    </Col>
+                    <Col md={18}>
                     {formData.additionalProfessions.map((prof, index) => {
                       const selectedProf = masterData.professions?.find(p => p.id === prof.professionId)
                       return (
@@ -1223,14 +1475,26 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                         </Typography.Text>
                       )
                     })}
-                  </>
+                    </Col>
+                  </Row>
                 )}
 
-                <Typography.Text strong>Children:</Typography.Text>
-                <Typography.Text>{formData.children?.length || 0}</Typography.Text>
-
-                <Typography.Text strong>Siblings:</Typography.Text>
-                <Typography.Text>{formData.siblings?.length || 0}</Typography.Text>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Children:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.children?.length || 0}</Typography.Text>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                  <Typography.Text strong>Siblings/Brother/sister:</Typography.Text>
+                  </Col>
+                  <Col md={18}>
+                  <Typography.Text>{formData.siblings?.length || 0}</Typography.Text>
+                  </Col>
+                </Row>
               </Space>
             </Col>
           </Row>

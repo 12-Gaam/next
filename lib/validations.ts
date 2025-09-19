@@ -4,9 +4,15 @@ export const contactFormSchema = z.object({
   firstname: z.string().min(1, "First name is required"),
   middlename: z.string().optional(),
   lastname: z.string().optional().default("Patel"),
-  spouseName: z.string().optional(),
-  fatherName: z.string().min(1, "Father's name is required"),
-  motherName: z.string().min(1, "Mother's name is required"),
+  spouseFirstName: z.string().optional(),
+  spouseMiddleName: z.string().optional(),
+  spouseLastName: z.string().optional(),
+  fatherFirstName: z.string().optional().default(""),
+  fatherMiddleName: z.string().optional(),
+  fatherLastName: z.string().optional(),
+  motherFirstName: z.string().optional().default(""),
+  motherMiddleName: z.string().optional(),
+  motherLastName: z.string().optional(),
   gender: z.string().min(1, "Gender is required"),
   maritalStatus: z.string().min(1, "Marital status is required"),
   is18Plus: z.boolean().optional(),
@@ -15,7 +21,8 @@ export const contactFormSchema = z.object({
   countryId: z.string().min(1, "Country is required"),
   stateId: z.string().min(1, "State is required"),
   cityId: z.string().optional().or(z.literal("")),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  phone: z.string().min(8, "Phone number must be at least 8 digits").max(12, "Phone number must be at most 12 digits"),
+  countryCode: z.string().optional().default("+1"),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   dob: z.string().optional().or(z.literal("")),
   educationId: z.string().optional().or(z.literal("")),
@@ -37,12 +44,16 @@ export const contactFormSchema = z.object({
   twitter: z.string().optional(),
   snapchat: z.string().optional(),
   children: z.array(z.object({
-    firstname: z.string().min(1, "Child first name is required"),
+    firstName: z.string().optional().default(""),
+    middleName: z.string().optional(),
+    lastName: z.string().optional(),
     gender: z.string().min(1, "Gender is required"),
     age: z.number().min(0).max(120, "Age must be between 0 and 120")
   })).default([]),
   siblings: z.array(z.object({
-    name: z.string().min(1, "Sibling name is required"),
+    firstName: z.string().optional().default(""),
+    middleName: z.string().optional(),
+    lastName: z.string().optional(),
     gender: z.string().min(1, "Gender is required"),
     age: z.number().min(0).max(120, "Age must be between 0 and 120")
   })).default([])
@@ -76,12 +87,12 @@ export const contactFormSchema = z.object({
     }
   });
 
-  // Check if spouse name is required when marital status is married
-  if (data.maritalStatus === 'married' && (!data.spouseName || data.spouseName.trim().length === 0)) {
+  // Check if spouse first name is required when marital status is married
+  if (data.maritalStatus === 'married' && (!data.spouseFirstName || data.spouseFirstName.trim().length === 0)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Spouse name is required when marital status is married",
-      path: ["spouseName"]
+      message: "Spouse first name is required when marital status is married",
+      path: ["spouseFirstName"]
     });
   }
 });

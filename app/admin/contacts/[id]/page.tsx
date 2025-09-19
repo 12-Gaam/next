@@ -25,6 +25,20 @@ interface Contact {
   firstname: string
   middlename?: string
   lastname?: string
+  // New fields (after migration)
+  spouseFirstName?: string
+  spouseMiddleName?: string
+  spouseLastName?: string
+  fatherFirstName?: string
+  fatherMiddleName?: string
+  fatherLastName?: string
+  motherFirstName?: string
+  motherMiddleName?: string
+  motherLastName?: string
+  maritalStatus?: string
+  is18Plus?: boolean
+  countryCode?: string
+  // Old fields (current database)
   spouseName?: string
   fatherName?: string
   motherName?: string
@@ -209,6 +223,14 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                   <p className="text-gray-900">{contact.gender || '-'}</p>
                 </div>
                 <div>
+                  <label className="text-sm font-medium text-gray-500">Marital Status</label>
+                  <p className="text-gray-900">{contact.maritalStatus || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">18+ Years Old</label>
+                  <p className="text-gray-900">{contact.is18Plus ? 'Yes' : 'No'}</p>
+                </div>
+                <div>
                   <label className="text-sm font-medium text-gray-500">Date of Birth</label>
                   <p className="text-gray-900">
                     {contact.dob ? new Date(contact.dob).toLocaleDateString() : '-'}
@@ -243,7 +265,9 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                   <Phone className="h-4 w-4 text-gray-400" />
                   <div>
                     <label className="text-sm font-medium text-gray-500">Phone</label>
-                    <p className="text-gray-900 font-medium">{contact.phone}</p>
+                    <p className="text-gray-900 font-medium">
+                      {contact.countryCode || '+1'} {contact.phone}
+                    </p>
                   </div>
                 </div>
                 {contact.website && (
@@ -272,26 +296,58 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Spouse Name</label>
-                  <p className="text-gray-900">{contact.spouseName || '-'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Father's Name</label>
-                  <p className="text-gray-900">{contact.fatherName || '-'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Mother's Name</label>
-                  <p className="text-gray-900">{contact.motherName || '-'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Children</label>
-                  <p className="text-gray-900 font-medium">{contact.children.length}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Siblings</label>
-                  <p className="text-gray-900 font-medium">{contact.siblings.length}</p>
+              <div className="space-y-4">
+                {/* Spouse Information - Handle both old and new fields */}
+                {(contact.spouseFirstName || contact.spouseMiddleName || contact.spouseLastName || contact.spouseName) && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Spouse Name</label>
+                    <p className="text-gray-900">
+                      {contact.spouseFirstName || contact.spouseMiddleName || contact.spouseLastName
+                        ? [contact.spouseFirstName, contact.spouseMiddleName, contact.spouseLastName]
+                            .filter(Boolean)
+                            .join(' ')
+                        : contact.spouseName || '-'}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Father Information - Handle both old and new fields */}
+                {(contact.fatherFirstName || contact.fatherMiddleName || contact.fatherLastName || contact.fatherName) && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Father's Name</label>
+                    <p className="text-gray-900">
+                      {contact.fatherFirstName || contact.fatherMiddleName || contact.fatherLastName
+                        ? [contact.fatherFirstName, contact.fatherMiddleName, contact.fatherLastName]
+                            .filter(Boolean)
+                            .join(' ')
+                        : contact.fatherName || '-'}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Mother Information - Handle both old and new fields */}
+                {(contact.motherFirstName || contact.motherMiddleName || contact.motherLastName || contact.motherName) && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Mother's Name</label>
+                    <p className="text-gray-900">
+                      {contact.motherFirstName || contact.motherMiddleName || contact.motherLastName
+                        ? [contact.motherFirstName, contact.motherMiddleName, contact.motherLastName]
+                            .filter(Boolean)
+                            .join(' ')
+                        : contact.motherName || '-'}
+                    </p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Children</label>
+                    <p className="text-gray-900 font-medium">{contact.children.length}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Siblings</label>
+                    <p className="text-gray-900 font-medium">{contact.siblings.length}</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -384,7 +440,13 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                     <div key={index} className="bg-gray-50 p-3 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium text-gray-900">{child.firstname}</p>
+                          <p className="font-medium text-gray-900">
+                            {child.firstName || child.middleName || child.lastName
+                              ? [child.firstName || child.firstname, child.middleName, child.lastName]
+                                  .filter(Boolean)
+                                  .join(' ')
+                              : child.firstname || 'Unnamed'}
+                          </p>
                           <p className="text-sm text-gray-600">
                             {child.gender} • Age {child.age}
                           </p>
@@ -403,7 +465,7 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
               <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
                 <CardTitle className="flex items-center text-green-800">
                   <Users className="h-5 w-5 mr-2" />
-                  Siblings ({contact.siblings.length})
+                  Siblings/Brother/sister ({contact.siblings.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -412,7 +474,13 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                     <div key={index} className="bg-gray-50 p-3 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium text-gray-900">{sibling.name}</p>
+                          <p className="font-medium text-gray-900">
+                            {sibling.firstName || sibling.middleName || sibling.lastName
+                              ? [sibling.firstName, sibling.middleName, sibling.lastName]
+                                  .filter(Boolean)
+                                  .join(' ')
+                              : sibling.name || 'Unnamed'}
+                          </p>
                           <p className="text-sm text-gray-600">
                             {sibling.gender} • Age {sibling.age}
                           </p>
