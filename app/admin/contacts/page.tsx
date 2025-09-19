@@ -318,7 +318,7 @@ export default function AdminContactsPage() {
                         <td className="py-3 px-4">
                           <div className="text-sm">
                             <div>Children: {contact.children.length}</div>
-                            <div>Siblings: {contact.siblings.length}</div>
+                            <div>Siblings/Brother/sister: {contact.siblings.length}</div>
                           </div>
                         </td>
                         <td className="py-3 px-4">

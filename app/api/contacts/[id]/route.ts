@@ -67,18 +67,27 @@ export async function PUT(
           firstname: validatedData.firstname,
           middlename: validatedData.middlename,
           lastname: validatedData.lastname,
-          spouseName: validatedData.spouseName,
-          fatherName: validatedData.fatherName,
-          motherName: validatedData.motherName,
+          spouseFirstName: validatedData.spouseFirstName,
+          spouseMiddleName: validatedData.spouseMiddleName,
+          spouseLastName: validatedData.spouseLastName,
+          fatherFirstName: validatedData.fatherFirstName,
+          fatherMiddleName: validatedData.fatherMiddleName,
+          fatherLastName: validatedData.fatherLastName,
+          motherFirstName: validatedData.motherFirstName,
+          motherMiddleName: validatedData.motherMiddleName,
+          motherLastName: validatedData.motherLastName,
           gender: validatedData.gender as any,
+          maritalStatus: validatedData.maritalStatus,
+          is18Plus: validatedData.is18Plus,
           gaam: validatedData.gaam,
           currentAddress: validatedData.currentAddress,
-          country: validatedData.countryId ? { connect: { id: validatedData.countryId } } : { disconnect: true },
-          state: validatedData.stateId ? { connect: { id: validatedData.stateId } } : { disconnect: true },
-          city: validatedData.cityId ? { connect: { id: validatedData.cityId } } : { disconnect: true },
+          countryId: validatedData.countryId,
+          stateId: validatedData.stateId,
+          cityId: validatedData.cityId,
           phone: validatedData.phone,
+          countryCode: validatedData.countryCode,
           email: validatedData.email,
-          dob: new Date(validatedData.dob || ''),
+          dob: validatedData.dob ? new Date(validatedData.dob) : null,
           educationId: validatedData.educationId,
           otherEducation: validatedData.otherEducation,
           professionId: validatedData.professionId,
@@ -88,14 +97,20 @@ export async function PUT(
           familyPhoto: validatedData.familyPhoto,
           children: {
             create: validatedData.children.map(child => ({
-              ...child,
-              gender: child.gender as any
+              firstName: child.firstName || '',
+              middleName: child.middleName,
+              lastName: child.lastName,
+              gender: child.gender as any,
+              age: child.age
             }))
           },
           siblings: {
             create: validatedData.siblings.map(sibling => ({
-              ...sibling,
-              gender: sibling.gender as any
+              firstName: sibling.firstName || '',
+              middleName: sibling.middleName,
+              lastName: sibling.lastName,
+              gender: sibling.gender as any,
+              age: sibling.age
             }))
           }
         } as any,

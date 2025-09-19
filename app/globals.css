@@ -67,3 +67,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+.upload_photo_box .ant-upload-select {
+  width: 100% !important;
+  height: 200px !important;
+}

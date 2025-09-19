@@ -1,70 +1,65 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-// UserRole and Gender are now strings since SQLite doesn't support enums
-
 model User {
-  id       String   @id @default(cuid())
-  username String   @unique
-  password String
-  role     String   @default("user")
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      String   @default("user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model CountryMaster {
-  id      String @id @default(cuid())
-  name    String @unique
-  states  StateMaster[]
-  contacts Contact[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String        @id @default(cuid())
+  name      String        @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  contacts  Contact[]
+  states    StateMaster[]
 }
 
 model StateMaster {
   id        String        @id @default(cuid())
   name      String
   countryId String
-  country   CountryMaster @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  cities    CityMaster[]
-  contacts  Contact[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  cities    CityMaster[]
+  contacts  Contact[]
+  country   CountryMaster @relation(fields: [countryId], references: [id], onDelete: Cascade)
 }
 
 model CityMaster {
-  id        String        @id @default(cuid())
+  id        String      @id @default(cuid())
   name      String
   stateId   String
-  state     StateMaster   @relation(fields: [stateId], references: [id], onDelete: Cascade)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  state     StateMaster @relation(fields: [stateId], references: [id], onDelete: Cascade)
 }
 
 model EducationMaster {
-  id      String @id @default(cuid())
-  name    String @unique
-  contacts Contact[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  contacts  Contact[]
 }
 
 model ProfessionMaster {
-  id      String @id @default(cuid())
-  name    String @unique
-  contacts Contact[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  contacts  Contact[]
 }
 
 model Contact {
@@ -72,10 +67,18 @@ model Contact {
   firstname        String
   middlename       String?
   lastname         String?            @default("Patel")
-  spouseName       String?
-  fatherName       String
-  motherName       String
+  spouseFirstName  String?
+  spouseMiddleName String?
+  spouseLastName   String?
+  fatherFirstName  String?           @default("")
+  fatherMiddleName String?
+  fatherLastName   String?
+  motherFirstName  String?           @default("")
+  motherMiddleName String?
+  motherLastName   String?
   gender           String
+  maritalStatus   String?
+  is18Plus        Boolean?           @default(false)
   gaam             String
   currentAddress   String
   countryId        String?
@@ -84,8 +87,9 @@ model Contact {
   state            StateMaster?      @relation(fields: [stateId], references: [id])
   cityId           String?
   phone            String            @unique
-  email            String            @unique
-  dob              DateTime
+  countryCode      String?           @default("+1")
+  email            String?           @unique
+  dob              DateTime?
   educationId      String?
   education        EducationMaster?  @relation(fields: [educationId], references: [id])
   otherEducation   String?
@@ -111,7 +115,9 @@ model ContactChild {
   id         String  @id @default(cuid())
   contactId  String
   contact    Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  firstname  String
+  firstName  String?  @default("")
+  middleName String?
+  lastName   String?
   gender     String
   age        Int
   createdAt  DateTime @default(now())
@@ -122,7 +128,9 @@ model ContactSibling {
   id        String  @id @default(cuid())
   contactId String
   contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  name      String
+  firstName String?  @default("")
+  middleName String?
+  lastName  String?
   gender    String
   age       Int
   createdAt DateTime @default(now())
