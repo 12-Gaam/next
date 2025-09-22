@@ -19,6 +19,7 @@ import {
   Home
 } from 'lucide-react'
 import Link from 'next/link'
+import FooterPage from '@/components/common/FooterPage'
 
 interface Contact {
   id: string
@@ -158,14 +159,14 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-primary shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Contact Details</h1>
-                <p className="text-gray-600">Viewing contact information</p>
+                <h1 className="text-2xl font-bold text-white">Contact Details</h1>
+                <p className="text-white/80">Viewing contact information</p>
               </div>
             </div>
             <div className="flex space-x-3">
@@ -183,11 +184,9 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
               </Button> */}
-              <Link href="/admin/contacts">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+              <Link href="/admin/contacts" className='bg-secondary hover:bg-secondary/90 text-white px-4 py-3 rounded-lg flex items-center gap-2'>
+                  <ArrowLeft className="h-4 w-4" />
                   Back to Contacts
-                </Button>
               </Link>
             </div>
           </div>
@@ -557,6 +556,8 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
           <p>Contact created on {new Date(contact.createdAt).toLocaleDateString()}</p>
         </div>
       </main>
+
+      <FooterPage />
     </div>
   )
 }
