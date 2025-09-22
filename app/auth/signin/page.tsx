@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Building2, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function SignInPage() {
   const [username, setUsername] = useState('')
@@ -48,12 +48,9 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-secondary/10 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Building2 className="h-12 w-12 text-blue-600" />
-          </div>
           <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
           <p className="text-gray-600 mt-2">Sign in to your 12Gaam account</p>
         </div>
@@ -111,7 +108,7 @@ export default function SignInPage() {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full bg-secondary hover:bg-secondary/90"
                 disabled={isLoading}
               >
                 {isLoading ? 'Signing In...' : 'Sign In'}

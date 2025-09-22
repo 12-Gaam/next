@@ -7,8 +7,11 @@ import { NextAuthProvider } from '@/components/providers/NextAuthProvider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: '12Gaam - Contact Management System',
-  description: 'A comprehensive contact management system for the 12Gaam community',
+  title: '12Gaam',
+  description: '12Gaam',
+  icons: {
+    icon: '/image/favicon.png',
+  },
 }
 
 export default function RootLayout({
