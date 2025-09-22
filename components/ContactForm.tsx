@@ -23,7 +23,7 @@ import {
   Image,
   Flex
 } from 'antd'
-import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, CheckOutlined, UploadOutlined, InboxOutlined } from '@ant-design/icons'
+import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, CheckOutlined, UploadOutlined, InboxOutlined, FilePdfOutlined } from '@ant-design/icons'
 import csc from 'countries-states-cities'
 import dayjs from 'dayjs'
 import { countryCodes, countryCodeMap } from '@/lib/country-codes'
@@ -485,7 +485,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             </Col>
           </>
         )}
-     
+
 
       </Row>
 
@@ -525,7 +525,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
       </Row>
       <Row gutter={[16, 16]}>
-      <Col xs={24} md={6}>
+        <Col xs={24} md={6}>
           <Form.Item
             label="Mother's First Name"
             required
@@ -557,7 +557,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             />
           </Form.Item>
         </Col>
-       
+
       </Row>
     </Space>
   )
@@ -711,7 +711,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
             </Input.Group>
           </Form.Item>
         </Col>
-     
+
       </Row>
 
 
@@ -887,181 +887,220 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
       <Divider orientation="left">
         <Typography.Title level={5}>Photos</Typography.Title>
       </Divider>
-
       <Row gutter={[16, 16]}>
         <Col xs={24} md={12}>
           <Card title="Profile Photo">
-          <Form.Item className='upload_photo_box'>
-            <Upload
-              name="profilePhoto"
-              listType="picture-card"
-              showUploadList={false}
-              beforeUpload={(file) => {
-                const isImage = file.type.startsWith('image/');
-                if (!isImage) {
-                  message.error('You can only upload image files!');
-                  return false;
-                }
-                const isLt5M = file.size / 1024 / 1024 < 5;
-                if (!isLt5M) {
-                  message.error('Image must be smaller than 5MB!');
-                  return false;
-                }
-                return true; // Allow upload to proceed
-              }}
-              customRequest={async ({ file, onSuccess, onError }) => {
-                try {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  formData.append('folder', 'profile-photos');
+            <Form.Item className="upload_photo_box">
+              <Upload
+                name="profilePhoto"
+                listType="picture-card"
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  const isAllowed =
+                    file.type.startsWith("image/") || file.type === "application/pdf";
 
-                  const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData,
-                  });
-
-                  const result = await response.json();
-
-                  if (response.ok) {
-                    setUploadedProfilePic(result.url);
-                    handleFieldChange('profilePic', result.url);
-                    onSuccess?.(result);
-                    message.success(`${(file as File).name} uploaded successfully`);
-                  } else {
-                    throw new Error(result.error || 'Upload failed');
+                  if (!isAllowed) {
+                    message.error("You can only upload image or PDF files!");
+                    return Upload.LIST_IGNORE;
                   }
-                } catch (error) {
-                  console.error('Upload error:', error);
-                  onError?.(error as Error);
-                  message.error(`${(file as File).name} upload failed`);
-                }
-              }}
-            >
-              <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                {uploadedProfilePic && (
-                  <img
-                    src={uploadedProfilePic}
-                    alt="profile"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      zIndex: 1
-                    }}
-                  />
-                )}
-                {!uploadedProfilePic && (
-                  <div style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    zIndex: 0
-                  }}>
-                    <InboxOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
-                    <div style={{ marginTop: 8 }}>Upload Profile Photo</div>
-                  </div>
-                )}
-              </div>
-            </Upload>
-          </Form.Item>
+
+                  const isLt15M = file.size / 1024 / 1024 < 15;
+                  if (!isLt15M) {
+                    message.error("File must be smaller than 15MB!");
+                    return Upload.LIST_IGNORE;
+                  }
+                  return true;
+                }}
+                customRequest={async ({ file, onSuccess, onError }) => {
+                  try {
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("folder", "profile-photos");
+
+                    const response = await fetch("/api/upload", {
+                      method: "POST",
+                      body: formData,
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                      setUploadedProfilePic(result.url);
+                      handleFieldChange("profilePic", result.url);
+                      onSuccess?.(result);
+                      message.success(`${(file as File).name} uploaded successfully`);
+                    } else {
+                      throw new Error(result.error || "Upload failed");
+                    }
+                  } catch (error) {
+                    console.error("Upload error:", error);
+                    onError?.(error as Error);
+                    message.error(`${(file as File).name} upload failed`);
+                  }
+                }}
+              >
+                <div style={{ width: "100%", height: "100%", position: "relative" }}>
+                  {uploadedProfilePic && uploadedProfilePic.endsWith(".pdf") ? (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#f5f5f5",
+                        border: "1px solid #d9d9d9",
+                        borderRadius: 4,
+                      }}
+                    >
+                      <FilePdfOutlined style={{ fontSize: "40px", color: "red" }} />
+                    </div>
+                  ) : uploadedProfilePic ? (
+                    <img
+                      src={uploadedProfilePic}
+                      alt="profile"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        zIndex: 1,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        zIndex: 0,
+                      }}
+                    >
+                      <InboxOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
+                      <div style={{ marginTop: 8 }}>Upload Profile Photo / PDF</div>
+                    </div>
+                  )}
+                </div>
+              </Upload>
+            </Form.Item>
           </Card>
         </Col>
+
         <Col xs={24} md={12}>
           <Card title="Family Photo">
-          <Form.Item className='upload_photo_box'>
-            <Upload
-              name="familyPhoto"
-              listType="picture-card"
-              showUploadList={false}
-              beforeUpload={(file) => {
-                const isImage = file.type.startsWith('image/');
-                if (!isImage) {
-                  message.error('You can only upload image files!');
-                  return false;
-                }
-                const isLt5M = file.size / 1024 / 1024 < 5;
-                if (!isLt5M) {
-                  message.error('Image must be smaller than 5MB!');
-                  return false;
-                }
-                return true; // Allow upload to proceed
-              }}
-              customRequest={async ({ file, onSuccess, onError }) => {
-                try {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  formData.append('folder', 'family-photos');
+            <Form.Item className="upload_photo_box">
+              <Upload
+                name="familyPhoto"
+                listType="picture-card"
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  const isAllowed =
+                    file.type.startsWith("image/") || file.type === "application/pdf";
 
-                  const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData,
-                  });
-
-                  const result = await response.json();
-
-                  if (response.ok) {
-                    setUploadedFamilyPhoto(result.url);
-                    handleFieldChange('familyPhoto', result.url);
-                    onSuccess?.(result);
-                    message.success(`${(file as File).name} uploaded successfully`);
-                  } else {
-                    throw new Error(result.error || 'Upload failed');
+                  if (!isAllowed) {
+                    message.error("You can only upload image or PDF files!");
+                    return Upload.LIST_IGNORE;
                   }
-                } catch (error) {
-                  console.error('Upload error:', error);
-                  onError?.(error as Error);
-                  message.error(`${(file as File).name} upload failed`);
-                }
-              }}
-            >
-              <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                {uploadedFamilyPhoto && (
-                  <img
-                    src={uploadedFamilyPhoto}
-                    alt="family"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      zIndex: 1
-                    }}
-                  />
-                )}
-                {!uploadedFamilyPhoto && (
-                  <div style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    zIndex: 0
-                  }}>
-                    <InboxOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
-                    <div style={{ marginTop: 8 }}>Upload Family Photo</div>
-                  </div>
-                )}
-              </div>
-            </Upload>
-          </Form.Item>
+
+                  const isLt15M = file.size / 1024 / 1024 < 15;
+                  if (!isLt15M) {
+                    message.error("File must be smaller than 15MB!");
+                    return Upload.LIST_IGNORE;
+                  }
+                  return true;
+                }}
+                customRequest={async ({ file, onSuccess, onError }) => {
+                  try {
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("folder", "family-photos");
+
+                    const response = await fetch("/api/upload", {
+                      method: "POST",
+                      body: formData,
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                      setUploadedFamilyPhoto(result.url);
+                      handleFieldChange("familyPhoto", result.url);
+                      onSuccess?.(result);
+                      message.success(`${(file as File).name} uploaded successfully`);
+                    } else {
+                      throw new Error(result.error || "Upload failed");
+                    }
+                  } catch (error) {
+                    console.error("Upload error:", error);
+                    onError?.(error as Error);
+                    message.error(`${(file as File).name} upload failed`);
+                  }
+                }}
+              >
+                <div style={{ width: "100%", height: "100%", position: "relative" }}>
+                  {uploadedFamilyPhoto && uploadedFamilyPhoto.endsWith(".pdf") ? (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#f5f5f5",
+                        border: "1px solid #d9d9d9",
+                        borderRadius: 4,
+                      }}
+                    >
+                      <FilePdfOutlined style={{ fontSize: "40px", color: "red" }} />
+                    </div>
+                  ) : uploadedFamilyPhoto ? (
+                    <img
+                      src={uploadedFamilyPhoto}
+                      alt="family"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        zIndex: 1,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        zIndex: 0,
+                      }}
+                    >
+                      <InboxOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
+                      <div style={{ marginTop: 8 }}>Upload Family Photo / PDF</div>
+                    </div>
+                  )}
+                </div>
+              </Upload>
+            </Form.Item>
           </Card>
         </Col>
       </Row>
+
     </Space>
   )
 
@@ -1157,14 +1196,14 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={6}>
-                  <Form.Item>
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => removeChild(index)}
-                    >
-                    </Button>
+                    <Form.Item>
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => removeChild(index)}
+                      >
+                      </Button>
                     </Form.Item>
                   </Col>
                 </Row>
@@ -1264,14 +1303,14 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={6}>
-                  <Form.Item>
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => removeSibling(index)}
-                    >
-                    </Button>
+                    <Form.Item>
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => removeSibling(index)}
+                      >
+                      </Button>
                     </Form.Item>
                   </Col>
                 </Row>
@@ -1299,7 +1338,7 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
         <Card title="Review Your Information">
           <Row gutter={[24, 16]}>
             <Col xs={24} md={12}>
-                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+              <Space direction="vertical" size="small" style={{ width: '100%' }}>
                 <Row>
                   <Col md={6}>
                     <Typography.Text strong>Name:</Typography.Text>
@@ -1310,123 +1349,123 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Gender:</Typography.Text>
+                    <Typography.Text strong>Gender:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.gender}</Typography.Text>
+                    <Typography.Text>{formData.gender}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Marital Status:</Typography.Text>
+                    <Typography.Text strong>Marital Status:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.maritalStatus}</Typography.Text>
+                    <Typography.Text>{formData.maritalStatus}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>18 Plus:</Typography.Text>
+                    <Typography.Text strong>18 Plus:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.is18Plus ? 'Yes' : 'No'}</Typography.Text>
+                    <Typography.Text>{formData.is18Plus ? 'Yes' : 'No'}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Date of Birth:</Typography.Text>
+                    <Typography.Text strong>Date of Birth:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.dob || 'Not specified'}</Typography.Text>
+                    <Typography.Text>{formData.dob || 'Not specified'}</Typography.Text>
                   </Col>
                 </Row>
                 {formData.maritalStatus === 'married' && formData.spouseFirstName && (
                   <Row>
                     <Col md={6}>
-                    <Typography.Text strong>Spouse Name:</Typography.Text>
+                      <Typography.Text strong>Spouse Name:</Typography.Text>
                     </Col>
                     <Col md={18}>
-                    <Typography.Text>{formData.spouseFirstName} {formData.spouseMiddleName} {formData.spouseLastName}</Typography.Text>
+                      <Typography.Text>{formData.spouseFirstName} {formData.spouseMiddleName} {formData.spouseLastName}</Typography.Text>
                     </Col>
                   </Row>
-                  )}  
-                  <Row>
+                )}
+                <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Phone:</Typography.Text>
+                    <Typography.Text strong>Phone:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.countryCode || '+1'} {formData.phone}</Typography.Text>
+                    <Typography.Text>{formData.countryCode || '+1'} {formData.phone}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Email:</Typography.Text>
+                    <Typography.Text strong>Email:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.email || 'Not specified'}</Typography.Text>
+                    <Typography.Text>{formData.email || 'Not specified'}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Gaam:</Typography.Text>
+                    <Typography.Text strong>Gaam:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.gaam}</Typography.Text>
+                    <Typography.Text>{formData.gaam}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Current Address:</Typography.Text>
+                    <Typography.Text strong>Current Address:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.currentAddress}</Typography.Text>
+                    <Typography.Text>{formData.currentAddress}</Typography.Text>
                   </Col>
                 </Row>
-                </Space>
+              </Space>
             </Col>
             <Col xs={24} md={12}>
               <Space direction="vertical" size="small" style={{ width: '100%' }}>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Country:</Typography.Text>
+                    <Typography.Text strong>Country:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{selectedCountry?.name || 'Not specified'}</Typography.Text>
+                    <Typography.Text>{selectedCountry?.name || 'Not specified'}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>State:</Typography.Text>
+                    <Typography.Text strong>State:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{selectedState?.name || 'Not specified'}</Typography.Text>
+                    <Typography.Text>{selectedState?.name || 'Not specified'}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>City:</Typography.Text>
+                    <Typography.Text strong>City:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.cityId || 'Not specified'}</Typography.Text>
+                    <Typography.Text>{formData.cityId || 'Not specified'}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Education:</Typography.Text>
+                    <Typography.Text strong>Education:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{selectedEducation?.name || 'Not specified'}</Typography.Text>
+                    <Typography.Text>{selectedEducation?.name || 'Not specified'}</Typography.Text>
                   </Col>
                 </Row>
                 {selectedEducation?.name?.toLowerCase().includes('other') && formData.otherEducation && (
-                <Row>
-                  <Col md={6}>
-                  <Typography.Text strong>Other Education:</Typography.Text>
-                  </Col>
-                  <Col md={18}>
-                  <Typography.Text>{formData.otherEducation}</Typography.Text>
-                  </Col>
-                </Row>
+                  <Row>
+                    <Col md={6}>
+                      <Typography.Text strong>Other Education:</Typography.Text>
+                    </Col>
+                    <Col md={18}>
+                      <Typography.Text>{formData.otherEducation}</Typography.Text>
+                    </Col>
+                  </Row>
                 )}
                 {/* <Row>
                   <Col md={6}>
@@ -1439,60 +1478,60 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Profession:</Typography.Text>
+                    <Typography.Text strong>Profession:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{selectedProfession?.name || 'Not specified'}</Typography.Text>
+                    <Typography.Text>{selectedProfession?.name || 'Not specified'}</Typography.Text>
                   </Col>
                 </Row>
 
                 {selectedProfession?.name?.toLowerCase().includes('other') && formData.otherProfession && (
-                <Row>
-                  <Col md={6}>
-                  <Typography.Text strong>Other Profession:</Typography.Text>
-                  </Col>
-                  <Col md={18}>
-                  <Typography.Text>{formData.otherProfession}</Typography.Text>
-                  </Col>
-                </Row>
+                  <Row>
+                    <Col md={6}>
+                      <Typography.Text strong>Other Profession:</Typography.Text>
+                    </Col>
+                    <Col md={18}>
+                      <Typography.Text>{formData.otherProfession}</Typography.Text>
+                    </Col>
+                  </Row>
                 )}
 
 
                 {formData.additionalProfessions && formData.additionalProfessions.length > 0 && (
-                   <Row>
+                  <Row>
                     <Col md={6}>
-                    <Typography.Text strong>Additional Professions:</Typography.Text>
+                      <Typography.Text strong>Additional Professions:</Typography.Text>
                     </Col>
                     <Col md={18}>
-                    {formData.additionalProfessions.map((prof, index) => {
-                      const selectedProf = masterData.professions?.find(p => p.id === prof.professionId)
-                      return (
-                        <Typography.Text key={index} style={{ display: 'block', marginLeft: 16 }}>
-                          {index + 1}. {selectedProf?.name || 'Not specified'}
-                          {selectedProf?.name?.toLowerCase().includes('other') && prof.otherProfession &&
-                            ` (${prof.otherProfession})`
-                          }
-                        </Typography.Text>
-                      )
-                    })}
+                      {formData.additionalProfessions.map((prof, index) => {
+                        const selectedProf = masterData.professions?.find(p => p.id === prof.professionId)
+                        return (
+                          <Typography.Text key={index} style={{ display: 'block', marginLeft: 16 }}>
+                            {index + 1}. {selectedProf?.name || 'Not specified'}
+                            {selectedProf?.name?.toLowerCase().includes('other') && prof.otherProfession &&
+                              ` (${prof.otherProfession})`
+                            }
+                          </Typography.Text>
+                        )
+                      })}
                     </Col>
                   </Row>
                 )}
 
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Children:</Typography.Text>
+                    <Typography.Text strong>Children:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.children?.length || 0}</Typography.Text>
+                    <Typography.Text>{formData.children?.length || 0}</Typography.Text>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                  <Typography.Text strong>Siblings/Brother/sister:</Typography.Text>
+                    <Typography.Text strong>Siblings/Brother/sister:</Typography.Text>
                   </Col>
                   <Col md={18}>
-                  <Typography.Text>{formData.siblings?.length || 0}</Typography.Text>
+                    <Typography.Text>{formData.siblings?.length || 0}</Typography.Text>
                   </Col>
                 </Row>
               </Space>
