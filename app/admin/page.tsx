@@ -103,29 +103,25 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-lg border-b border-gray-200">
+      <header className="bg-primary shadow-lg border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                <Building2 className="h-8 w-8 text-white" />
-              </div>
               <div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="text-2xl font-bold text-white">
                   12Gaam Admin
                 </span>
-                <p className="text-sm text-gray-500">Community Management System</p>
+                <p className="text-sm text-white/80 mb-0">Community Management System</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">Welcome back,</p>
-                <p className="text-sm text-gray-600">{session.user.username}</p>
+                <p className="text-sm font-medium text-white mb-0">Welcome back,</p>
+                <p className="text-sm text-white/80 mb-0">{session.user.username}</p>
               </div>
               <Button
-                variant="outline"
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center space-x-2 border-2 border-gray-200 hover:border-red-500 hover:text-red-600 transition-colors"
+                className="flex items-center bg-secondary hover:bg-secondary/90 text-white"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Sign Out</span>
@@ -138,7 +134,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-primary">
             Admin Dashboard
           </h1>
           <p className="text-gray-600 mt-3 text-lg">

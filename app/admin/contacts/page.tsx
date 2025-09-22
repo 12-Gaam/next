@@ -8,15 +8,14 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   Users, 
-  Building2, 
   Search,
   Eye,
-  Edit,
   Trash2,
-  Plus
+  ArrowLeft
 } from 'lucide-react'
 import Link from 'next/link'
 import { notification } from 'antd'
+import FooterPage from '@/components/common/FooterPage'
 
 interface Contact {
   id: string
@@ -154,16 +153,16 @@ export default function AdminContactsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-primary shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">12Gaam Admin</span>
+              <span className="text-2xl font-bold text-white">12Gaam Admin</span>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/admin">
-                <Button variant="outline">Back to Dashboard</Button>
+              <Link href="/admin" className='bg-secondary hover:bg-secondary/90 text-white px-4 py-3 rounded-lg flex items-center gap-2'>
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
               </Link>
             </div>
           </div>
@@ -173,7 +172,7 @@ export default function AdminContactsPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-primary">
             Contact Management
           </h1>
           <p className="text-gray-600 mt-3 text-lg">
@@ -404,6 +403,7 @@ export default function AdminContactsPage() {
           </CardContent>
         </Card>
       </main>
+      <FooterPage />
     </div>
   )
 }
