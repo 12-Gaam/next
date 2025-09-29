@@ -17,7 +17,7 @@ function HeaderPage() {
             <div className="flex items-center gap-3"> 
               <Link href="/auth/signin" className="bg-transparent hover:bg-white hover:text-primary text-white px-4 py-3 rounded-lg flex items-center gap-2">
               <LogIn size={20} />
-                  Login
+                  Admin Login
               </Link>
               <Link href="/dashboard" className="bg-secondary hover:bg-secondary/90 text-white px-4 py-3 rounded-lg flex items-center gap-2">
               <UsersRound size={20} />
