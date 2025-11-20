@@ -4,16 +4,38 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { contactFormSchema } from '@/lib/validations';
 import { Prisma } from '@prisma/client';
+import { isAdminRole } from '@/lib/rbac';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { searchParams } = new URL(request.url);
+    const ownership = searchParams.get('ownership');
+
+    if (ownership === 'me') {
+      if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const contact = await prisma.contact.findFirst({
+        where: { userId: session.user.id },
+        include: {
+          country: true,
+          state: true,
+          education: true,
+          profession: true,
+          children: true,
+          siblings: true
+        }
+      });
+
+      return NextResponse.json({ contact });
     }
 
-    const { searchParams } = new URL(request.url);
+    if (!session || !isAdminRole(session.user.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
@@ -74,10 +96,24 @@ export async function POST(request: NextRequest) {
   try {
     // Allow anyone to submit contact forms (no authentication required)
     // Only admin users can view contacts
+    const session = await getServerSession(authOptions).catch(() => null);
 
     const body = await request.json();
     
     const validatedData = contactFormSchema.parse(body);
+    if (session?.user?.id) {
+      const existingContact = await prisma.contact.findFirst({
+        where: { userId: session.user.id }
+      });
+
+      if (existingContact) {
+        return NextResponse.json(
+          { error: 'Family profile already exists for this user' },
+          { status: 400 }
+        );
+      }
+    }
+
     const contact = await prisma.contact.create({
       data: {
         firstname: validatedData.firstname,
@@ -117,6 +153,7 @@ export async function POST(request: NextRequest) {
         tiktok: validatedData.tiktok || undefined,
         twitter: validatedData.twitter || undefined,
         snapchat: validatedData.snapchat || undefined,
+        userId: session?.user?.id,
         children: {
           create: validatedData.children.map(child => ({
             firstName: child.firstName || '',

@@ -1,7 +1,14 @@
 // Define enums locally since they're not exported from Prisma client
 export enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user'
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  GAAM_ADMIN = 'GAAM_ADMIN',
+  MEMBER = 'MEMBER'
+}
+
+export enum RegistrationStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED'
 }
 
 export enum Gender {
@@ -12,8 +19,12 @@ export enum Gender {
 
 export interface User {
   id: string;
+  fullName: string;
   username: string;
+  email: string;
   role: UserRole;
+  status: RegistrationStatus;
+  gaamId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -70,6 +81,7 @@ export interface ContactSibling {
 
 export interface Contact {
   id: string;
+  userId?: string | null;
   firstname: string;
   middlename?: string;
   lastname?: string;

@@ -32,6 +32,8 @@ import { countryCodes, countryCodeMap } from '@/lib/country-codes'
 interface ContactFormProps {
   onSuccess: () => void
   onCancel: () => void
+  existingContact?: any
+  initialStep?: number
 }
 
 const steps = [
@@ -43,8 +45,8 @@ const steps = [
 ]
 
 
-export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
-  const [currentStep, setCurrentStep] = useState(1)
+export default function ContactForm({ onSuccess, onCancel, existingContact, initialStep = 1 }: ContactFormProps) {
+  const [currentStep, setCurrentStep] = useState(initialStep)
   const [isLoading, setIsLoading] = useState(false)
   const [showOtherEducation, setShowOtherEducation] = useState(false)
   const [showOtherProfession, setShowOtherProfession] = useState(false)
@@ -75,17 +77,17 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
     mode: 'onChange'
   })
 
-  const { fields: childrenFields, append: appendChild, remove: removeChild } = useFieldArray({
+  const { fields: childrenFields, append: appendChild, remove: removeChild, replace: replaceChildren } = useFieldArray({
     control,
     name: 'children'
   })
 
-  const { fields: siblingsFields, append: appendSibling, remove: removeSibling } = useFieldArray({
+  const { fields: siblingsFields, append: appendSibling, remove: removeSibling, replace: replaceSiblings } = useFieldArray({
     control,
     name: 'siblings'
   })
 
-  const { fields: additionalProfessionsFields, append: appendAdditionalProfession, remove: removeAdditionalProfession } = useFieldArray({
+  const { fields: additionalProfessionsFields, append: appendAdditionalProfession, remove: removeAdditionalProfession, replace: replaceAdditionalProfessions } = useFieldArray({
     control,
     name: 'additionalProfessions'
   })
@@ -95,10 +97,83 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
   const watchedEducationId = watch('educationId')
   const watchedProfessionId = watch('professionId')
   const watchedMaritalStatus = watch('maritalStatus') as unknown as string
+  const isEditMode = Boolean(existingContact?.id)
 
   useEffect(() => {
     fetchMasterData()
   }, [])
+
+  useEffect(() => {
+    if (existingContact) {
+      const baseValues: Partial<ContactFormData> = {
+        firstname: existingContact.firstname || '',
+        middlename: existingContact.middlename || '',
+        lastname: existingContact.lastname || '',
+        spouseFirstName: existingContact.spouseFirstName || '',
+        spouseMiddleName: existingContact.spouseMiddleName || '',
+        spouseLastName: existingContact.spouseLastName || '',
+        fatherFirstName: existingContact.fatherFirstName || '',
+        fatherMiddleName: existingContact.fatherMiddleName || '',
+        fatherLastName: existingContact.fatherLastName || '',
+        motherFirstName: existingContact.motherFirstName || '',
+        motherMiddleName: existingContact.motherMiddleName || '',
+        motherLastName: existingContact.motherLastName || '',
+        gender: existingContact.gender || '',
+        maritalStatus: existingContact.maritalStatus || '',
+        is18Plus: existingContact.is18Plus || false,
+        gaam: existingContact.gaam || '',
+        currentAddress: existingContact.currentAddress || '',
+        countryId: existingContact.countryId || '',
+        stateId: existingContact.stateId || '',
+        cityId: existingContact.cityId || '',
+        phone: existingContact.phone || '',
+        countryCode: existingContact.countryCode || '+1',
+        email: existingContact.email || '',
+        dob: existingContact.dob || '',
+        educationId: existingContact.educationId || '',
+        otherEducation: existingContact.otherEducation || '',
+        professionId: existingContact.professionId || '',
+        otherProfession: existingContact.otherProfession || '',
+        website: existingContact.website || '',
+        profilePic: existingContact.profilePic || '',
+        familyPhoto: existingContact.familyPhoto || '',
+        fb: existingContact.fb || '',
+        linkedin: existingContact.linkedin || '',
+        insta: existingContact.insta || '',
+        tiktok: existingContact.tiktok || '',
+        twitter: existingContact.twitter || '',
+        snapchat: existingContact.snapchat || ''
+      }
+
+      Object.entries(baseValues).forEach(([key, value]) => {
+        setValue(key as keyof ContactFormData, value as any, { shouldValidate: false })
+      })
+
+      replaceChildren(
+        (existingContact.children || []).map((child: any) => ({
+          firstName: child.firstName || '',
+          middleName: child.middleName || '',
+          lastName: child.lastName || '',
+          gender: child.gender || 'male',
+          age: child.age || 0
+        }))
+      )
+
+      replaceSiblings(
+        (existingContact.siblings || []).map((sibling: any) => ({
+          firstName: sibling.firstName || '',
+          middleName: sibling.middleName || '',
+          lastName: sibling.lastName || '',
+          gender: sibling.gender || 'male',
+          age: sibling.age || 0
+        }))
+      )
+
+      replaceAdditionalProfessions(existingContact.additionalProfessions || [])
+      setUploadedProfilePic(existingContact.profilePic || '')
+      setUploadedFamilyPhoto(existingContact.familyPhoto || '')
+    }
+  }, [existingContact, replaceChildren, replaceSiblings, replaceAdditionalProfessions, setValue])
 
   useEffect(() => {
     if (watchedCountryId) {
@@ -209,9 +284,13 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
     console.log('Form data being submitted:', processedData)
     setIsLoading(true)
+    const endpoint = isEditMode && existingContact?.id
+      ? `/api/contacts/${existingContact.id}`
+      : '/api/contacts'
+    const method = isEditMode ? 'PUT' : 'POST'
     try {
-      const response = await fetch('/api/contacts', {
-        method: 'POST',
+      const response = await fetch(endpoint, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -226,8 +305,10 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
       // Show success notification
       notification.success({
-        message: 'Success!',
-        description: 'Details submitted successfully! Your information has been saved.',
+        message: isEditMode ? 'Profile updated' : 'Success!',
+        description: isEditMode
+          ? 'Your profile has been updated successfully.'
+          : 'Details submitted successfully! Your information has been saved.',
         placement: 'topRight',
         duration: 3.5,
       })
@@ -1654,14 +1735,29 @@ export default function ContactForm({ onSuccess, onCancel }: ContactFormProps) {
 
           <Space>
             {currentStep < steps.length ? (
-              <Button
-                type="primary"
-                onClick={nextStep}
-                disabled={!isCurrentStepValid()}
-                icon={<RightOutlined />}
-              >
-                Next
-              </Button>
+              <>
+                {currentStep === 4 && isEditMode && (
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      const formData = watch()
+                      onSubmit(formData)
+                    }}
+                    disabled={isLoading}
+                    loading={isLoading}
+                  >
+                    Save Family Members
+                  </Button>
+                )}
+                <Button
+                  type="primary"
+                  onClick={nextStep}
+                  disabled={!isCurrentStepValid()}
+                  icon={<RightOutlined />}
+                >
+                  Next
+                </Button>
+              </>
             ) : (
               <Button
                 type="primary"

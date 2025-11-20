@@ -1,32 +1,31 @@
 # 12gaam - Community Contact Management System
 
-A modern web application for managing community contacts with a beautiful UI and robust backend powered by Next.js and Supabase.
+A modern web application for managing community relationships, registrations, and family profiles. Built with Next.js 14, Prisma, and PostgreSQL.
 
 ## 🚀 Features
 
-- **User Management**: Admin-only authentication system
-- **Contact Management**: Comprehensive contact forms with family details
-- **Location System**: Cascading dropdowns for Country → State → City
-- **Education & Profession**: Master data management with "Other" options
-- **Social Media Integration**: Multiple social platform links
-- **Responsive Design**: Modern UI built with Tailwind CSS and Ant Design
-- **Real-time Database**: Powered by Supabase with PostgreSQL
+- **Role-based Access**: Super admin, gaam admins, and member accounts
+- **Registration Workflow**: Public registration with automatic credential email + gaam verification
+- **Family Profile Management**: Members manage full household information once approved
+- **Gaam Assignments**: Requests routed to the assigned gaam admin automatically
+- **Contact Management**: Comprehensive multi-step form with education, profession, and family details
+- **Master Data**: Country, state, education, and profession catalogs with admin CRUD
+- **Responsive Design**: Tailwind CSS + Ant Design hybrid UI
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 14, React, TypeScript
-- **Styling**: Tailwind CSS, Ant Design
-- **Backend**: Next.js API Routes
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: NextAuth.js
-- **Form Handling**: React Hook Form with Zod validation
-- **State Management**: React hooks and context
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS, Ant Design, Lucide Icons
+- **Backend**: Next.js API Routes + Prisma ORM
+- **Database**: PostgreSQL
+- **Authentication**: NextAuth.js (Credentials provider)
+- **Forms & Validation**: React Hook Form + Zod
 
 ## 📋 Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
+- PostgreSQL instance
 - npm or yarn
-- Supabase account
 - Git
 
 ## 🚀 Quick Start
@@ -39,59 +38,61 @@ cd 12gaam
 
 ### 2. Install Dependencies
 ```bash
+yarn
+# or
 npm install
 ```
 
 ### 3. Environment Setup
-Create a `.env.local` file in the root directory:
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# NextAuth Configuration
-NEXTAUTH_SECRET=your_nextauth_secret
-NEXTAUTH_URL=http://localhost:3000
+Copy `env.example` to `.env.local` and fill in the values:
+```bash
+cp env.example .env.local
 ```
+Required variables:
+- `DATABASE_URL`, `DIRECT_URL`
+- `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS` (Gmail SMTP supported)
 
 ### 4. Database Setup
-1. Go to [Supabase Dashboard](https://supabase.com)
-2. Create a new project
-3. Run the SQL schema from `supabase-schema.sql` in the SQL Editor
-4. Run the seed data from `supabase-seed.sql`
+```bash
+yarn prisma migrate dev
+yarn prisma db seed
+```
+(Use `npm run` if you prefer npm.)
 
 ### 5. Run Development Server
 ```bash
-npm run dev
+yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 🗄️ Database Schema
+## 🗄️ Database Schema (Prisma)
 
-The application uses the following main tables:
-- `users` - User authentication and roles
-- `contacts` - Main contact information
-- `contact_children` - Children details
-- `contact_siblings` - Sibling information
-- `country_master`, `state_master`, `city_master` - Location data
-- `education_master`, `profession_master` - Master data
+- `User` — Includes full name, email, username, role, status, gaam relation
+- `Gaam` — 12 villages with optional admin assignments
+- `Contact` — Member family profile linked to a user
+- `ContactChild`, `ContactSibling` — Family details
+- `CountryMaster`, `StateMaster`, `CityMaster`
+- `EducationMaster`, `ProfessionMaster`
 
-## 🔐 Authentication
+## 🔐 Authentication & Roles
 
-- **Admin Access**: `/admin` - Username: `admin`, Password: `Admin@123`
-- **Public Access**: Main contact form is accessible without authentication
-- **Protected Routes**: Admin dashboard and contact management
+- **Super Admin**: Global access, manage gaams & master data  
+  - Default: `superadmin@12gaam.com / Admin@123`
+- **Gaam Admin**: Approve registrations assigned to their gaam  
+  - Default: `limbasi.admin@12gaam.com / Admin@123`
+- **Member**: Registers via `/join`, waits for approval, then manages their family profile.
 
-## 📱 API Endpoints
+## 📱 API Endpoints (Highlights)
 
-- `POST /api/contacts` - Create new contact
-- `GET /api/contacts` - Fetch contacts (with search)
-- `GET /api/countries` - Get all countries
-- `GET /api/states` - Get states by country
-- `GET /api/cities` - Get cities by state
-- `GET /api/educations` - Get education levels
-- `GET /api/professions` - Get professions
+- `POST /api/registrations` — Public registration + email credentials
+- `GET /api/registrations` — Admin review queue
+- `PATCH /api/registrations/:id` — Approve/Reject requests
+- `POST/GET /api/contacts` — Member profile CRUD (POST creates/PUT updates)
+- `GET /api/contacts?ownership=me` — Logged-in member profile fetch
+- `GET /api/gaams` — Gaam list for registration
+- `POST /api/countries|states|educations|professions` — Super admin master data management
 
 ## 🎨 UI Components
 
@@ -118,15 +119,16 @@ HOSTNAME=0.0.0.0 npm run dev
 ```
 12gaam/
 ├── app/                    # Next.js app directory
-│   ├── admin/            # Admin routes
-│   ├── api/              # API endpoints
-│   ├── auth/             # Authentication pages
-│   └── dashboard/        # User dashboard
-├── components/            # React components
-├── lib/                  # Utility functions
-├── prisma/               # Database schema (legacy)
-├── types/                # TypeScript definitions
-└── public/               # Static assets
+│   ├── admin/              # Admin + verification screens
+│   ├── api/                # API endpoints
+│   ├── auth/               # Legacy auth pages
+│   ├── dashboard/          # Member dashboard
+│   └── join/               # Combined login/registration landing
+├── components/             # React components
+├── lib/                    # Auth, prisma, email, helpers
+├── prisma/                 # Prisma schema + seeders
+├── types/                  # TypeScript definitions
+└── public/                 # Static assets
 ```
 
 ## 🔧 Available Scripts
@@ -155,12 +157,8 @@ For support and questions:
 - Create an issue in the repository
 - Contact the development team
 
-## 🔄 Migration Notes
+## 🔄 Notes
 
-This project has been migrated from:
-- **Prisma + SQLite** → **Supabase + PostgreSQL**
-- **Local database** → **Cloud database**
-- **File-based storage** → **Cloud storage**
-
-All existing functionality has been preserved during the migration.
+- Existing Supabase SQL scripts are retained for reference, but the application now uses Prisma migrations by default.
+- Registration email delivery relies on the Gmail SMTP credentials configured in `.env.local`.
 

@@ -50,7 +50,8 @@ export default function AdminContactsPage() {
       return
     }
 
-    if (session.user.role !== 'admin') {
+    const allowedRoles = ['SUPER_ADMIN', 'GAAM_ADMIN']
+    if (!allowedRoles.includes(session.user.role)) {
       router.push('/dashboard')
       return
     }
@@ -146,7 +147,8 @@ export default function AdminContactsPage() {
     )
   }
 
-  if (!session || session.user.role !== 'admin') {
+  const allowedRoles = ['SUPER_ADMIN', 'GAAM_ADMIN']
+  if (!session || !allowedRoles.includes(session.user.role)) {
     return null
   }
 
@@ -345,15 +347,17 @@ export default function AdminContactsPage() {
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
                             </Button> */}
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleDelete(contact.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
-                            </Button> 
+                            {session.user.role === 'SUPER_ADMIN' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleDelete(contact.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
