@@ -37,7 +37,8 @@ export default function AdminDashboard() {
       return
     }
 
-    if (session.user.role !== 'admin') {
+    const allowedRoles = ['SUPER_ADMIN', 'GAAM_ADMIN']
+    if (!allowedRoles.includes(session.user.role)) {
       router.push('/dashboard')
       return
     }
@@ -96,7 +97,8 @@ export default function AdminDashboard() {
     )
   }
 
-  if (!session || session.user.role !== 'admin') {
+  const allowedRoles = ['SUPER_ADMIN', 'GAAM_ADMIN']
+  if (!session || !allowedRoles.includes(session.user.role)) {
     return null
   }
 
@@ -254,6 +256,18 @@ export default function AdminDashboard() {
                        </CardContent>
                      </Card>
                    </Link>
+
+                  <Link href="/admin/registrations">
+                    <Card className="border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all cursor-pointer">
+                      <CardContent className="p-6 text-center">
+                        <UserPlus className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">Registration Requests</h3>
+                        <p className="text-gray-600 text-sm">Approve or reject gaam registrations</p>
+                        <div className="mt-4 text-lg font-semibold text-green-600">Review requests</div>
+                        <p className="text-sm text-gray-500">Pending approvals</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
 
                    <div className="border-2 border-gray-200 rounded-lg p-6 text-center bg-gray-50">
                      <UserPlus className="h-12 w-12 text-green-600 mx-auto mb-4" />

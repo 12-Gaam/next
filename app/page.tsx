@@ -27,7 +27,7 @@ export default function HomePage() {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/dashboard"  className="bg-secondary hover:bg-secondary/90 text-white px-6 py-4 rounded-lg flex items-center gap-2 justify-center">
+                  <Link href="/join#registration"  className="bg-secondary hover:bg-secondary/90 text-white px-6 py-4 rounded-lg flex items-center gap-2 justify-center">
                   Get Started
                   <ArrowRight />
                   </Link>

@@ -1,24 +1,47 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, RegistrationStatus, UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
+
 async function main() {
   console.log('🌱 Starting database seeding...')
 
-  // Create admin user
   const hashedPassword = await bcrypt.hash('Admin@123', 12)
   
-  const adminUser = await prisma.user.upsert({
-    where: { username: 'admin' },
+  const superAdmin = await prisma.user.upsert({
+    where: { email: 'superadmin@12gaam.com' },
     update: {},
     create: {
-      username: 'admin',
+      fullName: 'Super Admin',
+      email: 'superadmin@12gaam.com',
+      username: 'superadmin',
       password: hashedPassword,
-      role: 'admin'
+      role: UserRole.SUPER_ADMIN,
+      status: RegistrationStatus.APPROVED
     }
   })
-  console.log('✅ Admin user created:', adminUser.username)
+  console.log('✅ Super admin created:', superAdmin.username)
+
+  const gaamAdmin = await prisma.user.upsert({
+    where: { email: 'limbasi.admin@12gaam.com' },
+    update: {},
+    create: {
+      fullName: 'Limbasi Admin',
+      email: 'limbasi.admin@12gaam.com',
+      username: 'limbasiadmin',
+      password: hashedPassword,
+      role: UserRole.GAAM_ADMIN,
+      status: RegistrationStatus.APPROVED
+    }
+  })
+  console.log('✅ Gaam admin created:', gaamAdmin.username)
 
   // Create countries
   const countries = [
@@ -106,6 +129,42 @@ async function main() {
     })
   }
   console.log('✅ Professions created')
+
+  const gaamNames = [
+    'Limbasi',
+    'Mobha',
+    'Ras',
+    'Vasad',
+    'Vemali',
+    'Dodka',
+    'Wadadla',
+    'Pipaliya',
+    'Vejalpur',
+    'Bhanapura',
+    'Bharoda',
+    'Kanera'
+  ]
+
+  for (const name of gaamNames) {
+    await prisma.gaam.upsert({
+      where: { name },
+      update: {},
+      create: {
+        name,
+        slug: slugify(name),
+        adminId: name === 'Limbasi' ? gaamAdmin.id : undefined
+      }
+    })
+  }
+  console.log('✅ Gaams created and assigned')
+
+  const limbasiGaam = await prisma.gaam.findUnique({ where: { name: 'Limbasi' } })
+  if (limbasiGaam) {
+    await prisma.user.update({
+      where: { id: gaamAdmin.id },
+      data: { gaamId: limbasiGaam.id }
+    })
+  }
 
   console.log('🎉 Database seeding completed successfully!')
 }

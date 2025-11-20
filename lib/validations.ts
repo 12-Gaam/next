@@ -104,9 +104,16 @@ export const masterDataSchema = z.object({
 export const userSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["admin", "user"]).default("user")
+  role: z.enum(["SUPER_ADMIN", "GAAM_ADMIN", "MEMBER"]).default("MEMBER")
+});
+
+export const registrationSchema = z.object({
+  fullName: z.string().min(3, "Name must be at least 3 characters"),
+  email: z.string().email("Invalid email address"),
+  gaamId: z.string().min(1, "Please select a gaam")
 });
 
 export type ContactFormData = z.infer<typeof contactFormSchema>;
 export type MasterDataForm = z.infer<typeof masterDataSchema>;
 export type UserFormData = z.infer<typeof userSchema>;
+export type RegistrationFormData = z.infer<typeof registrationSchema>;

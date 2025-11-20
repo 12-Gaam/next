@@ -106,7 +106,8 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
       return
     }
 
-    if (session.user.role !== 'admin') {
+    const allowedRoles = ['SUPER_ADMIN', 'GAAM_ADMIN']
+    if (!allowedRoles.includes(session.user.role)) {
       router.push('/dashboard')
       return
     }
