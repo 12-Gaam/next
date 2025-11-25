@@ -354,7 +354,7 @@ export default function JoinPage() {
                       )}
                     </Button>
                     <p className="text-xs text-gray-500 text-center">
-                      Members: Use OTP sent to email. Admins: Use username and password.
+                      Members: Use OTP sent to email or enter your password to login.
                     </p>
                   </form>
                 ) : (
@@ -381,17 +381,7 @@ export default function JoinPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label>Gaam Selection</Label>
-                      <button
-                        type="button"
-                        onClick={() => setShowGaamList((prev) => !prev)}
-                        className="text-xs text-secondary hover:underline"
-                        disabled={isRegistering || isLoadingGaams || gaams.length === 0}
-                      >
-                        {showGaamList ? 'Hide list' : 'View gaam list'}
-                      </button>
-                    </div>
+            
                     <Select
                       value={gaamId}
                       onValueChange={(value) => setGaamId(value)}

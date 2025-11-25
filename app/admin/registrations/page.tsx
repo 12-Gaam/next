@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { AlertCircle, Check, Loader2 } from 'lucide-react'
+import { AlertCircle, Check, Loader2, Trash2 } from 'lucide-react'
 
 interface Registration {
   id: string
@@ -203,9 +203,12 @@ export default function RegistrationApprovalsPage() {
                         {actionInProgress === registration.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Check className="h-4 w-4 mr-2" />
+                          <>
+                            
+                            <Check className="h-4 w-4 mr-2" />
+                            Approve
+                          </>
                         )}
-                        Approve
                       </Button>
                       <Button
                         variant="outline"
@@ -213,7 +216,12 @@ export default function RegistrationApprovalsPage() {
                         disabled={actionInProgress === registration.id}
                         onClick={() => handleAction(registration.id, 'REJECTED')}
                       >
-                        Reject
+                        
+                        <>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Reject
+                        </>
+
                       </Button>
                     </div>
                   ) : (

@@ -14,7 +14,9 @@ import {
   TrendingUp,
   Calendar,
   UserPlus,
-  BarChart3
+  BarChart3,
+  UserCog,
+  Shield
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -227,7 +229,7 @@ export default function AdminDashboard() {
         </div>
 
                  {/* Core Management Section with List View */}
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+         <div className="grid grid-cols-1 lg:grid gap-10">
            {/* Left Side - Management Cards */}
            <div className="lg:col-span-2">
              <Card className="border-0 shadow-lg">
@@ -237,11 +239,11 @@ export default function AdminDashboard() {
                    Manage all community contacts and member information
                  </CardDescription>
                </CardHeader>
-               <CardContent className="p-6">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <CardContent className="p-4">
+                 <div className={`grid grid-cols-1 ${session?.user.role === 'SUPER_ADMIN' ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2'} gap-6`}>
                    <Link href="/admin/contacts">
                      <Card className="border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer">
-                       <CardContent className="p-6 text-center">
+                       <CardContent className="p-4 text-center">
                          <Eye className="h-12 w-12 text-blue-600 mx-auto mb-4" />
                          <h3 className="text-lg font-semibold text-gray-800 mb-2">View Contacts</h3>
                          <p className="text-gray-600 text-sm">Browse and manage all community contacts</p>
@@ -259,7 +261,7 @@ export default function AdminDashboard() {
 
                   <Link href="/admin/registrations">
                     <Card className="border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all cursor-pointer">
-                      <CardContent className="p-6 text-center">
+                      <CardContent className="p-4 text-center">
                         <UserPlus className="h-12 w-12 text-green-600 mx-auto mb-4" />
                         <h3 className="text-lg font-semibold text-gray-800 mb-2">Registration Requests</h3>
                         <p className="text-gray-600 text-sm">Approve or reject gaam registrations</p>
@@ -268,6 +270,19 @@ export default function AdminDashboard() {
                       </CardContent>
                     </Card>
                   </Link>
+
+                  {session?.user.role === 'SUPER_ADMIN' && (
+                    <Link href="/admin/admins">
+                      <Card className="border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer">
+                        <CardContent className="p-4 text-center">
+                          <Shield className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Manage Admins</h3>
+                          <p className="text-gray-600 text-sm">Create admins and assign GAAMs</p>
+                          <p className="text-sm text-gray-500">Admin management</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  )}
 
                    <div className="border-2 border-gray-200 rounded-lg p-6 text-center bg-gray-50">
                      <UserPlus className="h-12 w-12 text-green-600 mx-auto mb-4" />
