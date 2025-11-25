@@ -119,9 +119,9 @@ export default function SignInPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Member & Admin Login</CardTitle>
+            <CardTitle>Admin & Super Admin Login</CardTitle>
             <CardDescription>
-              Members: Use OTP sent to email. Admins: Use username and password.
+              Admin: Use OTP sent to email. Admins: Use username and password.
             </CardDescription>
           </CardHeader>
           <CardContent>
