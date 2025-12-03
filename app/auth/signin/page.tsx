@@ -119,9 +119,9 @@ export default function SignInPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Admin & Super Admin Login</CardTitle>
+            <CardTitle>Admin Login</CardTitle>
             <CardDescription>
-              Admin: Use OTP sent to email. Admins: Use username and password.
+              Admins: Use username and password to login.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -187,7 +187,7 @@ export default function SignInPage() {
               )}
 
               {/* Send OTP Button for Members */}
-              {!otpSent && (
+              {/* {!otpSent && (
                 <Button
                   type="button"
                   variant="outline"
@@ -204,7 +204,7 @@ export default function SignInPage() {
                     </>
                   )}
                 </Button>
-              )}
+              )} */}
 
               {otpMessage && (
                 <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md">
