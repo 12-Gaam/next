@@ -18,10 +18,7 @@ import {
 import {
   UserPlus,
   Users,
-  Building2,
-  Edit2,
   X,
-  Save,
   LogOut,
   ArrowLeft
 } from 'lucide-react'
@@ -286,17 +283,7 @@ export default function SuperAdminAdminsPage() {
                 }}
                 className="bg-secondary hover:bg-secondary/90"
               >
-                {showCreateForm ? (
-                  <>
-                    <X className="h-4 w-4 mr-2" />
-                    Cancel
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Create Admin
-                  </>
-                )}
+                {showCreateForm ? 'Cancel' : 'Create Admin'}
               </Button>
             </div>
           </CardHeader>
@@ -391,91 +378,98 @@ export default function SuperAdminAdminsPage() {
             ) : (
               <div className="space-y-4">
                 {admins.map((admin) => (
-                  <Card key={admin.id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                  <Card key={admin.id} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-4">
-                            <div className="bg-blue-100 p-2 rounded-lg">
-                              <Building2 className="h-5 w-5 text-blue-600" />
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">{admin.fullName}</h3>
-                              <p className="text-sm text-gray-600">{admin.email}</p>
-                              <p className="text-xs text-gray-500">@{admin.username}</p>
-                            </div>
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-1">{admin.fullName}</h3>
+                            <p className="text-sm text-gray-600 truncate">{admin.email}</p>
+                            <p className="text-xs text-gray-500 mt-1">@{admin.username}</p>
                           </div>
 
-                          {/* Current GAAM Assignment */}
-                          <div className="mb-4">
-                            <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                              Assigned GAAM:
-                            </Label>
-                            {admin.gaamsManaged && admin.gaamsManaged.length > 0 ? (
-                              <div className="flex items-center space-x-2">
-                                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1.5">Assigned GAAM</p>
+                              {admin.gaamsManaged && admin.gaamsManaged.length > 0 ? (
+                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
                                   {admin.gaamsManaged[0].name}
                                 </span>
-                              </div>
-                            ) : (
-                              <span className="text-sm text-gray-500 italic">No GAAM assigned</span>
-                            )}
+                              ) : (
+                                <span className="text-sm text-gray-500">No GAAM assigned</span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1.5">Created</p>
+                              <p className="text-sm text-gray-700 font-medium">
+                                {new Date(admin.createdAt).toLocaleDateString('en-GB', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric'
+                                })}
+                              </p>
+                            </div>
+                           
+                           
                           </div>
 
                           {/* Edit GAAM Assignment */}
-                          {editingAdminId === admin.id ? (
-                            <div className="space-y-3">
-                              <div>
-                                <Label htmlFor={`gaam-${admin.id}`} className="text-sm font-medium text-gray-700 mb-2 block">
-                                  Assign GAAM:
-                                </Label>
-                                <Select
-                                  value={gaamAssignment[admin.id] || 'none'}
-                                  onValueChange={(value) => {
-                                    setGaamAssignment({ ...gaamAssignment, [admin.id]: value })
-                                  }}
-                                >
-                                  <SelectTrigger id={`gaam-${admin.id}`} className="w-full md:w-64">
-                                    <SelectValue placeholder="Select a GAAM" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="none">None (Remove Assignment)</SelectItem>
-                                    {getAvailableGaams(admin.id).map((gaam) => (
-                                      <SelectItem key={gaam.id} value={gaam.id}>
-                                        {gaam.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex space-x-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleUpdateGaamAssignment(admin.id)}
-                                  disabled={isSubmitting}
-                                  className="bg-secondary hover:bg-secondary/90"
-                                >
-                                  <Save className="h-4 w-4 mr-2" />
-                                  {isSubmitting ? 'Saving...' : 'Save'}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setEditingAdminId(null)
-                                    // Reset to original value
-                                    const originalGaam = admin.gaamsManaged && admin.gaamsManaged.length > 0
-                                      ? admin.gaamsManaged[0].id
-                                      : 'none'
-                                    setGaamAssignment({ ...gaamAssignment, [admin.id]: originalGaam })
-                                  }}
-                                >
-                                  <X className="h-4 w-4 mr-2" />
-                                  Cancel
-                                </Button>
+                          {editingAdminId === admin.id && (
+                            <div className="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200">
+                              <div className="space-y-3">
+                                <div>
+                                  <Label htmlFor={`gaam-${admin.id}`} className="text-sm font-medium text-gray-700 mb-2 block">
+                                    Assign GAAM:
+                                  </Label>
+                                  <Select
+                                    value={gaamAssignment[admin.id] || 'none'}
+                                    onValueChange={(value) => {
+                                      setGaamAssignment({ ...gaamAssignment, [admin.id]: value })
+                                    }}
+                                  >
+                                    <SelectTrigger id={`gaam-${admin.id}`} className="w-full md:w-64">
+                                      <SelectValue placeholder="Select a GAAM" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="none">None (Remove Assignment)</SelectItem>
+                                      {getAvailableGaams(admin.id).map((gaam) => (
+                                        <SelectItem key={gaam.id} value={gaam.id}>
+                                          {gaam.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="flex gap-3">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleUpdateGaamAssignment(admin.id)}
+                                    disabled={isSubmitting}
+                                    className="bg-secondary hover:bg-secondary/90"
+                                  >
+                                    {isSubmitting ? 'Saving...' : 'Save'}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingAdminId(null)
+                                      // Reset to original value
+                                      const originalGaam = admin.gaamsManaged && admin.gaamsManaged.length > 0
+                                        ? admin.gaamsManaged[0].id
+                                        : 'none'
+                                      setGaamAssignment({ ...gaamAssignment, [admin.id]: originalGaam })
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
                               </div>
                             </div>
-                          ) : (
+                          )}
+                        </div>
+                        {editingAdminId !== admin.id && (
+                          <div className="flex-shrink-0 lg:self-start">
                             <Button
                               size="sm"
                               variant="outline"
@@ -487,12 +481,12 @@ export default function SuperAdminAdminsPage() {
                                   : 'none'
                                 setGaamAssignment({ ...gaamAssignment, [admin.id]: currentGaam })
                               }}
+                              className="w-full lg:w-auto whitespace-nowrap"
                             >
-                              <Edit2 className="h-4 w-4 mr-2" />
-                              {admin.gaamsManaged && admin.gaamsManaged.length > 0 ? 'Change GAAM' : 'Assign GAAM'}
+                              {admin.gaamsManaged && admin.gaamsManaged.length > 0 ? 'Edit ' : 'Assign'}
                             </Button>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
