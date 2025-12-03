@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { UserRole, RegistrationStatus } from '@prisma/client'
 import { isSuperAdmin } from '@/lib/rbac'
+import { sendAdminCredentialsEmail } from '@/lib/mailer'
 
 // GET - Fetch all admins with their GAAM assignments
 export async function GET() {
@@ -99,6 +100,22 @@ export async function POST(request: NextRequest) {
         createdAt: true
       }
     })
+
+    // Send email with credentials
+    try {
+      await sendAdminCredentialsEmail({
+        to: admin.email,
+        name: admin.fullName,
+        username: admin.username,
+        password: password // Send the plain password from request body
+      })
+      console.log(`Admin credentials email sent successfully to ${admin.email}`)
+    } catch (emailError) {
+      console.error('Failed to send admin credentials email:', emailError)
+      console.error('Email error details:', emailError instanceof Error ? emailError.message : String(emailError))
+      // Don't fail the whole request if email delivery fails
+      // Log the error but still return success
+    }
 
     return NextResponse.json(admin, { status: 201 })
   } catch (error) {

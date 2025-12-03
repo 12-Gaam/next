@@ -76,18 +76,18 @@ export const authOptions: NextAuthOptions = {
           // For ADMIN and SUPER_ADMIN, use password authentication
           if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.GAAM_ADMIN) {
             if (!credentials.password) {
-            return null;
-          }
+              return null;
+            }
 
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
+            const isPasswordValid = await bcrypt.compare(
+              credentials.password,
+              user.password
+            );
 
-          if (!isPasswordValid) {
-            console.error("Invalid password for user:", credentials.identifier);
-            return null;
-          }
+            if (!isPasswordValid) {
+              console.error("Invalid password for user:", credentials.identifier);
+              return null;
+            }
 
             return {
               id: user.id,

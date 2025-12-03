@@ -20,11 +20,22 @@ interface OTPEmailPayload {
   otp: string
 }
 
+interface AdminCredentialsEmailPayload {
+  to: string
+  name: string
+  username: string
+  password: string
+}
+
 let transporter: nodemailer.Transporter | null = null
 
 function getEmailTransporter() {
   if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error('Email environment variables are not configured')
+    const missingVars = []
+    if (!process.env.EMAIL_HOST) missingVars.push('EMAIL_HOST')
+    if (!process.env.EMAIL_USER) missingVars.push('EMAIL_USER')
+    if (!process.env.EMAIL_PASS) missingVars.push('EMAIL_PASS')
+    throw new Error(`Email environment variables are not configured. Missing: ${missingVars.join(', ')}`)
   }
 
   if (!transporter) {
@@ -100,6 +111,28 @@ export async function sendOTPEmail(payload: OTPEmailPayload) {
       <p>Your login OTP is: <strong style="font-size: 24px; letter-spacing: 4px;">${payload.otp}</strong></p>
       <p>This OTP will expire in 15 minutes.</p>
       <p>If you didn't request this OTP, please ignore this email.</p>
+      <p>Regards,<br />12Gaam Team</p>
+    `
+  })
+}
+
+export async function sendAdminCredentialsEmail(payload: AdminCredentialsEmailPayload) {
+  const transporterInstance = getEmailTransporter()
+
+  await transporterInstance.sendMail({
+    from: `"12Gaam" <${process.env.EMAIL_USER}>`,
+    to: payload.to,
+    subject: 'Your 12Gaam Admin Account Credentials',
+    html: `
+      <p>Hi ${payload.name},</p>
+      <p>Your admin account has been created. Here are your login credentials:</p>
+      <ul>
+        <li><strong>Username:</strong> ${payload.username}</li>
+        <li><strong>Email:</strong> ${payload.to}</li>
+        <li><strong>Password:</strong> ${payload.password}</li>
+      </ul>
+      <p>You can now sign in at https://12gaam.com/join using your username or email and password.</p>
+      <p><strong>Important:</strong> Please change your password after your first login for security.</p>
       <p>Regards,<br />12Gaam Team</p>
     `
   })
