@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const statusParam = searchParams.get('status')
     const gaamParam = searchParams.get('gaamId')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const skip = (page - 1) * limit
 
     let statusFilter: RegistrationStatus | undefined
     if (statusParam && Object.values(RegistrationStatus).includes(statusParam as RegistrationStatus)) {
@@ -40,29 +43,52 @@ export async function GET(request: NextRequest) {
       gaamFilter = gaams.map((gaam) => gaam.id)
 
       if (!gaamFilter.length) {
-        return NextResponse.json({ registrations: [] })
+        return NextResponse.json({ 
+          registrations: [],
+          pagination: {
+            page: 1,
+            limit,
+            total: 0,
+            pages: 0
+          }
+        })
       }
     }
 
-    const registrations = await prisma.user.findMany({
-      where: {
-        role: UserRole.MEMBER,
-        ...(statusFilter ? { status: statusFilter } : {}),
-        ...(gaamFilter ? { gaamId: { in: gaamFilter } } : {})
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        gaam: true,
-        verifiedBy: {
-          select: {
-            id: true,
-            fullName: true
+    const where = {
+      role: UserRole.MEMBER,
+      ...(statusFilter ? { status: statusFilter } : {}),
+      ...(gaamFilter ? { gaamId: { in: gaamFilter } } : {})
+    }
+
+    const [registrations, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          gaam: true,
+          verifiedBy: {
+            select: {
+              id: true,
+              fullName: true
+            }
           }
         }
+      }),
+      prisma.user.count({ where })
+    ])
+
+    return NextResponse.json({ 
+      registrations,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
       }
     })
-
-    return NextResponse.json({ registrations })
   } catch (error) {
     console.error('Error fetching registrations:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
