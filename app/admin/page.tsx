@@ -124,7 +124,7 @@ export default function AdminDashboard() {
                 <p className="text-sm text-white/80 mb-0">{session.user.username}</p>
               </div>
               <Button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => signOut({ callbackUrl: '/auth/signin' })}
                 className="flex items-center bg-secondary hover:bg-secondary/90 text-white"
               >
                 <LogOut className="h-4 w-4" />
@@ -239,64 +239,74 @@ export default function AdminDashboard() {
                    Manage all community contacts and member information
                  </CardDescription>
                </CardHeader>
-               <CardContent className="p-4">
+               <CardContent className="p-6">
                  <div className={`grid grid-cols-1 ${session?.user.role === 'SUPER_ADMIN' ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2'} gap-6`}>
-                   <Link href="/admin/contacts">
-                     <Card className="border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer">
-                       <CardContent className="p-4 text-center">
+                   <Link href="/admin/contacts" className="h-full">
+                     <Card className="border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
+                       <CardContent className="p-6 text-center flex flex-col flex-grow">
                          <Eye className="h-12 w-12 text-blue-600 mx-auto mb-4" />
                          <h3 className="text-lg font-semibold text-gray-800 mb-2">View Contacts</h3>
-                         <p className="text-gray-600 text-sm">Browse and manage all community contacts</p>
-                         <div className="mt-4 text-2xl font-bold text-blue-600">
-                           {isLoadingStats ? (
-                             <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto"></div>
-                           ) : (
-                             stats.contacts
-                           )}
+                         <p className="text-gray-600 text-sm mb-4 flex-grow">Browse and manage all community contacts</p>
+                         <div className="mt-auto">
+                           <div className="text-2xl font-bold text-blue-600">
+                             {isLoadingStats ? (
+                               <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto"></div>
+                             ) : (
+                               stats.contacts
+                             )}
+                           </div>
+                           <p className="text-sm text-gray-500 mt-1">Total Contacts</p>
                          </div>
-                         <p className="text-sm text-gray-500">Total Contacts</p>
                        </CardContent>
                      </Card>
                    </Link>
 
-                  <Link href="/admin/registrations">
-                    <Card className="border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all cursor-pointer">
-                      <CardContent className="p-4 text-center">
+                  <Link href="/admin/registrations" className="h-full">
+                    <Card className="border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
+                      <CardContent className="p-6 text-center flex flex-col flex-grow">
                         <UserPlus className="h-12 w-12 text-green-600 mx-auto mb-4" />
                         <h3 className="text-lg font-semibold text-gray-800 mb-2">Registration Requests</h3>
-                        <p className="text-gray-600 text-sm">Approve or reject gaam registrations</p>
-                        <div className="mt-4 text-lg font-semibold text-green-600">Review requests</div>
-                        <p className="text-sm text-gray-500">Pending approvals</p>
+                        <p className="text-gray-600 text-sm mb-4 flex-grow">Approve or reject gaam registrations</p>
+                        <div className="mt-auto">
+                          <div className="text-lg font-semibold text-green-600">Review requests</div>
+                          <p className="text-sm text-gray-500 mt-1">Pending approvals</p>
+                        </div>
                       </CardContent>
                     </Card>
                   </Link>
 
                   {session?.user.role === 'SUPER_ADMIN' && (
-                    <Link href="/admin/admins">
-                      <Card className="border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer">
-                        <CardContent className="p-4 text-center">
+                    <Link href="/admin/admins" className="h-full">
+                      <Card className="border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
+                        <CardContent className="p-6 text-center flex flex-col flex-grow">
                           <Shield className="h-12 w-12 text-purple-600 mx-auto mb-4" />
                           <h3 className="text-lg font-semibold text-gray-800 mb-2">Manage Admins</h3>
-                          <p className="text-gray-600 text-sm">Create admins and assign GAAMs</p>
-                          <p className="text-sm text-gray-500">Admin management</p>
+                          <p className="text-gray-600 text-sm mb-4 flex-grow">Create admins and assign GAAMs</p>
+                          <div className="mt-auto">
+                            <p className="text-sm text-gray-500">Admin management</p>
+                          </div>
                         </CardContent>
                       </Card>
                     </Link>
                   )}
 
-                   <div className="border-2 border-gray-200 rounded-lg p-6 text-center bg-gray-50">
-                     <UserPlus className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                     <h3 className="text-lg font-semibold text-gray-800 mb-2">New Members</h3>
-                     <p className="text-gray-600 text-sm">Members who joined this month</p>
-                     <div className="mt-4 text-2xl font-bold text-green-600">
-                       {isLoadingStats ? (
-                         <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto"></div>
-                       ) : (
-                         stats.newContactsThisMonth
-                       )}
-                     </div>
-                     <p className="text-sm text-gray-500">This Month</p>
-                   </div>
+                   <Card className="border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all h-full flex flex-col">
+                     <CardContent className="p-6 text-center flex flex-col flex-grow">
+                       <UserPlus className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                       <h3 className="text-lg font-semibold text-gray-800 mb-2">New Members</h3>
+                       <p className="text-gray-600 text-sm mb-4 flex-grow">Members who joined this month</p>
+                       <div className="mt-auto">
+                         <div className="text-2xl font-bold text-green-600">
+                           {isLoadingStats ? (
+                             <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto"></div>
+                           ) : (
+                             stats.newContactsThisMonth
+                           )}
+                         </div>
+                         <p className="text-sm text-gray-500 mt-1">This Month</p>
+                       </div>
+                     </CardContent>
+                   </Card>
                  </div>
                </CardContent>
              </Card>
