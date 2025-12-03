@@ -235,7 +235,7 @@ export default function SuperAdminAdminsPage() {
                 <p className="text-sm text-white/80 mb-0">{session.user.username}</p>
               </div>
               <Button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => signOut({ callbackUrl: '/auth/signin' })}
                 className="flex items-center bg-secondary hover:bg-secondary/90 text-white"
               >
                 <LogOut className="h-4 w-4" />

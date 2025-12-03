@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
+    console.log('Creating admin user:', { email, username, role: UserRole.GAAM_ADMIN })
 
     // Create admin user
     const admin = await prisma.user.create({
@@ -100,6 +101,8 @@ export async function POST(request: NextRequest) {
         createdAt: true
       }
     })
+    
+    console.log('Admin user created successfully:', { id: admin.id, email: admin.email, username: admin.username, role: admin.role })
 
     // Send email with credentials
     try {

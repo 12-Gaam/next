@@ -77,7 +77,11 @@ function HeaderPage() {
                     Dashboard
                   </Link> */}
                   <button
-                    onClick={() => signOut({ callbackUrl: '/' })}
+                    onClick={() => {
+                      // Redirect admins to admin login, normal users to dashboard
+                      const isAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'GAAM_ADMIN'
+                      signOut({ callbackUrl: isAdmin ? '/auth/signin' : '/dashboard' })
+                    }}
                     className="bg-transparent hover:bg-white hover:text-primary text-white px-4 py-3 rounded-lg flex items-center gap-2"
                   >
                     <LogOut size={20} />

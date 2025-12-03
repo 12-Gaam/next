@@ -32,6 +32,14 @@ export const authOptions: NextAuthOptions = {
             console.error("User not found:", credentials.identifier);
             return null;
           }
+          
+          console.log("User found for authentication:", { 
+            id: user.id, 
+            email: user.email, 
+            username: user.username, 
+            role: user.role, 
+            status: user.status 
+          });
 
           // Check if user is MEMBER with APPROVED status - use OTP
           if (user.role === UserRole.MEMBER && user.status === RegistrationStatus.APPROVED) {
@@ -76,18 +84,37 @@ export const authOptions: NextAuthOptions = {
           // For ADMIN and SUPER_ADMIN, use password authentication
           if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.GAAM_ADMIN) {
             if (!credentials.password) {
+              console.error("Password not provided for admin user:", credentials.identifier);
               return null;
             }
+
+            console.log("Verifying password for admin user:", { 
+              identifier: credentials.identifier, 
+              hasPassword: !!user.password,
+              passwordLength: user.password?.length 
+            });
 
             const isPasswordValid = await bcrypt.compare(
               credentials.password,
               user.password
             );
 
+            console.log("Password verification result:", { 
+              identifier: credentials.identifier, 
+              isValid: isPasswordValid 
+            });
+
             if (!isPasswordValid) {
               console.error("Invalid password for user:", credentials.identifier);
               return null;
             }
+
+            console.log("Admin authentication successful:", { 
+              id: user.id, 
+              email: user.email, 
+              username: user.username, 
+              role: user.role 
+            });
 
             return {
               id: user.id,
