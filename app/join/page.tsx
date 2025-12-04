@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn, getSession } from 'next-auth/react'
+import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -140,12 +140,10 @@ export default function JoinPage() {
           setLoginError('Invalid credentials. Please try again.')
         }
       } else {
-        const session = await getSession()
-        if (session?.user.role === 'SUPER_ADMIN' || session?.user.role === 'GAAM_ADMIN') {
-          router.push('/admin')
-        } else {
-          router.push('/dashboard')
-        }
+        // Successful login - redirect immediately for better UX
+        // Use hard redirect to ensure session is available on next page
+        // Dashboard will handle role-based redirects
+        window.location.href = '/dashboard'
       }
     } catch (error) {
       setLoginError('Unable to sign in. Please try again later.')

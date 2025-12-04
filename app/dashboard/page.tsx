@@ -64,12 +64,34 @@ export default function UserDashboard() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [contact, setContact] = useState<Contact | null>(null)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'family'>('dashboard')
+  
+  // Initialize hasAutoShownForm from localStorage (persists across reloads)
+  const [hasAutoShownForm, setHasAutoShownFormState] = useState(false)
+  
+  // Helper to update both state and localStorage
+  const setHasAutoShownForm = (value: boolean) => {
+    setHasAutoShownFormState(value)
+    if (typeof window !== 'undefined' && session?.user?.id) {
+      const key = `hasAutoShownForm_${session.user.id}`
+      if (value) {
+        localStorage.setItem(key, 'true')
+      } else {
+        localStorage.removeItem(key)
+      }
+    }
+  }
 
   useEffect(() => {
     if (status === 'loading') return
 
     if (!session) {
       router.push('/join?reason=login')
+      return
+    }
+
+    // Redirect admins to admin dashboard
+    if (session.user.role === 'SUPER_ADMIN' || session.user.role === 'GAAM_ADMIN') {
+      router.push('/admin')
       return
     }
 
@@ -116,13 +138,43 @@ export default function UserDashboard() {
     }
   }, [])
 
+  // Update hasAutoShownForm from localStorage when session is available
+  useEffect(() => {
+    if (session?.user?.id && typeof window !== 'undefined') {
+      const key = `hasAutoShownForm_${session.user.id}`
+      const stored = localStorage.getItem(key) === 'true'
+      setHasAutoShownFormState(stored)
+    }
+  }, [session?.user?.id])
+
+  // Compute hasContact before using it in useEffect
+  const hasContact = Boolean(contact)
+
+  // Update form visibility when tab changes
+  useEffect(() => {
+    // If user switches to a tab other than dashboard, hide the form (unless adding family members)
+    if (activeTab !== 'dashboard' && showForm && !hasContact && !isAddingFamilyMembers) {
+      setShowForm(false)
+    }
+    // Auto-show form on dashboard tab only once when there's no contact and profile has loaded
+    else if (activeTab === 'dashboard' && !hasContact && !showForm && !isLoadingProfile && !hasAutoShownForm) {
+      setShowForm(true)
+      setHasAutoShownForm(true)
+    }
+  }, [activeTab, hasContact, showForm, isLoadingProfile, hasAutoShownForm, isAddingFamilyMembers])
+
   const fetchMyContact = async () => {
     try {
       setIsLoadingProfile(true)
       const response = await fetch('/api/contacts?ownership=me')
       const data = await response.json()
+      const hasContactData = Boolean(data.contact)
       setContact(data.contact || null)
-      setShowForm(!data.contact)
+      // Clear auto-show flag when contact is created (user completed profile)
+      if (hasContactData && session?.user?.id) {
+        const key = `hasAutoShownForm_${session.user.id}`
+        localStorage.removeItem(key)
+      }
     } catch (error) {
       console.error('Error loading profile', error)
     } finally {
@@ -139,7 +191,6 @@ export default function UserDashboard() {
   }
 
   const isApproved = session.user.status === 'APPROVED'
-  const hasContact = Boolean(contact)
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Not provided'
@@ -754,92 +805,94 @@ export default function UserDashboard() {
             </Card>
           )}
 
-          {isApproved && !showForm && (
+          {isApproved && (
             <>
-              {activeTab === 'dashboard' && (
+              {showForm && (activeTab === 'dashboard' || isAddingFamilyMembers) ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      {isAddingFamilyMembers 
+                        ? 'Add Family Members' 
+                        : hasContact 
+                          ? 'Update Family Profile' 
+                          : 'Family Profile'}
+                    </CardTitle>
+                    <CardDescription>
+                      {isAddingFamilyMembers
+                        ? 'Add your spouse, children, and siblings. You can navigate to Step 4 directly to add family members.'
+                        : 'Provide as many details as you can. You can always come back and edit later.'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ContactForm
+                      existingContact={contact || undefined}
+                      initialStep={isAddingFamilyMembers ? 4 : 1}
+                      onSuccess={() => {
+                        setShowForm(false)
+                        setIsAddingFamilyMembers(false)
+                        fetchMyContact()
+                      }}
+                      onCancel={() => {
+                        setShowForm(false)
+                        setIsAddingFamilyMembers(false)
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              ) : (
                 <>
-                  <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                      Welcome, {session?.user.fullName}
-                    </h1>
-                    <p className="text-lg text-gray-600">
-                      Manage your family profile and keep your contact details up to date.
-                    </p>
-                  </div>
-                  {isLoadingProfile ? (
-                    <div className="text-center py-12">Loading...</div>
-                  ) : (
-                    renderDashboardView()
+                  {activeTab === 'dashboard' && (
+                    <>
+                      <div className="mb-8">
+                        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                          Welcome, {session?.user.fullName}
+                        </h1>
+                        <p className="text-lg text-gray-600">
+                          Manage your family profile and keep your contact details up to date.
+                        </p>
+                      </div>
+                      {isLoadingProfile ? (
+                        <div className="text-center py-12">Loading...</div>
+                      ) : (
+                        renderDashboardView()
+                      )}
+                    </>
                   )}
-                </>
-              )}
 
-              {activeTab === 'profile' && (
-                <>
-                  <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-                    <p className="text-gray-600 mt-2">
-                      your information and profile picture
-                    </p>
-                  </div>
-                  {isLoadingProfile ? (
-                    <div className="text-center py-12">Loading...</div>
-                  ) : (
-                    renderProfileView()
+                  {activeTab === 'profile' && (
+                    <>
+                      <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+                        <p className="text-gray-600 mt-2">
+                          your information and profile picture
+                        </p>
+                      </div>
+                      {isLoadingProfile ? (
+                        <div className="text-center py-12">Loading...</div>
+                      ) : (
+                        renderProfileView()
+                      )}
+                    </>
                   )}
-                </>
-              )}
 
-              {activeTab === 'family' && (
-                <>
-                  <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Family Members</h1>
-                    <p className="text-gray-600 mt-2">
-                      Manage your family members and add new ones
-                    </p>
-                  </div>
-                  {isLoadingProfile ? (
-                    <div className="text-center py-12">Loading...</div>
-                  ) : (
-                    renderFamilyView()
+                  {activeTab === 'family' && (
+                    <>
+                      <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">Family Members</h1>
+                        <p className="text-gray-600 mt-2">
+                          Manage your family members and add new ones
+                        </p>
+                      </div>
+                      {isLoadingProfile ? (
+                        <div className="text-center py-12">Loading...</div>
+                      ) : (
+                        renderFamilyView()
+                      )}
+                    </>
                   )}
                 </>
               )}
             </>
-          )}
-
-          {isApproved && showForm && (
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {isAddingFamilyMembers 
-                    ? 'Add Family Members' 
-                    : hasContact 
-                      ? 'Update Family Profile' 
-                      : 'Family Profile'}
-                </CardTitle>
-                <CardDescription>
-                  {isAddingFamilyMembers
-                    ? 'Add your spouse, children, and siblings. You can navigate to Step 4 directly to add family members.'
-                    : 'Provide as many details as you can. You can always come back and edit later.'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ContactForm
-                  existingContact={contact || undefined}
-                  initialStep={isAddingFamilyMembers ? 4 : 1}
-                  onSuccess={() => {
-                    setShowForm(false)
-                    setIsAddingFamilyMembers(false)
-                    fetchMyContact()
-                  }}
-                  onCancel={() => {
-                    setShowForm(false)
-                    setIsAddingFamilyMembers(false)
-                  }}
-                />
-              </CardContent>
-            </Card>
           )}
         </main>
       </div>
