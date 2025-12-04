@@ -89,6 +89,12 @@ export default function UserDashboard() {
       return
     }
 
+    // Redirect admins to admin dashboard
+    if (session.user.role === 'SUPER_ADMIN' || session.user.role === 'GAAM_ADMIN') {
+      router.push('/admin')
+      return
+    }
+
     if (session.user.status !== 'APPROVED') {
       setIsLoadingProfile(false)
       return
@@ -146,8 +152,8 @@ export default function UserDashboard() {
 
   // Update form visibility when tab changes
   useEffect(() => {
-    // If user switches to a tab other than dashboard, hide the form
-    if (activeTab !== 'dashboard' && showForm && !hasContact) {
+    // If user switches to a tab other than dashboard, hide the form (unless adding family members)
+    if (activeTab !== 'dashboard' && showForm && !hasContact && !isAddingFamilyMembers) {
       setShowForm(false)
     }
     // Auto-show form on dashboard tab only once when there's no contact and profile has loaded
@@ -155,7 +161,7 @@ export default function UserDashboard() {
       setShowForm(true)
       setHasAutoShownForm(true)
     }
-  }, [activeTab, hasContact, showForm, isLoadingProfile, hasAutoShownForm])
+  }, [activeTab, hasContact, showForm, isLoadingProfile, hasAutoShownForm, isAddingFamilyMembers])
 
   const fetchMyContact = async () => {
     try {
@@ -801,7 +807,7 @@ export default function UserDashboard() {
 
           {isApproved && (
             <>
-              {showForm && activeTab === 'dashboard' ? (
+              {showForm && (activeTab === 'dashboard' || isAddingFamilyMembers) ? (
                 <Card>
                   <CardHeader>
                     <CardTitle>
