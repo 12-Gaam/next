@@ -22,10 +22,14 @@ export async function GET() {
       },
       include: {
         gaamsManaged: {
-          select: {
-            id: true,
-            name: true,
-            slug: true
+          include: {
+            gaam: {
+              select: {
+                id: true,
+                name: true,
+                slug: true
+              }
+            }
           }
         }
       },
@@ -34,7 +38,13 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json(admins)
+    // Transform to match expected format (extract gaam from GaamAdmin wrapper)
+    const formattedAdmins = admins.map(admin => ({
+      ...admin,
+      gaamsManaged: admin.gaamsManaged.map(gm => gm.gaam)
+    }))
+
+    return NextResponse.json(formattedAdmins)
   } catch (error) {
     console.error('Error fetching admins:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

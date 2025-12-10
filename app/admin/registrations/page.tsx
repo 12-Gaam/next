@@ -39,7 +39,7 @@ export default function RegistrationApprovalsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalRegistrations, setTotalRegistrations] = useState(0)
-  const limit = 10
+  const limit = 100
 
   useEffect(() => {
     if (status === 'loading') return

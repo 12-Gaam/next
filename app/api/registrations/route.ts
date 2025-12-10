@@ -36,11 +36,12 @@ export async function GET(request: NextRequest) {
         gaamFilter = [gaamParam]
       }
     } else {
-      const gaams = await prisma.gaam.findMany({
+      // Get all gaams where this admin is assigned
+      const gaamAdmins = await prisma.gaamAdmin.findMany({
         where: { adminId: session.user.id },
-        select: { id: true }
+        select: { gaamId: true }
       })
-      gaamFilter = gaams.map((gaam) => gaam.id)
+      gaamFilter = gaamAdmins.map((ga) => ga.gaamId)
 
       if (!gaamFilter.length) {
         return NextResponse.json({ 

@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { isSuperAdmin } from '@/lib/rbac'
 
-// PUT - Assign or update GAAM assignment for an admin
+// PUT - Assign or update GAAM assignments for an admin (supports multiple gaams)
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -18,55 +18,81 @@ export async function PUT(
 
     const adminId = params.id
     const body = await request.json()
-    const { gaamId } = body
+    let { gaamIds } = body // Now accepts array of gaamIds
 
     // Verify admin exists and is a GAAM_ADMIN
     const admin = await prisma.user.findUnique({
       where: { id: adminId },
-      include: { gaamsManaged: true }
+      include: { 
+        gaamsManaged: {
+          include: {
+            gaam: {
+              select: {
+                id: true,
+                name: true,
+                slug: true
+              }
+            }
+          }
+        }
+      }
     })
 
     if (!admin || admin.role !== 'GAAM_ADMIN') {
       return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
     }
 
-    // If gaamId is null or empty, remove all GAAM assignments
-    if (!gaamId) {
-      await prisma.gaam.updateMany({
-        where: { adminId: adminId },
-        data: { adminId: null }
+    // If gaamIds is null, empty array, or not provided, remove all GAAM assignments
+    if (!gaamIds || !Array.isArray(gaamIds) || gaamIds.length === 0) {
+      await prisma.gaamAdmin.deleteMany({
+        where: { adminId: adminId }
       })
 
-      return NextResponse.json({ message: 'GAAM assignment removed' })
+      return NextResponse.json({ message: 'GAAM assignments removed' })
     }
 
-    // Verify GAAM exists
-    const gaam = await prisma.gaam.findUnique({
-      where: { id: gaamId }
+    // Filter out invalid IDs (single characters, "none", empty strings, etc.)
+    // Valid Prisma CUIDs start with 'c' and are typically 25 characters long
+    const validGaamIds = gaamIds.filter((id: any) => {
+      return (
+        typeof id === 'string' &&
+        id.length > 10 && // Filter out short strings like "n", "o", "none"
+        id !== 'none' &&
+        id.trim() !== ''
+      )
     })
 
-    if (!gaam) {
-      return NextResponse.json({ error: 'GAAM not found' }, { status: 404 })
+    if (validGaamIds.length === 0) {
+      // If no valid IDs, remove all assignments
+      await prisma.gaamAdmin.deleteMany({
+        where: { adminId: adminId }
+      })
+      return NextResponse.json({ message: 'GAAM assignments removed' })
     }
 
-    // Check if GAAM is already assigned to another admin
-    if (gaam.adminId && gaam.adminId !== adminId) {
-      return NextResponse.json(
-        { error: 'This GAAM is already assigned to another admin' },
-        { status: 400 }
-      )
+    // Verify all GAAMs exist
+    const gaams = await prisma.gaam.findMany({
+      where: { id: { in: validGaamIds } }
+    })
+
+    if (gaams.length !== validGaamIds.length) {
+      return NextResponse.json({ 
+        error: 'One or more GAAMs not found',
+        details: `Found ${gaams.length} out of ${validGaamIds.length} requested GAAMs`
+      }, { status: 404 })
     }
 
     // Remove existing assignments for this admin
-    await prisma.gaam.updateMany({
-      where: { adminId: adminId },
-      data: { adminId: null }
+    await prisma.gaamAdmin.deleteMany({
+      where: { adminId: adminId }
     })
 
-    // Assign new GAAM
-    await prisma.gaam.update({
-      where: { id: gaamId },
-      data: { adminId: adminId }
+    // Create new assignments
+    await prisma.gaamAdmin.createMany({
+      data: validGaamIds.map((gaamId: string) => ({
+        gaamId,
+        adminId
+      }))
     })
 
     // Return updated admin with GAAMs
@@ -74,16 +100,26 @@ export async function PUT(
       where: { id: adminId },
       include: {
         gaamsManaged: {
-          select: {
-            id: true,
-            name: true,
-            slug: true
+          include: {
+            gaam: {
+              select: {
+                id: true,
+                name: true,
+                slug: true
+              }
+            }
           }
         }
       }
     })
 
-    return NextResponse.json(updatedAdmin)
+    // Transform to match expected format
+    const formattedAdmin = {
+      ...updatedAdmin,
+      gaamsManaged: updatedAdmin?.gaamsManaged.map(gm => gm.gaam) || []
+    }
+
+    return NextResponse.json(formattedAdmin)
   } catch (error) {
     console.error('Error updating GAAM assignment:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
