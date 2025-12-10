@@ -176,14 +176,6 @@ async function main() {
     console.log('✅ Admin assigned to Limbasi gaam')
   }
 
-  const limbasiGaam = await prisma.gaam.findUnique({ where: { name: 'Limbasi' } })
-  if (limbasiGaam) {
-    await prisma.user.update({
-      where: { id: gaamAdmin.id },
-      data: { gaamId: limbasiGaam.id }
-    })
-  }
-
   console.log('🎉 Database seeding completed successfully!')
 }
 
