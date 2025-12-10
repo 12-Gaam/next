@@ -9,18 +9,29 @@ export async function GET() {
   try {
     const gaams = await prisma.gaam.findMany({
       include: {
-        admin: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true
+        admins: {
+          include: {
+            admin: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true
+              }
+            }
           }
         }
       },
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(gaams)
+    // Transform to match expected format (backward compatibility)
+    const formattedGaams = gaams.map(gaam => ({
+      ...gaam,
+      admin: gaam.admins.length > 0 ? gaam.admins[0].admin : null,
+      admins: gaam.admins.map(ga => ga.admin)
+    }))
+
+    return NextResponse.json(formattedGaams)
   } catch (error) {
     console.error('Error fetching gaams:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -37,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const name = (body?.name as string)?.trim()
-    const adminId = body?.adminId as string | undefined
+    const adminIds = body?.adminIds as string[] | undefined // Now accepts array
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -51,30 +62,44 @@ export async function POST(request: NextRequest) {
       slug = `${slugBase}-${counter++}`
     }
 
+    // Create gaam with optional admin assignments
     const gaam = await prisma.gaam.create({
       data: {
         name,
         slug,
-        ...(adminId
+        ...(adminIds && adminIds.length > 0
           ? {
-              admin: {
-                connect: { id: adminId }
+              admins: {
+                create: adminIds.map((adminId: string) => ({
+                  adminId
+                }))
               }
             }
           : {})
       },
       include: {
-        admin: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true
+        admins: {
+          include: {
+            admin: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true
+              }
+            }
           }
         }
       }
     })
 
-    return NextResponse.json(gaam, { status: 201 })
+    // Transform to match expected format (backward compatibility)
+    const formattedGaam = {
+      ...gaam,
+      admin: gaam.admins.length > 0 ? gaam.admins[0].admin : null,
+      admins: gaam.admins.map(ga => ga.admin)
+    }
+
+    return NextResponse.json(formattedGaam, { status: 201 })
   } catch (error) {
     console.error('Error creating gaam:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
