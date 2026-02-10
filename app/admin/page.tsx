@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { 
-  Users, 
-  Building2, 
+import {
+  Users,
+  Building2,
   LogOut,
   Eye,
   TrendingUp,
@@ -228,38 +228,38 @@ export default function AdminDashboard() {
           )}
         </div>
 
-                 {/* Core Management Section with List View */}
-         <div className="grid grid-cols-1 lg:grid gap-10">
-           {/* Left Side - Management Cards */}
-           <div className="lg:col-span-2">
-             <Card className="border-0 shadow-lg">
-               <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                 <CardTitle className="text-xl font-semibold text-gray-800">Contact Management</CardTitle>
-                 <CardDescription className="text-gray-600">
-                   Manage all community contacts and member information
-                 </CardDescription>
-               </CardHeader>
-               <CardContent className="p-6">
-                 <div className={`grid grid-cols-1 ${session?.user.role === 'SUPER_ADMIN' ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2'} gap-6`}>
-                   <Link href="/admin/contacts" className="h-full">
-                     <Card className="border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
-                       <CardContent className="p-6 text-center flex flex-col flex-grow">
-                         <Eye className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                         <h3 className="text-lg font-semibold text-gray-800 mb-2">View Contacts</h3>
-                         <p className="text-gray-600 text-sm mb-4 flex-grow">Browse and manage all community contacts</p>
-                         <div className="mt-auto">
-                           <div className="text-2xl font-bold text-blue-600">
-                             {isLoadingStats ? (
-                               <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto"></div>
-                             ) : (
-                               stats.contacts
-                             )}
-                           </div>
-                           <p className="text-sm text-gray-500 mt-1">Total Contacts</p>
-                         </div>
-                       </CardContent>
-                     </Card>
-                   </Link>
+        {/* Core Management Section with List View */}
+        <div className="grid grid-cols-1 lg:grid gap-10">
+          {/* Left Side - Management Cards */}
+          <div className="lg:col-span-2">
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                <CardTitle className="text-xl font-semibold text-gray-800">Contact Management</CardTitle>
+                <CardDescription className="text-gray-600">
+                  Manage all community contacts and member information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className={`grid grid-cols-1 ${session?.user.role === 'SUPER_ADMIN' ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2'} gap-6`}>
+                  <Link href="/admin/contacts" className="h-full">
+                    <Card className="border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
+                      <CardContent className="p-6 text-center flex flex-col flex-grow">
+                        <Eye className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">View Contacts</h3>
+                        <p className="text-gray-600 text-sm mb-4 flex-grow">Browse and manage all community contacts</p>
+                        <div className="mt-auto">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {isLoadingStats ? (
+                              <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto"></div>
+                            ) : (
+                              stats.contacts
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">Total Contacts</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
 
                   <Link href="/admin/registrations" className="h-full">
                     <Card className="border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
@@ -290,115 +290,117 @@ export default function AdminDashboard() {
                     </Link>
                   )}
 
-                   <Card className="border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all h-full flex flex-col">
-                     <CardContent className="p-6 text-center flex flex-col flex-grow">
-                       <UserPlus className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                       <h3 className="text-lg font-semibold text-gray-800 mb-2">New Members</h3>
-                       <p className="text-gray-600 text-sm mb-4 flex-grow">Members who joined this month</p>
-                       <div className="mt-auto">
-                         <div className="text-2xl font-bold text-green-600">
-                           {isLoadingStats ? (
-                             <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto"></div>
-                           ) : (
-                             stats.newContactsThisMonth
-                           )}
-                         </div>
-                         <p className="text-sm text-gray-500 mt-1">This Month</p>
-                       </div>
-                     </CardContent>
-                   </Card>
-                 </div>
-               </CardContent>
-             </Card>
-           </div>
+                  <Link href="/admin/contacts?filter=this_month" className="h-full">
+                    <Card className="border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
+                      <CardContent className="p-6 text-center flex flex-col flex-grow">
+                        <UserPlus className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">New Members</h3>
+                        <p className="text-gray-600 text-sm mb-4 flex-grow">Members who joined this month</p>
+                        <div className="mt-auto">
+                          <div className="text-2xl font-bold text-green-600">
+                            {isLoadingStats ? (
+                              <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto"></div>
+                            ) : (
+                              stats.newContactsThisMonth
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">This Month</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-           {/* Right Side - Recent Contacts List */}
-           <div className="lg:col-span-1">
-             <Card className="border-0 shadow-lg h-full">
-               <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
-                 <CardTitle className="text-lg font-semibold text-blue-800">Recent Contacts</CardTitle>
-                 <CardDescription className="text-blue-600">
-                   Latest community members
-                 </CardDescription>
-               </CardHeader>
-               <CardContent className="p-4">
-                 <div className="space-y-3">
-                   {isLoadingStats ? (
-                     <div className="text-center py-8">
-                       <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse mx-auto mb-2"></div>
-                       <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mx-auto mb-2"></div>
-                       <div className="h-8 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div>
-                     </div>
-                   ) : stats.contacts > 0 ? (
-                     <div className="text-center py-8">
-                       <Users className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-                       <p className="text-sm text-gray-600">View all {stats.contacts} contacts</p>
-                       <Link href="/admin/contacts">
-                         <Button size="sm" className="mt-2 bg-blue-600 hover:bg-blue-700">
-                           View All
-                         </Button>
-                       </Link>
-                     </div>
-                   ) : (
-                     <div className="text-center py-8">
-                       <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                       <p className="text-sm text-gray-600">No contacts yet</p>
-                       <p className="text-xs text-gray-500">Start building your community</p>
-                     </div>
-                   )}
-                 </div>
-               </CardContent>
-             </Card>
-           </div>
-         </div>
+          {/* Right Side - Recent Contacts List */}
+          <div className="lg:col-span-1">
+            <Card className="border-0 shadow-lg h-full">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                <CardTitle className="text-lg font-semibold text-blue-800">Recent Contacts</CardTitle>
+                <CardDescription className="text-blue-600">
+                  Latest community members
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {isLoadingStats ? (
+                    <div className="text-center py-8">
+                      <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse mx-auto mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-32 mx-auto mb-2"></div>
+                      <div className="h-8 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div>
+                    </div>
+                  ) : stats.contacts > 0 ? (
+                    <div className="text-center py-8">
+                      <Users className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">View all {stats.contacts} contacts</p>
+                      <Link href="/admin/contacts">
+                        <Button size="sm" className="mt-2 bg-blue-600 hover:bg-blue-700">
+                          View All
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">No contacts yet</p>
+                      <p className="text-xs text-gray-500">Start building your community</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-         {/* System Status Card */}
-         <div className="mt-8">
-           <Card className="border-0 shadow-lg">
-             <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200">
-               <CardTitle className="text-lg font-semibold text-purple-800">System Status</CardTitle>
-               <CardDescription className="text-purple-600">
-                 Geographic coverage and system information
-               </CardDescription>
-             </CardHeader>
-             <CardContent className="p-6">
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 <div className="text-center p-4 bg-white rounded-lg border border-purple-200">
-                   <Building2 className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                   <p className="text-sm font-medium text-gray-600">Countries</p>
-                   {isLoadingStats ? (
-                     <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto mt-2"></div>
-                   ) : (
-                     <p className="text-2xl font-bold text-purple-600">{stats.totalCountries}</p>
-                   )}
-                 </div>
-                 <div className="text-center p-4 bg-white rounded-lg border border-purple-200">
-                   <BarChart3 className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                   <p className="text-sm font-medium text-gray-600">States</p>
-                   {isLoadingStats ? (
-                     <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto mt-2"></div>
-                   ) : (
-                     <p className="text-2xl font-bold text-purple-600">{stats.totalStates}</p>
-                   )}
-                 </div>
-                 <div className="text-center p-4 bg-white rounded-lg border border-purple-200">
-                   <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                   <p className="text-sm font-medium text-gray-600">Coverage</p>
-                   {isLoadingStats ? (
-                     <div className="h-6 bg-gray-200 rounded animate-pulse w-8 mx-auto mt-2"></div>
-                   ) : (
-                     <p className="text-lg font-semibold text-purple-600">
-                       {stats.totalCountries > 0 && stats.totalStates > 0 
-                         ? `${Math.round((stats.totalStates / (stats.totalCountries * 10)) * 100)}%`
-                         : '0%'
-                       }
-                     </p>
-                   )}
-                 </div>
-               </div>
-             </CardContent>
-           </Card>
-         </div>
+        {/* System Status Card */}
+        <div className="mt-8">
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200">
+              <CardTitle className="text-lg font-semibold text-purple-800">System Status</CardTitle>
+              <CardDescription className="text-purple-600">
+                Geographic coverage and system information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center p-4 bg-white rounded-lg border border-purple-200">
+                  <Building2 className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-600">Countries</p>
+                  {isLoadingStats ? (
+                    <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto mt-2"></div>
+                  ) : (
+                    <p className="text-2xl font-bold text-purple-600">{stats.totalCountries}</p>
+                  )}
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg border border-purple-200">
+                  <BarChart3 className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-600">States</p>
+                  {isLoadingStats ? (
+                    <div className="h-8 bg-gray-200 rounded animate-pulse w-12 mx-auto mt-2"></div>
+                  ) : (
+                    <p className="text-2xl font-bold text-purple-600">{stats.totalStates}</p>
+                  )}
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg border border-purple-200">
+                  <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-600">Coverage</p>
+                  {isLoadingStats ? (
+                    <div className="h-6 bg-gray-200 rounded animate-pulse w-8 mx-auto mt-2"></div>
+                  ) : (
+                    <p className="text-lg font-semibold text-purple-600">
+                      {stats.totalCountries > 0 && stats.totalStates > 0
+                        ? `${Math.round((stats.totalStates / (stats.totalCountries * 10)) * 100)}%`
+                        : '0%'
+                      }
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
 
       </main>

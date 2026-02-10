@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Eye, EyeOff, Mail } from 'lucide-react'
+import { Eye, EyeOff, Mail, ArrowRight, UserCircle, ShieldCheck, Loader2 } from 'lucide-react'
+import HeaderPage from '@/components/common/HeaderPage'
+import FooterPage from '@/components/common/FooterPage'
 
 export default function SignInPage() {
   const [identifier, setIdentifier] = useState('')
@@ -32,6 +34,7 @@ export default function SignInPage() {
     setIsSendingOtp(true)
     setError('')
     setOtpMessage('')
+    setPassword('') // Mutual exclusivity: clear password if OTP is requested
 
     try {
       const response = await fetch('/api/auth/send-otp', {
@@ -110,134 +113,183 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Sign In</h1>
-          <p className="text-gray-600 mt-2">Access your 12Gaam account</p>
-        </div>
+    <div className="flex flex-col min-h-screen bg-[#fdfaf6]">
+      <HeaderPage />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Admin Login</CardTitle>
-            <CardDescription>
-              Admins: Use username and password to login.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="identifier">Email or Username</Label>
-                <Input
-                  id="identifier"
-                  type="text"
-                  value={identifier}
-                  onChange={(e) => {
-                    setIdentifier(e.target.value)
-                    setOtpSent(false)
-                    setOtp('')
-                    setOtpMessage('')
-                  }}
-                  placeholder="e.g. me@12gaam.com"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
+      <main className="flex-1 relative flex items-center justify-center p-6 overflow-hidden">
+        {/* Warm Background Accents */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#f4a94b]/5 rounded-full blur-[100px] animate-pulse"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-amber-50 rounded-full blur-[150px]"></div>
 
-              {/* OTP Section for Members */}
-              {otpSent ? (
+        <div className="w-full max-w-md relative z-10 transition-all duration-500 animate-in fade-in zoom-in slide-in-from-bottom-4">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center p-3 mb-6 rounded-2xl bg-white shadow-xl border border-amber-100/20">
+              <span className="text-4xl font-black tracking-tighter text-primary">
+                12<span className="text-secondary">Gaam</span>
+              </span>
+            </div>
+            <p className="text-slate-500 text-lg">Access your community portal</p>
+          </div>
+
+          <Card className="bg-white/80 backdrop-blur-2xl border-white shadow-[0_20px_50px_rgba(244,169,75,0.08)] overflow-hidden rounded-3xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none"></div>
+
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl font-bold text-slate-900 text-center">Admin Login</CardTitle>
+              <CardDescription className="text-slate-500 text-center">
+                {otpSent ? 'Enter the security code sent to your email.' : 'Admins: Use username and password to login.'}
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="pt-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-sm font-medium border border-red-100 animate-in shake flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-600"></div>
+                    {error}
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <Label htmlFor="otp">OTP (One-Time Password)</Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="Enter 6-digit OTP"
-                    maxLength={6}
-                    disabled={isLoading}
-                  />
-                  <p className="text-xs text-gray-500">
-                    OTP sent to your email. Valid for 15 minutes.
-                  </p>
+                  <Label htmlFor="identifier" className="text-slate-700 font-medium ml-1">Username</Label>
+                  <div className="relative group">
+                    <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-secondary transition-colors" />
+                    <Input
+                      id="identifier"
+                      placeholder="Your community username"
+                      value={identifier}
+                      onChange={(e) => {
+                        setIdentifier(e.target.value)
+                        setOtpSent(false)
+                        setOtp('')
+                        setOtpMessage('')
+                        setPassword('') // Reset password when identifier changes to reset state
+                      }}
+                      required
+                      className="pl-10 h-12 rounded-xl border-amber-100/50 bg-slate-50/50 focus:bg-white focus:ring-secondary/20 focus:border-secondary transition-all"
+                    />
+                  </div>
                 </div>
-              ) : (
-                /* Password Section for Admins */
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    disabled={isLoading}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-              )}
 
-              {/* Send OTP Button for Members */}
-              {/* {!otpSent && (
+                {!otpSent ? (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center ml-1">
+                      <Label htmlFor="password" className="text-slate-700 font-medium">Password</Label>
+                      {!password && (
+                        <button
+                          type="button"
+                          onClick={handleSendOtp}
+                          disabled={isSendingOtp}
+                          className="text-xs font-semibold text-secondary hover:text-secondary/80 transition-colors disabled:opacity-50 animate-in fade-in zoom-in duration-300"
+                        >
+                          {isSendingOtp ? 'Sending...' : 'Login with Email OTP Instead'}
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative group">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value)
+                          // Clear any OTP states if user starts typing password
+                          setOtp('')
+                          setOtpSent(false)
+                          setOtpMessage('')
+                        }}
+                        placeholder="Enter your security password"
+                        className="h-12 bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-secondary transition-all rounded-xl"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                        disabled={isLoading}
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 animate-in slide-in-from-right-4 duration-300">
+                    <div className="flex justify-between items-center ml-1">
+                      <Label htmlFor="otp" className="text-slate-700 font-medium">Security Code (OTP)</Label>
+                      <button
+                        type="button"
+                        onClick={() => setOtpSent(false)}
+                        className="text-xs font-semibold text-slate-400 hover:text-slate-600"
+                      >
+                        Back to password
+                      </button>
+                    </div>
+                    <div className="relative group">
+                      <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-secondary transition-colors" />
+                      <Input
+                        id="otp"
+                        type="text"
+                        placeholder="Enter 6-digit code"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        required
+                        className="pl-10 h-12 rounded-xl border-amber-100/50 bg-slate-50/50 focus:bg-white focus:border-secondary transition-all text-center text-xl tracking-[0.5em] font-mono"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {otpMessage && (
+                  <div className="text-sm text-green-700 bg-green-50 border border-green-100 p-4 rounded-xl flex items-center gap-3 animate-in fade-in scale-in-95">
+                    <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                    {otpMessage}
+                  </div>
+                )}
+
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSendOtp}
-                  disabled={isSendingOtp || isLoading || !identifier}
-                  className="w-full"
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-14 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-bold text-lg shadow-xl shadow-secondary/20 transition-all active:scale-[0.98]"
                 >
-                  {isSendingOtp ? (
-                    'Sending OTP...'
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Authenticating...
+                    </div>
                   ) : (
-                    <>
-                      <Mail className="mr-2 h-4 w-4" />
-                      Send OTP to Email
-                    </>
+                    <div className="flex items-center gap-2">
+                      Sign In
+                      <ArrowRight className="h-5 w-5" />
+                    </div>
                   )}
                 </Button>
-              )} */}
 
-              {otpMessage && (
-                <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md">
-                  {otpMessage}
+                <div className="pt-4 text-center">
+                  <p className="text-sm text-slate-500">
+                    New to the community?{' '}
+                    <Link href="/join#register" className="text-secondary hover:text-secondary/80 font-semibold transition-colors">
+                      Register your family
+                    </Link>
+                  </p>
                 </div>
-              )}
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
 
-              {error && (
-                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                  {error}
-                </div>
-              )}
+      <FooterPage />
 
-              <Button
-                type="submit"
-                className="w-full bg-secondary hover:bg-secondary/90"
-                disabled={isLoading || (otpSent ? !otp : !password && !otp)}
-              >
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Need to register your family?{' '}
-                <Link href="/join#register" className="text-blue-600 hover:underline">
-                  Join the community
-                </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <style jsx global>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
+        }
+        .animate-in.shake {
+          animation: shake 0.3s ease-in-out;
+        }
+      `}</style>
     </div>
   )
 }

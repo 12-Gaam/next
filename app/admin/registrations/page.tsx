@@ -86,7 +86,7 @@ export default function RegistrationApprovalsPage() {
 
   const handleAction = async (id: string, action: 'APPROVED' | 'REJECTED') => {
     const notes = action === 'REJECTED' ? prompt('Add rejection note (optional):') : undefined
-    setActionInProgress(id)
+    setActionInProgress(`${id}-${action}`)
     try {
       const response = await fetch(`/api/registrations/${id}`, {
         method: 'PATCH',
@@ -257,10 +257,10 @@ export default function RegistrationApprovalsPage() {
                         <div className="flex flex-row gap-3 flex-shrink-0">
                           <Button
                             className="bg-green-600 hover:bg-green-700 text-white"
-                            disabled={actionInProgress === registration.id}
+                            disabled={actionInProgress?.startsWith(registration.id)}
                             onClick={() => handleAction(registration.id, 'APPROVED')}
                           >
-                            {actionInProgress === registration.id ? (
+                            {actionInProgress === `${registration.id}-APPROVED` ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               'Approve'
@@ -269,10 +269,10 @@ export default function RegistrationApprovalsPage() {
                           <Button
                             variant="outline"
                             className="border-red-500 text-red-600 hover:bg-red-50"
-                            disabled={actionInProgress === registration.id}
+                            disabled={actionInProgress?.startsWith(registration.id)}
                             onClick={() => handleAction(registration.id, 'REJECTED')}
                           >
-                            {actionInProgress === registration.id ? (
+                            {actionInProgress === `${registration.id}-REJECTED` ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               'Reject'
@@ -315,11 +315,10 @@ export default function RegistrationApprovalsPage() {
                         variant={currentPage === pageNum ? "default" : "outline"}
                         onClick={() => setCurrentPage(pageNum)}
                         disabled={isLoading}
-                        className={`w-10 h-10 rounded-full ${
-                          currentPage === pageNum 
-                            ? 'bg-blue-600 text-white border-0' 
+                        className={`w-10 h-10 rounded-full ${currentPage === pageNum
+                            ? 'bg-blue-600 text-white border-0'
                             : 'border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50'
-                        } transition-all disabled:opacity-50`}
+                          } transition-all disabled:opacity-50`}
                       >
                         {pageNum}
                       </Button>

@@ -22,8 +22,8 @@ export const authOptions: NextAuthOptions = {
           const user = await prisma.user.findFirst({
             where: {
               OR: [
-                { username: credentials.identifier },
-                { email: credentials.identifier }
+                { username: { equals: credentials.identifier, mode: 'insensitive' } },
+                { email: { equals: credentials.identifier, mode: 'insensitive' } }
               ]
             }
           });
@@ -32,19 +32,19 @@ export const authOptions: NextAuthOptions = {
             console.error("User not found:", credentials.identifier);
             return null;
           }
-          
-          console.log("User found for authentication:", { 
-            id: user.id, 
-            email: user.email, 
-            username: user.username, 
-            role: user.role, 
-            status: user.status 
+
+          console.log("User found for authentication:", {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            status: user.status
           });
 
           // Check if user is MEMBER with APPROVED status - use OTP
           if (user.role === UserRole.MEMBER && user.status === RegistrationStatus.APPROVED) {
             const otp = credentials.otp || credentials.password;
-            
+
             if (!otp) {
               throw new Error('OTP_REQUIRED');
             }
@@ -88,10 +88,10 @@ export const authOptions: NextAuthOptions = {
               return null;
             }
 
-            console.log("Verifying password for admin user:", { 
-              identifier: credentials.identifier, 
+            console.log("Verifying password for admin user:", {
+              identifier: credentials.identifier,
               hasPassword: !!user.password,
-              passwordLength: user.password?.length 
+              passwordLength: user.password?.length
             });
 
             const isPasswordValid = await bcrypt.compare(
@@ -99,9 +99,9 @@ export const authOptions: NextAuthOptions = {
               user.password
             );
 
-            console.log("Password verification result:", { 
-              identifier: credentials.identifier, 
-              isValid: isPasswordValid 
+            console.log("Password verification result:", {
+              identifier: credentials.identifier,
+              isValid: isPasswordValid
             });
 
             if (!isPasswordValid) {
@@ -109,11 +109,11 @@ export const authOptions: NextAuthOptions = {
               return null;
             }
 
-            console.log("Admin authentication successful:", { 
-              id: user.id, 
-              email: user.email, 
-              username: user.username, 
-              role: user.role 
+            console.log("Admin authentication successful:", {
+              id: user.id,
+              email: user.email,
+              username: user.username,
+              role: user.role
             });
 
             return {

@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { 
-  Users, 
+import {
+  Users,
   Search,
   Eye,
   Trash2,
@@ -35,12 +35,28 @@ interface Contact {
 export default function AdminContactsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const filterParam = searchParams.get('filter') || ''
+
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [filter, setFilter] = useState(filterParam)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalContacts, setTotalContacts] = useState(0)
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setCurrentPage(1)
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -57,28 +73,21 @@ export default function AdminContactsPage() {
     }
 
     fetchContacts()
-  }, [session, status, router, currentPage])
-
-  // Debounced search effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchTerm !== '') {
-        setCurrentPage(1)
-        fetchContacts()
-      }
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [searchTerm])
+  }, [session, status, router, currentPage, debouncedSearch, filter])
 
   const fetchContacts = async () => {
     try {
-      setLoading(true)
+      if (contacts.length === 0) {
+        setLoading(true)
+      } else {
+        setIsRefreshing(true)
+      }
+
       const response = await fetch(
-        `/api/contacts?page=${currentPage}&limit=10&search=${searchTerm}`
+        `/api/contacts?page=${currentPage}&limit=10&search=${debouncedSearch}&filter=${filter}`
       )
       const data = await response.json()
-      
+
       setContacts(data.contacts || [])
       setTotalPages(data.pagination?.pages || 1)
       setTotalContacts(data.pagination?.total || 0)
@@ -86,12 +95,8 @@ export default function AdminContactsPage() {
       console.error('Error fetching contacts:', error)
     } finally {
       setLoading(false)
+      setIsRefreshing(false)
     }
-  }
-
-  const handleSearch = () => {
-    setCurrentPage(1)
-    fetchContacts()
   }
 
   const handleView = (contactId: string) => {
@@ -163,8 +168,8 @@ export default function AdminContactsPage() {
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/admin" className='bg-secondary hover:bg-secondary/90 text-white px-4 py-3 rounded-lg flex items-center gap-2'>
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
               </Link>
             </div>
           </div>
@@ -234,7 +239,9 @@ export default function AdminContactsPage() {
           <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-semibold text-gray-800">All Contacts</CardTitle>
+                <CardTitle className="text-xl font-semibold text-gray-800">
+                  {filter === 'this_month' ? 'New Members This Month' : 'All Contacts'}
+                </CardTitle>
                 <CardDescription className="text-gray-600">
                   Showing {contacts.length} of {totalContacts} contacts
                 </CardDescription>
@@ -258,27 +265,40 @@ export default function AdminContactsPage() {
                     </button>
                   )}
                 </div>
-                {searchTerm && (
-                  <Button 
-                    onClick={handleSearch}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                {(filter || searchTerm) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setFilter('')
+                      setSearchTerm('')
+                      setCurrentPage(1)
+                      router.push('/admin/contacts')
+                    }}
+                    className="text-gray-500 hover:text-gray-700 font-medium"
                   >
-                    Search
+                    Clear All
                   </Button>
                 )}
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative">
+            {isRefreshing && (
+              <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center backdrop-blur-[1px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            )}
+
             {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading contacts...</p>
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600 font-medium">Loading contacts...</p>
               </div>
             ) : contacts.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No contacts found</p>
+              <div className="text-center py-20 bg-gray-50/50 rounded-xl border-2 border-dashed border-gray-200">
+                <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-xl font-medium text-gray-600">No contacts found</p>
+                <p className="text-gray-400 mt-2">Try adjusting your search or filters</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -329,8 +349,8 @@ export default function AdminContactsPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex space-x-2">
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => handleView(contact.id)}
                               className="hover:bg-blue-50 hover:text-blue-600"
@@ -338,7 +358,7 @@ export default function AdminContactsPage() {
                               <Eye className="h-4 w-4 mr-1" />
                               View
                             </Button>
-                             {/* <Button 
+                            {/* <Button 
                               size="sm" 
                               variant="outline"
                               onClick={() => handleEdit(contact.id)}
@@ -348,8 +368,8 @@ export default function AdminContactsPage() {
                               Edit
                             </Button> */}
                             {session.user.role === 'SUPER_ADMIN' && (
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleDelete(contact.id)}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -384,11 +404,10 @@ export default function AdminContactsPage() {
                       key={page}
                       variant={currentPage === page ? "default" : "outline"}
                       onClick={() => setCurrentPage(page)}
-                      className={`w-10 h-10 rounded-full ${
-                        currentPage === page 
-                          ? 'bg-blue-600 text-white border-0' 
-                          : 'border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50'
-                      } transition-all`}
+                      className={`w-10 h-10 rounded-full ${currentPage === page
+                        ? 'bg-blue-600 text-white border-0'
+                        : 'border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50'
+                        } transition-all`}
                     >
                       {page}
                     </Button>

@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma'
 import { isAdminRole, isSuperAdmin } from '@/lib/rbac'
 import { RegistrationStatus, UserRole } from '@prisma/client'
 import { sendRegistrationStatusEmail } from '@/lib/mailer'
+import { generateRandomPassword } from '@/lib/utils'
+import bcrypt from 'bcryptjs'
 
 export async function PATCH(
   request: NextRequest,
@@ -58,13 +60,21 @@ export async function PATCH(
       }
     }
 
+    const isApproved = status === RegistrationStatus.APPROVED
+    let plainPassword = ''
+
+    if (isApproved) {
+      plainPassword = generateRandomPassword(10)
+    }
+
     const updated = await prisma.user.update({
       where: { id: params.id },
       data: {
         status,
         verificationNotes: notes,
         verifiedAt: new Date(),
-        verifiedById: session.user.id
+        verifiedById: session.user.id,
+        ...(isApproved ? { password: await bcrypt.hash(plainPassword, 12) } : {})
       },
       include: {
         gaam: true,
@@ -81,7 +91,9 @@ export async function PATCH(
       await sendRegistrationStatusEmail({
         to: updated.email,
         name: updated.fullName,
-        status: status === RegistrationStatus.APPROVED ? 'Approved' : 'Rejected',
+        status: isApproved ? 'Approved' : 'Rejected',
+        username: isApproved ? updated.username : undefined,
+        password: isApproved ? plainPassword : undefined,
         notes
       })
     } catch (emailError) {

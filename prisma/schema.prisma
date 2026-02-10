@@ -8,28 +8,16 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum UserRole {
-  SUPER_ADMIN
-  GAAM_ADMIN
-  MEMBER
-}
-
-enum RegistrationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model User {
   id                String             @id @default(cuid())
-  fullName          String
-  email             String             @unique
   username          String             @unique
   password          String
-  role              UserRole           @default(MEMBER)
-  status            RegistrationStatus @default(PENDING)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  email             String             @unique
+  fullName          String
   gaamId            String?
-  gaam              Gaam?              @relation(fields: [gaamId], references: [id])
+  status            RegistrationStatus @default(PENDING)
   verificationNotes String?
   verifiedAt        DateTime?
   verifiedById      String?
@@ -39,8 +27,11 @@ model User {
   gaamsManaged      GaamAdmin[]        @relation("GaamAdmins")
   otp               String?
   otpExpiresAt      DateTime?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  contacts          Contact[]
+  gaamsManaged      Gaam[]             @relation("GaamAdmins")
+  gaam              Gaam?              @relation(fields: [gaamId], references: [id])
+  verifiedBy        User?              @relation("UserVerification", fields: [verifiedById], references: [id])
+  verifiedUsers     User[]             @relation("UserVerification")
 }
 
 model Gaam {
@@ -114,38 +105,21 @@ model ProfessionMaster {
 
 model Contact {
   id               String            @id @default(cuid())
-  userId           String?
   firstname        String
   middlename       String?
   lastname         String?           @default("Patel")
-  spouseFirstName  String?
-  spouseMiddleName String?
-  spouseLastName   String?
-  fatherFirstName  String?           @default("")
-  fatherMiddleName String?
-  fatherLastName   String?
-  motherFirstName  String?           @default("")
-  motherMiddleName String?
-  motherLastName   String?
   gender           String
-  maritalStatus    String?
-  is18Plus         Boolean?          @default(false)
   gaam             String
   currentAddress   String
   countryId        String?
-  country          CountryMaster?    @relation(fields: [countryId], references: [id])
   stateId          String?
-  state            StateMaster?      @relation(fields: [stateId], references: [id])
   cityId           String?
   phone            String            @unique
-  countryCode      String?           @default("+1")
   email            String?           @unique
   dob              DateTime?
   educationId      String?
-  education        EducationMaster?  @relation(fields: [educationId], references: [id])
   otherEducation   String?
   professionId     String?
-  profession       ProfessionMaster? @relation(fields: [professionId], references: [id])
   otherProfession  String?
   website          String?
   profilePic       String?
@@ -156,35 +130,64 @@ model Contact {
   tiktok           String?
   twitter          String?
   snapchat         String?
-  children         ContactChild[]
-  siblings         ContactSibling[]
-  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  spouseFirstName  String?
+  spouseMiddleName String?
+  spouseLastName   String?
+  fatherFirstName  String?           @default("")
+  fatherMiddleName String?
+  fatherLastName   String?
+  motherFirstName  String?           @default("")
+  motherMiddleName String?
+  motherLastName   String?
+  maritalStatus    String?
+  is18Plus         Boolean?          @default(false)
+  countryCode      String?           @default("+1")
+  userId           String?
+  country          CountryMaster?    @relation(fields: [countryId], references: [id])
+  education        EducationMaster?  @relation(fields: [educationId], references: [id])
+  profession       ProfessionMaster? @relation(fields: [professionId], references: [id])
+  state            StateMaster?      @relation(fields: [stateId], references: [id])
+  user             User?             @relation(fields: [userId], references: [id])
+  children         ContactChild[]
+  siblings         ContactSibling[]
 }
 
 model ContactChild {
   id         String   @id @default(cuid())
   contactId  String
-  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  firstName  String?  @default("")
-  middleName String?
-  lastName   String?
   gender     String
   age        Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  firstName  String?  @default("")
+  middleName String?
+  lastName   String?
+  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
 }
 
 model ContactSibling {
   id         String   @id @default(cuid())
   contactId  String
-  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  firstName  String?  @default("")
-  middleName String?
-  lastName   String?
   gender     String
   age        Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  firstName  String?  @default("")
+  middleName String?
+  lastName   String?
+  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  GAAM_ADMIN
+  MEMBER
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

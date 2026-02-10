@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       gaamFilter = gaamAdmins.map((ga) => ga.gaamId)
 
       if (!gaamFilter.length) {
-        return NextResponse.json({ 
+        return NextResponse.json({
           registrations: [],
           pagination: {
             page: 1,
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       prisma.user.count({ where })
     ])
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       registrations,
       pagination: {
         page,
@@ -145,9 +145,7 @@ export async function POST(request: NextRequest) {
     try {
       await sendRegistrationCredentialsEmail({
         to: user.email,
-        name: user.fullName,
-        username: user.username,
-        password
+        name: user.fullName
       })
     } catch (emailError) {
       console.error('Failed to send registration email:', emailError)
@@ -157,19 +155,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Registration submitted successfully' }, { status: 201 })
   } catch (error) {
     console.error('Error creating registration:', error)
-    
+
     if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json({ 
-        error: 'Validation error', 
-        details: error.message 
+      return NextResponse.json({
+        error: 'Validation error',
+        details: error.message
       }, { status: 400 })
     }
 
     // Return more detailed error for debugging
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     const errorStack = error instanceof Error ? error.stack : undefined
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       error: 'Internal server error',
       message: errorMessage,
       ...(process.env.NODE_ENV === 'development' && { stack: errorStack })

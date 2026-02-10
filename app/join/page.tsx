@@ -11,7 +11,7 @@ import HeaderPage from '@/components/common/HeaderPage'
 import FooterPage from '@/components/common/FooterPage'
 import { AlertCircle, CheckCircle2, Loader2, LogIn, Mail, UserPlus2 } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-  
+
 interface Gaam {
   id: string
   name: string
@@ -77,6 +77,7 @@ export default function JoinPage() {
     setIsSendingOtp(true)
     setLoginError('')
     setOtpMessage('')
+    setPassword('') // Mutual exclusivity: clear password if OTP is requested
 
     try {
       const response = await fetch('/api/auth/send-otp', {
@@ -177,7 +178,7 @@ export default function JoinPage() {
       }
 
       setRegistrationMessage(
-        'Registration submitted! Check your email for login credentials. Your gaam admin will verify your request.'
+        'Registration submitted! Your gaam admin will verify your details. You will receive your login credentials via email once approved.'
       )
       setFullName('')
       setEmail('')
@@ -214,22 +215,20 @@ export default function JoinPage() {
               <div className="grid grid-cols-2 text-center text-sm font-semibold p-4">
                 <button
                   type="button"
-                  className={`py-4 transition ${
-                    activeTab === 'login'
-                      ? 'bg-secondary text-primary shadow-inner rounded-full'
-                      : ' text-dark rounded-full'
-                  }`}
+                  className={`py-4 transition ${activeTab === 'login'
+                    ? 'bg-secondary text-primary shadow-inner rounded-full'
+                    : ' text-dark rounded-full'
+                    }`}
                   onClick={() => setActiveTab('login')}
                 >
                   Existing Member Login
                 </button>
                 <button
                   type="button"
-                  className={`py-4 transition ${
-                    activeTab === 'register'
-                      ? 'bg-secondary text-primary shadow-inner rounded-full'
-                      : 'text-dark rounded-full'
-                  }`}
+                  className={`py-4 transition ${activeTab === 'register'
+                    ? 'bg-secondary text-primary shadow-inner rounded-full'
+                    : 'text-dark rounded-full'
+                    }`}
                   onClick={() => setActiveTab('register')}
                 >
                   New Family Registration
@@ -248,189 +247,195 @@ export default function JoinPage() {
                   </CardTitle>
                   <CardDescription>
                     {activeTab === 'login'
-                      ? 'Use the credentials provided over email to access your dashboard.'
-                      : 'Complete this form to receive login credentials by email.'}
+                      ? 'Use your username or email and the credentials provided over email to access your dashboard.'
+                      : 'Complete this form to register your family. Credentials will be sent after approval.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0 sm:pt-2">
-                {activeTab === 'login' ? (
-                  <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Email or Username</Label>
-                    <Input
-                      value={identifier}
-                      onChange={(e) => {
-                        setIdentifier(e.target.value)
-                        setOtpSent(false)
-                        setOtp('')
-                        setOtpMessage('')
-                      }}
-                      placeholder="e.g. me@12gaam.com"
-                      required
-                      disabled={isLoggingIn}
-                    />
-                  </div>
-
-                  {/* OTP Section for Members */}
-                  {otpSent ? (
-                    <div className="space-y-2">
-                      <Label>OTP (One-Time Password)</Label>
-                      <Input
-                        type="text"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        placeholder="Enter 6-digit OTP"
-                        maxLength={6}
-                        disabled={isLoggingIn}
-                      />
-                      <p className="text-xs text-gray-500">
-                        OTP sent to your email. Valid for 15 minutes.
-                      </p>
-                    </div>
-                  ) : (
-                    /* Password Section for Admins */
-                  <div className="space-y-2">
-                    <Label>Password</Label>
-                    <Input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                      disabled={isLoggingIn}
-                    />
-                  </div>
-                  )}
-
-                  {/* Send OTP Button for Members */}
-                  {!otpSent && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleSendOtp}
-                      disabled={isSendingOtp || isLoggingIn || !identifier}
-                      className="w-full"
-                    >
-                      {isSendingOtp ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Sending OTP...
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          Send OTP to Email
-                        </span>
-                      )}
-                    </Button>
-                  )}
-
-                  {otpMessage && (
-                    <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-md">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>{otpMessage}</span>
-                    </div>
-                  )}
-
-                    {loginError && (
-                      <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                        <AlertCircle className="h-4 w-4" />
-                        <span>{loginError}</span>
+                  {activeTab === 'login' ? (
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Email or Username</Label>
+                        <Input
+                          value={identifier}
+                          onChange={(e) => {
+                            setIdentifier(e.target.value)
+                            setOtpSent(false)
+                            setOtp('')
+                            setOtpMessage('')
+                          }}
+                          placeholder="e.g. me@12gaam.com"
+                          required
+                          disabled={isLoggingIn}
+                        />
                       </div>
-                    )}
-                    <Button
-                      type="submit"
-                      className="w-full bg-primary hover:bg-primary/90 text-white"
-                      disabled={isLoggingIn || (otpSent ? !otp : !password && !otp)}
-                    >
-                      {isLoggingIn ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Signing In...
-                        </span>
+
+                      {/* OTP Section for Members */}
+                      {otpSent ? (
+                        <div className="space-y-2">
+                          <Label>OTP (One-Time Password)</Label>
+                          <Input
+                            type="text"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            placeholder="Enter 6-digit OTP"
+                            maxLength={6}
+                            disabled={isLoggingIn}
+                          />
+                          <p className="text-xs text-gray-500">
+                            OTP sent to your email. Valid for 15 minutes.
+                          </p>
+                        </div>
                       ) : (
-                        'Sign In'
+                        /* Password Section for Admins */
+                        <div className="space-y-2">
+                          <Label>Password</Label>
+                          <Input
+                            type="password"
+                            value={password}
+                            onChange={(e) => {
+                              setPassword(e.target.value)
+                              // Mutual exclusivity: clear OTP if user types password
+                              setOtp('')
+                              setOtpSent(false)
+                              setOtpMessage('')
+                            }}
+                            placeholder="Enter your password"
+                            disabled={isLoggingIn}
+                          />
+                        </div>
                       )}
-                    </Button>
-                    <p className="text-xs text-gray-500 text-center">
-                      Members: Use OTP sent to email or enter your password to login.
-                    </p>
-                  </form>
-                ) : (
-                  <form onSubmit={handleRegistration} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Full Name</Label>
-                    <Input
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Enter your full name"
-                      required
-                      disabled={isRegistering}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      required
-                      disabled={isRegistering}
-                    />
-                  </div>
-                  <div className="space-y-2">
-            
-                    <Select
-                      value={gaamId}
-                      onValueChange={(value) => setGaamId(value)}
-                      required
-                      disabled={isRegistering || isLoadingGaams}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your gaam" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {gaams.map((gaam) => (
-                          <SelectItem key={gaam.id} value={gaam.id}>
-                            {gaam.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    
-                  </div>
-                  {registrationError && (
-                    <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                      <AlertCircle className="h-4 w-4" />
-                      <span>{registrationError}</span>
-                    </div>
+
+                      {/* Send OTP Button for Members */}
+                      {!otpSent && !password && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleSendOtp}
+                          disabled={isSendingOtp || isLoggingIn || !identifier}
+                          className="w-full animate-in fade-in zoom-in duration-300"
+                        >
+                          {isSendingOtp ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Sending OTP...
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              <Mail className="h-4 w-4" />
+                              Send OTP to Email
+                            </span>
+                          )}
+                        </Button>
+                      )}
+
+                      {otpMessage && (
+                        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-md">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span>{otpMessage}</span>
+                        </div>
+                      )}
+
+                      {loginError && (
+                        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                          <AlertCircle className="h-4 w-4" />
+                          <span>{loginError}</span>
+                        </div>
+                      )}
+                      <Button
+                        type="submit"
+                        className="w-full bg-primary hover:bg-primary/90 text-white"
+                        disabled={isLoggingIn || (otpSent ? !otp : !password && !otp)}
+                      >
+                        {isLoggingIn ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Signing In...
+                          </span>
+                        ) : (
+                          'Sign In'
+                        )}
+                      </Button>
+                      <p className="text-xs text-gray-500 text-center">
+                        Members: Use OTP sent to email or enter your password to login.
+                      </p>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleRegistration} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Full Name</Label>
+                        <Input
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="Enter your full name"
+                          required
+                          disabled={isRegistering}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@example.com"
+                          required
+                          disabled={isRegistering}
+                        />
+                      </div>
+                      <div className="space-y-2">
+
+                        <Select
+                          value={gaamId}
+                          onValueChange={(value) => setGaamId(value)}
+                          required
+                          disabled={isRegistering || isLoadingGaams}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select your gaam" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {gaams.map((gaam) => (
+                              <SelectItem key={gaam.id} value={gaam.id}>
+                                {gaam.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                      </div>
+                      {registrationError && (
+                        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                          <AlertCircle className="h-4 w-4" />
+                          <span>{registrationError}</span>
+                        </div>
+                      )}
+                      {registrationMessage && (
+                        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-md">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span>{registrationMessage}</span>
+                        </div>
+                      )}
+                      <Button
+                        type="submit"
+                        className="w-full bg-secondary hover:bg-secondary/90 text-white"
+                        disabled={isRegistering}
+                      >
+                        {isRegistering ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Submitting...
+                          </span>
+                        ) : (
+                          'Submit Registration'
+                        )}
+                      </Button>
+                      <p className="text-xs text-gray-500">
+                        Your registration will be sent to your gaam admin for verification.
+                        Login credentials will be emailed to you once your account is activated.
+                      </p>
+                    </form>
                   )}
-                  {registrationMessage && (
-                    <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-md">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>{registrationMessage}</span>
-                    </div>
-                  )}
-                  <Button
-                    type="submit"
-                    className="w-full bg-secondary hover:bg-secondary/90 text-white"
-                    disabled={isRegistering}
-                  >
-                    {isRegistering ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Submitting...
-                      </span>
-                    ) : (
-                      'Submit Registration'
-                    )}
-                  </Button>
-                    <p className="text-xs text-gray-500">
-                      You will receive login credentials immediately after submission. Access
-                      is activated once your gaam admin verifies the details.
-                    </p>
-                  </form>
-                )}
                 </CardContent>
               </Card>
             </div>

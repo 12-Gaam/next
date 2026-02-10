@@ -16,23 +16,23 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: identifier },
-          { username: identifier }
+          { email: { equals: identifier, mode: 'insensitive' } },
+          { username: { equals: identifier, mode: 'insensitive' } }
         ]
       }
     })
 
     if (!user) {
       // Don't reveal if user exists or not for security
-      return NextResponse.json({ 
-        message: 'If the email/username exists, an OTP has been sent' 
+      return NextResponse.json({
+        message: 'If the email/username exists, an OTP has been sent'
       }, { status: 200 })
     }
 
     // Only allow OTP for MEMBER role users with APPROVED status
     if (user.role !== UserRole.MEMBER || user.status !== RegistrationStatus.APPROVED) {
-      return NextResponse.json({ 
-        message: 'If the email/username exists, an OTP has been sent' 
+      return NextResponse.json({
+        message: 'If the email/username exists, an OTP has been sent'
       }, { status: 200 })
     }
 
@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to send OTP email' }, { status: 500 })
     }
 
-    return NextResponse.json({ 
-      message: 'OTP has been sent to your email' 
+    return NextResponse.json({
+      message: 'OTP has been sent to your email'
     }, { status: 200 })
   } catch (error) {
     console.error('Error sending OTP:', error)
