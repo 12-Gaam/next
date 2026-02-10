@@ -362,10 +362,7 @@ export default function UserDashboard() {
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-gray-500 mb-4">No profile found. Please create your profile first.</p>
-            <Button onClick={() => setShowForm(true)} className="bg-secondary hover:bg-secondary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Profile
-            </Button>
+          
           </CardContent>
         </Card>
       )
@@ -651,10 +648,6 @@ export default function UserDashboard() {
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-gray-500 mb-4">No profile found. Please create your profile first.</p>
-            <Button onClick={() => setShowForm(true)} className="bg-secondary hover:bg-secondary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Profile
-            </Button>
           </CardContent>
         </Card>
       )

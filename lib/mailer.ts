@@ -3,14 +3,14 @@ import nodemailer from 'nodemailer'
 interface RegistrationEmailPayload {
   to: string
   name: string
-  username: string
-  password: string
 }
 
 interface RegistrationStatusPayload {
   to: string
   name: string
   status: string
+  username?: string
+  password?: string
   notes?: string | null
 }
 
@@ -60,15 +60,11 @@ export async function sendRegistrationCredentialsEmail(payload: RegistrationEmai
   await transporterInstance.sendMail({
     from: `"12Gaam" <${process.env.EMAIL_USER}>`,
     to: payload.to,
-    subject: 'Welcome to 12Gaam - Your Login Credentials',
+    subject: 'Welcome to 12Gaam - Registration Received',
     html: `
       <p>Hi ${payload.name},</p>
-      <p>Thank you for registering with 12Gaam. Here are your login credentials:</p>
-      <ul>
-        <li><strong>Username:</strong> ${payload.username}</li>
-        <li><strong>Password:</strong> ${payload.password}</li>
-      </ul>
-      <p>Your account is now under review by your Gaam admin. We will notify you once it has been approved.</p>
+      <p>Thank you for registering with 12Gaam.</p>
+      <p>Your account is now under review by your Gaam admin. We will notify you once it has been approved, at which point you will receive your login credentials.</p>
       <p>Regards,<br />12Gaam Team</p>
     `
   })
@@ -77,22 +73,37 @@ export async function sendRegistrationCredentialsEmail(payload: RegistrationEmai
 export async function sendRegistrationStatusEmail(payload: RegistrationStatusPayload) {
   const transporterInstance = getEmailTransporter()
 
+  const isApproved = payload.status === 'Approved'
+
   await transporterInstance.sendMail({
     from: `"12Gaam" <${process.env.EMAIL_USER}>`,
     to: payload.to,
     subject: `12Gaam Registration ${payload.status}`,
     html: `
       <p>Hi ${payload.name},</p>
-      <p>Your registration status has been updated to <strong>${payload.status}</strong>.</p>
+      <p>Your registration status has been <strong>${payload.status}</strong>.</p>
+      
+      ${
+        isApproved && payload.username && payload.password
+          ? `
+          <p>Here are your login credentials:</p>
+          <ul>
+            <li><strong>Username:</strong> ${payload.username}</li>
+            <li><strong>Password:</strong> ${payload.password}</li>
+          </ul>
+          `
+          : ''
+      }
+
       ${
         payload.notes
           ? `<p>Notes from the admin: ${payload.notes}</p>`
           : ''
       }
       ${
-        payload.status === 'Approved'
-          ? `<p>You can now sign in at https://12gaam.com/join. As a member, you will use OTP-based login. When you sign in, click "Send OTP" to receive a one-time password via email.</p>`
-          : `<p>You can sign in at https://12gaam.com/join once approved.</p>`
+        isApproved
+          ? `<p>You can now sign in at <a href="https://12gaam.com/join">https://12gaam.com/join</a>. As a member, you will use OTP-based login also.</p>`
+          : `<p>You can sign in at <a href="https://12gaam.com/join">https://12gaam.com/join</a> once approved.</p>`
       }
       <p>Regards,<br />12Gaam Team</p>
     `

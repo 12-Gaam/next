@@ -39,20 +39,35 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
+    const filter = searchParams.get('filter') || '';
 
     const skip = (page - 1) * limit;
 
     let where: Prisma.ContactWhereInput = {};
-    
+
     if (search) {
       where = {
         OR: [
-          { firstname: { contains: search } },
-          { middlename: { contains: search } },
-          { lastname: { contains: search } },
-          { email: { contains: search } },
-          { phone: { contains: search } }
+          { firstname: { contains: search, mode: 'insensitive' } },
+          { middlename: { contains: search, mode: 'insensitive' } },
+          { lastname: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } }
         ]
+      };
+    }
+
+    if (filter === 'this_month') {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+      where = {
+        ...where,
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth
+        }
       };
     }
 
@@ -99,7 +114,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions).catch(() => null);
 
     const body = await request.json();
-    
+
     const validatedData = contactFormSchema.parse(body);
     if (session?.user?.id) {
       const existingContact = await prisma.contact.findFirst({

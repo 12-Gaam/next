@@ -8,11 +8,11 @@ import HeaderPage from '@/components/common/HeaderPage'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen flex flex-col bg-white">
       <HeaderPage />
 
       {/* Hero Section */}
-      <main>
+      <main className="flex-1">
         <section className="py-12 md:py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -20,23 +20,23 @@ export default function HomePage() {
                 <h1 className="text-3xl md:text-5xl font-bold text-primary mb-8 leading-tight">
                   Connect Your <span className="text-secondary">Community</span>
                 </h1>
-                
+
                 <p className="text-base md:text-lg text-gray-600 mb-8 leading-relaxed text-justify">
-                The 12 Gaam Samaj is a proud community of twelve closely connected villages near Vadodara, Gujarat. Rooted in shared history, culture, and traditions, our community is built on values of unity, respect, and togetherness.<br /><br />
-                For generations, families from our 12 villages have stood strong in agriculture, business, education, and social service – contributing not only to our villages but also to the broader society. Today, as we embrace modern life, our traditions and values continue to guide us.
+                  The 12 Gaam Samaj is a proud community of twelve closely connected villages near Vadodara, Gujarat. Rooted in shared history, culture, and traditions, our community is built on values of unity, respect, and togetherness.<br /><br />
+                  For generations, families from our 12 villages have stood strong in agriculture, business, education, and social service – contributing not only to our villages but also to the broader society. Today, as we embrace modern life, our traditions and values continue to guide us.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/join#registration"  className="bg-secondary hover:bg-secondary/90 text-white px-6 py-4 rounded-lg flex items-center gap-2 justify-center">
-                  Get Started
-                  <ArrowRight />
+                  <Link href="/join#registration" className="bg-secondary hover:bg-secondary/90 text-white px-6 py-4 rounded-lg flex items-center gap-2 justify-center">
+                    Get Started
+                    <ArrowRight />
                   </Link>
                 </div>
               </div>
-              
+
               <div className="flex justify-center">
                 <div className="w-full max-w-lg h-auto lg:h-80 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <Image 
+                  <Image
                     src="/image/logo.jpg"
                     alt="12 Gaam Samaj"
                     width={1000}
@@ -261,7 +261,7 @@ export default function HomePage() {
       </main>
 
       <FooterPage />
-      
+
     </div>
   )
 }
