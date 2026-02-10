@@ -17,6 +17,7 @@ model User {
   email             String             @unique
   fullName          String
   gaamId            String?
+  role              UserRole           @default(MEMBER)
   status            RegistrationStatus @default(PENDING)
   verificationNotes String?
   verifiedAt        DateTime?
@@ -27,11 +28,7 @@ model User {
   gaamsManaged      GaamAdmin[]        @relation("GaamAdmins")
   otp               String?
   otpExpiresAt      DateTime?
-  contacts          Contact[]
-  gaamsManaged      Gaam[]             @relation("GaamAdmins")
   gaam              Gaam?              @relation(fields: [gaamId], references: [id])
-  verifiedBy        User?              @relation("UserVerification", fields: [verifiedById], references: [id])
-  verifiedUsers     User[]             @relation("UserVerification")
 }
 
 model Gaam {
