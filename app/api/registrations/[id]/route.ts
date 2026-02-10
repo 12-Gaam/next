@@ -47,7 +47,15 @@ export async function PATCH(
     }
 
     if (!isSuperAdmin(session.user.role)) {
-      if (!registration.gaam || registration.gaam.adminId !== session.user.id) {
+      // Check if the admin is assigned to this gaam
+      const gaamAdmin = await prisma.gaamAdmin.findFirst({
+        where: {
+          gaamId: registration.gaamId,
+          adminId: session.user.id
+        }
+      })
+
+      if (!gaamAdmin) {
         return NextResponse.json({ error: 'Not authorized for this gaam' }, { status: 403 })
       }
     }

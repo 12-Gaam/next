@@ -151,19 +151,29 @@ async function main() {
       update: {},
       create: {
         name,
-        slug: slugify(name),
-        adminId: name === 'Limbasi' ? gaamAdmin.id : undefined
+        slug: slugify(name)
       }
     })
   }
-  console.log('✅ Gaams created and assigned')
+  console.log('✅ Gaams created')
 
+  // Assign admin to Limbasi gaam using the new many-to-many relationship
   const limbasiGaam = await prisma.gaam.findUnique({ where: { name: 'Limbasi' } })
   if (limbasiGaam) {
-    await prisma.user.update({
-      where: { id: gaamAdmin.id },
-      data: { gaamId: limbasiGaam.id }
+    await prisma.gaamAdmin.upsert({
+      where: {
+        gaamId_adminId: {
+          gaamId: limbasiGaam.id,
+          adminId: gaamAdmin.id
+        }
+      },
+      update: {},
+      create: {
+        gaamId: limbasiGaam.id,
+        adminId: gaamAdmin.id
+      }
     })
+    console.log('✅ Admin assigned to Limbasi gaam')
   }
 
   console.log('🎉 Database seeding completed successfully!')

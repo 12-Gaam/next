@@ -21,7 +21,8 @@ import {
   Upload,
   message,
   Image,
-  Flex
+  Flex,
+  Spin
 } from 'antd'
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, CheckOutlined, UploadOutlined, InboxOutlined, FilePdfOutlined } from '@ant-design/icons'
 import csc from 'countries-states-cities'
@@ -48,6 +49,7 @@ const steps = [
 export default function ContactForm({ onSuccess, onCancel, existingContact, initialStep = 1 }: ContactFormProps) {
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(true)
   const [showOtherEducation, setShowOtherEducation] = useState(false)
   const [showOtherProfession, setShowOtherProfession] = useState(false)
   const [fileList, setFileList] = useState<any[]>([])
@@ -155,13 +157,6 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         setValue(key as keyof ContactFormData, value as any, { shouldValidate: false })
       })
 
-      // Fetch states if countryId exists (after a small delay to ensure form values are set)
-      if (existingContact.countryId) {
-        setTimeout(() => {
-          fetchStates(existingContact.countryId, existingContact.stateId)
-        }, 300)
-      }
-
       replaceChildren(
         (existingContact.children || []).map((child: any) => ({
           firstName: child.firstName || '',
@@ -185,15 +180,18 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
       replaceAdditionalProfessions(existingContact.additionalProfessions || [])
       setUploadedProfilePic(existingContact.profilePic || '')
       setUploadedFamilyPhoto(existingContact.familyPhoto || '')
-      
-      // Mark that we've loaded existing data
-      setHasLoadedExistingData(true)
-      
+
       // Fetch states if countryId exists (after a small delay to ensure form values are set)
+      // Stop loading after states are loaded
       if (existingContact.countryId) {
-        setTimeout(() => {
-          fetchStates(existingContact.countryId, existingContact.stateId)
+        setTimeout(async () => {
+          await fetchStates(existingContact.countryId, existingContact.stateId)
+          // Stop loading after states are fetched
+          setIsLoadingInitialData(false)
         }, 300)
+      } else {
+        // No countryId, stop loading immediately
+        setIsLoadingInitialData(false)
       }
     }
   }, [existingContact, replaceChildren, replaceSiblings, replaceAdditionalProfessions, setValue, masterData.countries.length])
@@ -284,6 +282,11 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         states: [],
         cities: []
       })
+      
+      // If not in edit mode, stop loading. Otherwise, wait for existing data to load
+      if (!existingContact) {
+        setIsLoadingInitialData(false)
+      }
     } catch (error) {
       console.error('Error fetching master data:', error)
       setMasterData({
@@ -293,6 +296,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         states: [],
         cities: []
       })
+      setIsLoadingInitialData(false)
     }
   }
 
@@ -307,13 +311,17 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
       
       // If we need to preserve a stateId (for edit mode), set it after states are loaded
       if (preserveStateId) {
+        // Use a slightly longer timeout to ensure states are fully loaded in the component
         setTimeout(() => {
           setValue('stateId', preserveStateId, { shouldValidate: false })
-        }, 50)
+        }, 100)
       }
+      
+      return states
     } catch (error) {
       console.error('Error fetching states:', error)
       setMasterData(prev => ({ ...prev, states: [], cities: [] }))
+      throw error
     }
   }
 
@@ -822,6 +830,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
               <Select
                 size="large"
                 showSearch
+                value={watch('gaam') || undefined}
                 filterOption={(input, option) =>
                   (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }
@@ -877,6 +886,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
               <Select
                 size="large"
                 showSearch
+                value={watch('countryId') || undefined}
                 filterOption={(input, option) =>
                   (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }
@@ -900,6 +910,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
               <Select
                 size="large"
                 showSearch
+                value={watch('stateId') || undefined}
                 filterOption={(input, option) =>
                   (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                 }
@@ -1945,6 +1956,28 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
     }
   }
 
+  // Show loading spinner while initial data is being loaded
+  if (isLoadingInitialData) {
+    return (
+      <div className="w-full">
+        <Card 
+          className="shadow-xl border-0"
+          style={{
+            borderRadius: '16px',
+            overflow: 'hidden'
+          }}
+        >
+          <div className="flex flex-col items-center justify-center py-24">
+            <Spin size="large" />
+            <Typography.Text className="mt-4 text-gray-600 text-lg">
+              {existingContact ? 'Loading contact data...' : 'Loading form...'}
+            </Typography.Text>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full">
       {/* Modern Card Container */}
@@ -1958,10 +1991,19 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         {/* Progress Steps - Enhanced Design */}
         <div className="mb-8 pb-6 border-b border-gray-200">
           <div className="flex items-center justify-between max-w-4xl mx-auto px-4">
-            {steps.map((step, index) => (
+            {steps.map((step, index) => {
+              // Allow clicking on any step in edit mode, or on completed/current/next steps in create mode
+              const isClickable = isEditMode || currentStep >= step.id || step.id === currentStep + 1
+              
+              return (
               <div key={step.id} className="flex items-center flex-1">
                 <div className="flex flex-col items-center flex-1">
                   <div
+                    onClick={() => {
+                      if (isClickable) {
+                        setCurrentStep(step.id)
+                      }
+                    }}
                     className={`
                       flex items-center justify-center
                       w-12 h-12 rounded-full
@@ -1971,11 +2013,13 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         ? 'bg-secondary text-white shadow-lg scale-110'
                         : 'bg-gray-100 text-gray-400 border-2 border-gray-300'
                       }
+                      ${isClickable ? 'cursor-pointer hover:scale-105 hover:shadow-md' : 'cursor-not-allowed opacity-50'}
                     `}
                     style={{
                       minWidth: '48px',
                       minHeight: '48px'
                     }}
+                    title={isClickable ? `Go to ${step.title}` : 'Complete previous steps first'}
                   >
                     {currentStep > step.id ? (
                       <CheckOutlined className="text-lg" />
@@ -1999,7 +2043,8 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                   />
                 )}
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 

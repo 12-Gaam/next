@@ -43,7 +43,8 @@ interface Gaam {
   id: string
   name: string
   slug: string
-  adminId: string | null
+  adminId: string | null // For backward compatibility, but will be deprecated
+  admins?: Array<{ id: string; fullName: string; email: string }> // New structure
 }
 
 export default function SuperAdminAdminsPage() {
@@ -66,8 +67,8 @@ export default function SuperAdminAdminsPage() {
     password: ''
   })
 
-  // Form state for editing GAAM assignment
-  const [gaamAssignment, setGaamAssignment] = useState<{ [key: string]: string }>({})
+  // Form state for editing GAAM assignment (now supports multiple gaams)
+  const [gaamAssignment, setGaamAssignment] = useState<{ [key: string]: string[] }>({})
 
   useEffect(() => {
     if (status === 'loading') return
@@ -103,13 +104,13 @@ export default function SuperAdminAdminsPage() {
       setAdmins(adminsData)
       setGaams(gaamsData)
 
-      // Initialize GAAM assignment state
-      const initialAssignments: { [key: string]: string } = {}
+      // Initialize GAAM assignment state (now supports multiple gaams)
+      const initialAssignments: { [key: string]: string[] } = {}
       adminsData.forEach((admin: Admin) => {
         if (admin.gaamsManaged && admin.gaamsManaged.length > 0) {
-          initialAssignments[admin.id] = admin.gaamsManaged[0].id
+          initialAssignments[admin.id] = admin.gaamsManaged.map(g => g.id)
         } else {
-          initialAssignments[admin.id] = 'none'
+          initialAssignments[admin.id] = []
         }
       })
       setGaamAssignment(initialAssignments)
@@ -159,15 +160,29 @@ export default function SuperAdminAdminsPage() {
     setSuccess(null)
 
     try {
-      const selectedValue = gaamAssignment[adminId] || 'none'
-      const selectedGaamId = selectedValue === 'none' ? null : selectedValue
+      let selectedGaamIds = gaamAssignment[adminId] || []
+      
+      // Ensure it's an array and filter out invalid values
+      if (!Array.isArray(selectedGaamIds)) {
+        selectedGaamIds = []
+      }
+      
+      // Filter out invalid IDs (single characters, "none", empty strings, etc.)
+      selectedGaamIds = selectedGaamIds.filter((id: string) => {
+        return (
+          typeof id === 'string' &&
+          id.length > 10 && // Valid CUIDs are longer
+          id !== 'none' &&
+          id.trim() !== ''
+        )
+      })
 
       const response = await fetch(`/api/admins/${adminId}/gaam`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ gaamId: selectedGaamId })
+        body: JSON.stringify({ gaamIds: selectedGaamIds })
       })
 
       const data = await response.json()
@@ -201,9 +216,27 @@ export default function SuperAdminAdminsPage() {
     return null
   }
 
-  // Get available GAAMs (not assigned to other admins)
-  const getAvailableGaams = (currentAdminId: string) => {
-    return gaams.filter(gaam => !gaam.adminId || gaam.adminId === currentAdminId)
+  // Get all available GAAMs (now multiple admins can be assigned to same gaam)
+  const getAvailableGaams = () => {
+    return gaams
+  }
+
+  // Toggle gaam selection for an admin
+  const toggleGaamSelection = (adminId: string, gaamId: string) => {
+    const currentSelection = gaamAssignment[adminId] || []
+    const isSelected = currentSelection.includes(gaamId)
+    
+    if (isSelected) {
+      setGaamAssignment({
+        ...gaamAssignment,
+        [adminId]: currentSelection.filter(id => id !== gaamId)
+      })
+    } else {
+      setGaamAssignment({
+        ...gaamAssignment,
+        [adminId]: [...currentSelection, gaamId]
+      })
+    }
   }
 
   return (
@@ -390,11 +423,15 @@ export default function SuperAdminAdminsPage() {
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
-                              <p className="text-xs text-gray-500 mb-1.5">Assigned GAAM</p>
+                              <p className="text-xs text-gray-500 mb-1.5">Assigned GAAMs</p>
                               {admin.gaamsManaged && admin.gaamsManaged.length > 0 ? (
-                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
-                                  {admin.gaamsManaged[0].name}
-                                </span>
+                                <div className="flex flex-wrap gap-2">
+                                  {admin.gaamsManaged.map((gaam) => (
+                                    <span key={gaam.id} className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
+                                      {gaam.name}
+                                    </span>
+                                  ))}
+                                </div>
                               ) : (
                                 <span className="text-sm text-gray-500">No GAAM assigned</span>
                               )}
@@ -418,27 +455,37 @@ export default function SuperAdminAdminsPage() {
                             <div className="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200">
                               <div className="space-y-3">
                                 <div>
-                                  <Label htmlFor={`gaam-${admin.id}`} className="text-sm font-medium text-gray-700 mb-2 block">
-                                    Assign GAAM:
+                                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                    Assign GAAMs (Multiple selection allowed):
                                   </Label>
-                                  <Select
-                                    value={gaamAssignment[admin.id] || 'none'}
-                                    onValueChange={(value) => {
-                                      setGaamAssignment({ ...gaamAssignment, [admin.id]: value })
-                                    }}
-                                  >
-                                    <SelectTrigger id={`gaam-${admin.id}`} className="w-full md:w-64">
-                                      <SelectValue placeholder="Select a GAAM" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="none">None (Remove Assignment)</SelectItem>
-                                      {getAvailableGaams(admin.id).map((gaam) => (
-                                        <SelectItem key={gaam.id} value={gaam.id}>
-                                          {gaam.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-md p-3 bg-white">
+                                    {getAvailableGaams().length === 0 ? (
+                                      <p className="text-sm text-gray-500">No GAAMs available</p>
+                                    ) : (
+                                      <div className="space-y-2">
+                                        {getAvailableGaams().map((gaam) => {
+                                          const isSelected = (gaamAssignment[admin.id] || []).includes(gaam.id)
+                                          return (
+                                            <label
+                                              key={gaam.id}
+                                              className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                                            >
+                                              <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => toggleGaamSelection(admin.id, gaam.id)}
+                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                              />
+                                              <span className="text-sm text-gray-700">{gaam.name}</span>
+                                            </label>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-2">
+                                    Selected: {(gaamAssignment[admin.id] || []).length} GAAM(s)
+                                  </p>
                                 </div>
                                 <div className="flex gap-3">
                                   <Button
@@ -454,11 +501,11 @@ export default function SuperAdminAdminsPage() {
                                     variant="outline"
                                     onClick={() => {
                                       setEditingAdminId(null)
-                                      // Reset to original value
-                                      const originalGaam = admin.gaamsManaged && admin.gaamsManaged.length > 0
-                                        ? admin.gaamsManaged[0].id
-                                        : 'none'
-                                      setGaamAssignment({ ...gaamAssignment, [admin.id]: originalGaam })
+                                      // Reset to original value (array of gaam IDs)
+                                      const originalGaams = admin.gaamsManaged && admin.gaamsManaged.length > 0
+                                        ? admin.gaamsManaged.map(g => g.id)
+                                        : []
+                                      setGaamAssignment({ ...gaamAssignment, [admin.id]: originalGaams })
                                     }}
                                   >
                                     Cancel
@@ -475,11 +522,11 @@ export default function SuperAdminAdminsPage() {
                               variant="outline"
                               onClick={() => {
                                 setEditingAdminId(admin.id)
-                                // Initialize with current assignment
-                                const currentGaam = admin.gaamsManaged && admin.gaamsManaged.length > 0
-                                  ? admin.gaamsManaged[0].id
-                                  : 'none'
-                                setGaamAssignment({ ...gaamAssignment, [admin.id]: currentGaam })
+                                // Initialize with current assignment (array of gaam IDs)
+                                const currentGaams = admin.gaamsManaged && admin.gaamsManaged.length > 0
+                                  ? admin.gaamsManaged.map(g => g.id)
+                                  : []
+                                setGaamAssignment({ ...gaamAssignment, [admin.id]: currentGaams })
                               }}
                               className="w-full lg:w-auto whitespace-nowrap"
                             >

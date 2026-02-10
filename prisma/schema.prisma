@@ -21,7 +21,10 @@ model User {
   verificationNotes String?
   verifiedAt        DateTime?
   verifiedById      String?
-  role              UserRole           @default(MEMBER)
+  verifiedBy        User?              @relation("UserVerification", fields: [verifiedById], references: [id])
+  verifiedUsers     User[]             @relation("UserVerification")
+  contacts          Contact[]
+  gaamsManaged      GaamAdmin[]        @relation("GaamAdmins")
   otp               String?
   otpExpiresAt      DateTime?
   contacts          Contact[]
@@ -32,14 +35,27 @@ model User {
 }
 
 model Gaam {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  slug      String        @unique
+  admins    GaamAdmin[]   @relation("GaamAdmins")
+  members   User[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model GaamAdmin {
   id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
+  gaamId    String
+  adminId   String
+  gaam      Gaam     @relation("GaamAdmins", fields: [gaamId], references: [id], onDelete: Cascade)
+  admin     User     @relation("GaamAdmins", fields: [adminId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  adminId   String?
-  admin     User?    @relation("GaamAdmins", fields: [adminId], references: [id])
-  members   User[]
+
+  @@unique([gaamId, adminId])
+  @@index([gaamId])
+  @@index([adminId])
 }
 
 model CountryMaster {
