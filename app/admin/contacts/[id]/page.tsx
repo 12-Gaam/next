@@ -53,9 +53,13 @@ interface Contact {
   email: string
   dob?: string
   education?: { name: string }
+  educationDetail?: string
   otherEducation?: string
   profession?: { name: string }
   otherProfession?: string
+  zipCode?: string
+  residingCountryId?: string
+  residingCountry?: { name: string }
   website?: string
   profile?: string
   profilePic?: string
@@ -375,12 +379,20 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                     <p className="text-gray-900">{contact?.cityId || '-'}</p>
                   </div>
                   <div>
+                    <label className="text-sm font-medium text-gray-500">Zip Code</label>
+                    <p className="text-gray-900">{contact?.zipCode || '-'}</p>
+                  </div>
+                  <div>
                     <label className="text-sm font-medium text-gray-500">State</label>
                     <p className="text-gray-900">{contact.state?.name || '-'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Country</label>
                     <p className="text-gray-900">{contact.country?.name || '-'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Residing Country</label>
+                    <p className="text-gray-900">{contact.residingCountry?.name || '-'}</p>
                   </div>
                 </div>
               </div>
@@ -408,6 +420,12 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                       {contact.education?.name || contact.otherEducation || '-'}
                     </p>
                   </div>
+                  {contact.educationDetail && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Education Detail</label>
+                      <p className="text-gray-900">{contact.educationDetail}</p>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-800 flex items-center">
@@ -448,7 +466,7 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                               : child.firstname || 'Unnamed'}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {child.gender} • Age {child.age}
+                            {child.gender} • Bday {child.dob || child.age}
                           </p>
                         </div>
                       </div>
@@ -482,7 +500,7 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                               : sibling.name || 'Unnamed'}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {sibling.gender} • Age {sibling.age}
+                            {sibling.gender} • Bday {sibling.dob || sibling.age}
                           </p>
                         </div>
                       </div>

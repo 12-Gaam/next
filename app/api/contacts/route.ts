@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
+    const gaamFilter = searchParams.get('gaam') || '';
+    const countryFilter = searchParams.get('countryId') || '';
     const filter = searchParams.get('filter') || '';
 
     const skip = (page - 1) * limit;
@@ -70,6 +72,12 @@ export async function GET(request: NextRequest) {
         }
       };
     }
+
+    where = {
+      ...where,
+      gaam: gaamFilter ? { contains: gaamFilter, mode: 'insensitive' } : undefined,
+      countryId: countryFilter || undefined,
+    };
 
     const [contacts, total] = await Promise.all([
       prisma.contact.findMany({
@@ -151,11 +159,13 @@ export async function POST(request: NextRequest) {
         countryId: validatedData.countryId || null,
         stateId: validatedData.stateId || null,
         cityId: validatedData.cityId || null,
+        zipCode: validatedData.zipCode || null,
         phone: validatedData.phone,
         countryCode: validatedData.countryCode || '+1',
         email: validatedData.email || '',
-        dob: validatedData.dob ? new Date(validatedData.dob) : new Date(),
+        dob: validatedData.dob ? new Date(validatedData.dob) : null,
         educationId: validatedData.educationId,
+        educationDetail: validatedData.educationDetail || null,
         otherEducation: validatedData.otherEducation || undefined,
         professionId: validatedData.professionId || undefined,
         otherProfession: validatedData.otherProfession || undefined,
@@ -168,6 +178,7 @@ export async function POST(request: NextRequest) {
         tiktok: validatedData.tiktok || undefined,
         twitter: validatedData.twitter || undefined,
         snapchat: validatedData.snapchat || undefined,
+        residingCountryId: validatedData.residingCountryId || null,
         userId: session?.user?.id,
         children: {
           create: validatedData.children.map(child => ({
@@ -175,8 +186,8 @@ export async function POST(request: NextRequest) {
             middleName: child.middleName || null,
             lastName: child.lastName || null,
             gender: child.gender as any,
-            age: child.age
-          }))
+            dob: child.dob || null
+          }) as any)
         },
         siblings: {
           create: validatedData.siblings.map(sibling => ({
@@ -184,10 +195,10 @@ export async function POST(request: NextRequest) {
             middleName: sibling.middleName || null,
             lastName: sibling.lastName || null,
             gender: sibling.gender as any,
-            age: sibling.age
-          }))
+            dob: sibling.dob || null
+          }) as any)
         }
-      },
+      } as any,
       include: {
         country: true,
         state: true,
@@ -214,4 +225,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

@@ -49,7 +49,7 @@ export default function SignInPage() {
 
       if (response.ok) {
         setOtpSent(true)
-        setOtpMessage('OTP has been sent to your email. Please check your inbox.')
+        // setOtpMessage('OTP has been sent to your email. Please check your inbox.')
       } else {
         setError(data.error || 'Failed to send OTP')
       }

@@ -149,3 +149,20 @@ export async function sendAdminCredentialsEmail(payload: AdminCredentialsEmailPa
   })
 }
 
+export async function sendPendingApprovalsNotification(payload: { to: string, name: string, gaam: string, count: number }) {
+  const transporterInstance = getEmailTransporter()
+
+  await transporterInstance.sendMail({
+    from: `"12Gaam" <${process.env.EMAIL_USER}>`,
+    to: payload.to,
+    subject: `Action Required: Pending Approvals for ${payload.gaam}`,
+    html: `
+      <p>Hi ${payload.name},</p>
+      <p>You have <strong>${payload.count}</strong> pending registration(s) for <strong>${payload.gaam}</strong> that require your approval.</p>
+      <p>Please log in to the admin panel to review and approve these registrations.</p>
+      <p><a href="https://12gaam.com/admin/registrations">https://12gaam.com/admin/registrations</a></p>
+      <p>Regards,<br />12Gaam Team</p>
+    `
+  })
+}
+
