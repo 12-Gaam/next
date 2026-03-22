@@ -284,7 +284,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         states: [],
         cities: []
       })
-      
+
       // If not in edit mode, stop loading. Otherwise, wait for existing data to load
       if (!existingContact) {
         setIsLoadingInitialData(false)
@@ -310,7 +310,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
       // Ensure we always have an array
       const states = Array.isArray(statesData) ? statesData : (statesData?.data || statesData?.states || [])
       setMasterData(prev => ({ ...prev, states: Array.isArray(states) ? states : [], cities: [] }))
-      
+
       // If we need to preserve a stateId (for edit mode), set it after states are loaded
       if (preserveStateId) {
         // Use a slightly longer timeout to ensure states are fully loaded in the component
@@ -318,7 +318,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           setValue('stateId', preserveStateId, { shouldValidate: false })
         }, 100)
       }
-      
+
       return states
     } catch (error) {
       console.error('Error fetching states:', error)
@@ -543,7 +543,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
             </Form.Item>
           </Col>
         </Row>
-        
+
         <Row gutter={[20, 20]} className="mt-6">
           <Col xs={24} md={6}>
             <Form.Item
@@ -622,63 +622,63 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         </Row>
       </div>
 
-        {watchedMaritalStatus === 'married' && (
-          <div className="mt-8">
-            <div className="mb-6 pb-3 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <span className="w-1 h-6 bg-secondary rounded-full"></span>
-                Spouse Information
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">Details about your spouse</p>
-            </div>
-            <Row gutter={[20, 20]}>
-              <Col xs={24} md={8}>
-                <Form.Item
-                  label={<span className="font-medium text-gray-700">Spouse First Name <span className="text-red-500">*</span></span>}
-                  validateStatus={errors.spouseFirstName ? 'error' : ''}
-                  help={errors.spouseFirstName?.message}
-                  className="mb-0"
-                >
-                  <Input
-                    size="large"
-                    value={watch('spouseFirstName') || ''}
-                    onChange={(e) => handleFieldChange('spouseFirstName', e.target.value)}
-                    placeholder="Enter spouse first name"
-                    className="rounded-lg"
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item
-                  label={<span className="font-medium text-gray-700">Spouse Middle Name</span>}
-                  className="mb-0"
-                >
-                  <Input
-                    size="large"
-                    value={watch('spouseMiddleName') || ''}
-                    onChange={(e) => handleFieldChange('spouseMiddleName', e.target.value)}
-                    placeholder="Enter spouse middle name"
-                    className="rounded-lg"
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item
-                  label={<span className="font-medium text-gray-700">Spouse Last Name</span>}
-                  className="mb-0"
-                >
-                  <Input
-                    size="large"
-                    value={watch('spouseLastName') || ''}
-                    onChange={(e) => handleFieldChange('spouseLastName', e.target.value)}
-                    placeholder="Enter spouse last name"
-                    className="rounded-lg"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
+      {watchedMaritalStatus === 'married' && (
+        <div className="mt-8">
+          <div className="mb-6 pb-3 border-b border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <span className="w-1 h-6 bg-secondary rounded-full"></span>
+              Spouse Information
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">Details about your spouse</p>
           </div>
-        )}
+          <Row gutter={[20, 20]}>
+            <Col xs={24} md={8}>
+              <Form.Item
+                label={<span className="font-medium text-gray-700">Spouse First Name <span className="text-red-500">*</span></span>}
+                validateStatus={errors.spouseFirstName ? 'error' : ''}
+                help={errors.spouseFirstName?.message}
+                className="mb-0"
+              >
+                <Input
+                  size="large"
+                  value={watch('spouseFirstName') || ''}
+                  onChange={(e) => handleFieldChange('spouseFirstName', e.target.value)}
+                  placeholder="Enter spouse first name"
+                  className="rounded-lg"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item
+                label={<span className="font-medium text-gray-700">Spouse Middle Name</span>}
+                className="mb-0"
+              >
+                <Input
+                  size="large"
+                  value={watch('spouseMiddleName') || ''}
+                  onChange={(e) => handleFieldChange('spouseMiddleName', e.target.value)}
+                  placeholder="Enter spouse middle name"
+                  className="rounded-lg"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item
+                label={<span className="font-medium text-gray-700">Spouse Last Name</span>}
+                className="mb-0"
+              >
+                <Input
+                  size="large"
+                  value={watch('spouseLastName') || ''}
+                  onChange={(e) => handleFieldChange('spouseLastName', e.target.value)}
+                  placeholder="Enter spouse last name"
+                  className="rounded-lg"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </div>
+      )}
 
       {/* Parents Information Section */}
       <div className="mt-8">
@@ -689,7 +689,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           </h3>
           <p className="text-sm text-gray-600 mt-1">Details about your parents</p>
         </div>
-        
+
         <div className="mb-6">
           <h4 className="text-base font-semibold text-gray-800 mb-4">Father's Details</h4>
           <Row gutter={[20, 20]}>
@@ -804,7 +804,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           </h3>
           <p className="text-sm text-gray-600 mt-1">Your current address and location details</p>
         </div>
-        
+
         <Row gutter={[20, 20]}>
           <Col xs={24} md={12}>
             <Form.Item
@@ -1015,7 +1015,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           </h3>
           <p className="text-sm text-gray-600 mt-1">Your educational and professional background</p>
         </div>
-        
+
         <Row gutter={[20, 20]}>
           <Col xs={24} md={6}>
             <Form.Item
@@ -1255,7 +1255,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         </div>
         <Row gutter={[20, 20]}>
           <Col xs={24} md={12}>
-            <Card 
+            <Card
               title={<span className="font-semibold text-gray-900">Profile Photo</span>}
               className="shadow-md border border-gray-200"
               style={{ borderRadius: '12px' }}
@@ -1366,7 +1366,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           </Col>
 
           <Col xs={24} md={12}>
-            <Card 
+            <Card
               title={<span className="font-semibold text-gray-900">Family Photo</span>}
               className="shadow-md border border-gray-200"
               style={{ borderRadius: '12px' }}
@@ -1492,9 +1492,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
             </h3>
             <p className="text-sm text-gray-600 mt-1">Add information about your children</p>
           </div>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
             onClick={addChild}
             size="large"
             className="bg-secondary hover:bg-secondary/90 border-0"
@@ -1502,7 +1502,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
             Add Child
           </Button>
         </div>
-        
+
         <Card className="border border-gray-200 shadow-sm" style={{ borderRadius: '12px' }}>
           {childrenFields.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -1627,9 +1627,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
             </h3>
             <p className="text-sm text-gray-600 mt-1">Add information about your siblings</p>
           </div>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
             onClick={addSibling}
             size="large"
             className="bg-secondary hover:bg-secondary/90 border-0"
@@ -1637,7 +1637,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
             Add Sibling
           </Button>
         </div>
-        
+
         <Card className="border border-gray-200 shadow-sm" style={{ borderRadius: '12px' }}>
           {siblingsFields.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -1775,7 +1775,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
             </h3>
             <p className="text-sm text-gray-600 mt-1">Please review all your details before submitting</p>
           </div>
-          
+
           <Card className="border border-gray-200 shadow-sm" style={{ borderRadius: '12px' }}>
             <Row gutter={[24, 24]}>
               <Col xs={24} md={12}>
@@ -2007,7 +2007,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
   if (isLoadingInitialData) {
     return (
       <div className="w-full">
-        <Card 
+        <Card
           className="shadow-xl border-0"
           style={{
             borderRadius: '16px',
@@ -2015,9 +2015,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           }}
         >
           <div className="flex flex-col items-center justify-center py-24">
-            <Spin size="large" />
+            <Spin size="small" />
             <Typography.Text className="mt-4 text-gray-600 text-lg">
-              {existingContact ? 'Loading contact data...' : 'Loading form...'}
+              {existingContact ? 'Loading contact data...' : 'Loading...'}
             </Typography.Text>
           </div>
         </Card>
@@ -2028,7 +2028,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
   return (
     <div className="w-full">
       {/* Modern Card Container */}
-      <Card 
+      <Card
         className="shadow-xl border-0"
         style={{
           borderRadius: '16px',
@@ -2041,55 +2041,55 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
             {steps.map((step, index) => {
               // Allow clicking on any step in edit mode, or on completed/current/next steps in create mode
               const isClickable = isEditMode || currentStep >= step.id || step.id === currentStep + 1
-              
+
               return (
-              <div key={step.id} className="flex items-center flex-1">
-                <div className="flex flex-col items-center flex-1">
-                  <div
-                    onClick={() => {
-                      if (isClickable) {
-                        setCurrentStep(step.id)
-                      }
-                    }}
-                    className={`
+                <div key={step.id} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div
+                      onClick={() => {
+                        if (isClickable) {
+                          setCurrentStep(step.id)
+                        }
+                      }}
+                      className={`
                       flex items-center justify-center
                       w-12 h-12 rounded-full
                       font-semibold text-sm
                       transition-all duration-300
                       ${currentStep >= step.id
-                        ? 'bg-secondary text-white shadow-lg scale-110'
-                        : 'bg-gray-100 text-gray-400 border-2 border-gray-300'
-                      }
+                          ? 'bg-secondary text-white shadow-lg scale-110'
+                          : 'bg-gray-100 text-gray-400 border-2 border-gray-300'
+                        }
                       ${isClickable ? 'cursor-pointer hover:scale-105 hover:shadow-md' : 'cursor-not-allowed opacity-50'}
                     `}
-                    style={{
-                      minWidth: '48px',
-                      minHeight: '48px'
-                    }}
-                    title={isClickable ? `Go to ${step.title}` : 'Complete previous steps first'}
-                  >
-                    {currentStep > step.id ? (
-                      <CheckOutlined className="text-lg" />
-                    ) : (
-                      <span>{step.id}</span>
-                    )}
-                  </div>
-                  <div className="mt-2 text-center hidden md:block">
-                    <div className={`text-xs font-medium ${currentStep >= step.id ? 'text-secondary' : 'text-gray-400'}`}>
-                      {step.title.split(' ')[0]}
+                      style={{
+                        minWidth: '48px',
+                        minHeight: '48px'
+                      }}
+                      title={isClickable ? `Go to ${step.title}` : 'Complete previous steps first'}
+                    >
+                      {currentStep > step.id ? (
+                        <CheckOutlined className="text-lg" />
+                      ) : (
+                        <span>{step.id}</span>
+                      )}
+                    </div>
+                    <div className="mt-2 text-center hidden md:block">
+                      <div className={`text-xs font-medium ${currentStep >= step.id ? 'text-secondary' : 'text-gray-400'}`}>
+                        {step.title.split(' ')[0]}
+                      </div>
                     </div>
                   </div>
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`
+                  {index < steps.length - 1 && (
+                    <div
+                      className={`
                       flex-1 h-1 mx-2 rounded-full transition-all duration-300
                       ${currentStep > step.id ? 'bg-secondary' : 'bg-gray-200'}
                     `}
-                    style={{ marginTop: '-24px' }}
-                  />
-                )}
-              </div>
+                      style={{ marginTop: '-24px' }}
+                    />
+                  )}
+                </div>
               )
             })}
           </div>
