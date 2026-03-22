@@ -102,8 +102,8 @@ export async function sendRegistrationStatusEmail(payload: RegistrationStatusPay
       }
       ${
         isApproved
-          ? `<p>You can now sign in at <a href="https://12gaam.com/join">https://12gaam.com/join</a>. As a member, you will use OTP-based login also.</p>`
-          : `<p>You can sign in at <a href="https://12gaam.com/join">https://12gaam.com/join</a> once approved.</p>`
+          ? `<p>You can now sign in at <a href="${process.env.NEXTAUTH_URL}/join">https://12gaam.com/join</a>. As a member, you will use OTP-based login.</p>`
+          : `<p>You can sign in at <a href="${process.env.NEXTAUTH_URL}/join">https://12gaam.com/join</a> once approved.</p>`
       }
       <p>Regards,<br />12Gaam Team</p>
     `
@@ -142,7 +142,7 @@ export async function sendAdminCredentialsEmail(payload: AdminCredentialsEmailPa
         <li><strong>Email:</strong> ${payload.to}</li>
         <li><strong>Password:</strong> ${payload.password}</li>
       </ul>
-      <p>You can now sign in at https://12gaam.com/join using your username or email and password.</p>
+      <p>You can now sign in at <a href="${process.env.NEXTAUTH_URL}/auth/signin">${process.env.NEXTAUTH_URL}/auth/signin</a> using your username or email and password.</p>
       <p><strong>Important:</strong> Please change your password after your first login for security.</p>
       <p>Regards,<br />12Gaam Team</p>
     `

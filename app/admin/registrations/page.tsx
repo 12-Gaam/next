@@ -29,7 +29,7 @@ const statusOptions = [
 ]
 
 export default function RegistrationApprovalsPage() {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const router = useRouter()
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -42,21 +42,8 @@ export default function RegistrationApprovalsPage() {
   const limit = 100
 
   useEffect(() => {
-    if (status === 'loading') return
-
-    if (!session) {
-      router.push('/auth/signin')
-      return
-    }
-
-    const allowedRoles = ['SUPER_ADMIN', 'GAAM_ADMIN']
-    if (!allowedRoles.includes(session.user.role)) {
-      router.push('/dashboard')
-      return
-    }
-
     fetchRegistrations()
-  }, [session, status, statusFilter, currentPage, router])
+  }, [statusFilter, currentPage])
 
   const fetchRegistrations = async () => {
     try {
@@ -119,34 +106,20 @@ export default function RegistrationApprovalsPage() {
     }
   }
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+  if (!session) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-primary shadow-lg border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-4">
-              <Link href="/admin">
-                <Button variant="ghost" className="text-white hover:bg-white/10">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-white">Registration Approvals</h1>
-                <p className="text-sm text-white/80 mb-0">Review member requests assigned to your gaam.</p>
-              </div>
-            </div>
-          </div>
+    <>
+      <div className="mb-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Registration Requests
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Review and approve member registration requests
+          </p>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <Card className="border-0 shadow-lg">
@@ -338,7 +311,7 @@ export default function RegistrationApprovalsPage() {
           </>
         )}
       </main>
-    </div>
+    </>
   )
 }
 

@@ -4,18 +4,15 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Users,
   Search,
   Eye,
   Trash2,
-  ArrowLeft
+  UserPlus
 } from 'lucide-react'
-import Link from 'next/link'
 import { notification } from 'antd'
-import FooterPage from '@/components/common/FooterPage'
 import {
   Select,
   SelectContent,
@@ -40,7 +37,7 @@ interface Contact {
 }
 
 export default function AdminContactsPage() {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
   const filterParam = searchParams.get('filter') || ''
@@ -69,21 +66,12 @@ export default function AdminContactsPage() {
   }, [searchTerm])
 
   useEffect(() => {
-    if (status === 'loading') return
-
-    if (!session) {
-      router.push('/auth/signin')
-      return
-    }
-
-    const allowedRoles = ['SUPER_ADMIN', 'GAAM_ADMIN']
-    if (!allowedRoles.includes(session.user.role)) {
-      router.push('/dashboard')
-      return
-    }
-
     fetchCountries()
-  }, [session, status, router, currentPage, debouncedSearch, filter, gaamFilter, countryFilter])
+  }, [])
+
+  useEffect(() => {
+    fetchContacts()
+  }, [debouncedSearch, filter, gaamFilter, countryFilter, currentPage])
 
   const fetchCountries = async () => {
     try {
@@ -123,24 +111,16 @@ export default function AdminContactsPage() {
     router.push(`/admin/contacts/${contactId}`)
   }
 
-  const handleEdit = (contactId: string) => {
-    router.push(`/admin/contacts/${contactId}/edit`)
-  }
-
   const handleDelete = async (contactId: string) => {
-    // if (!confirm('Are you sure you want to delete this contact? This action cannot be undone.')) return
-
     try {
       const response = await fetch(`/api/contacts/${contactId}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
-        // Show success message
         notification.success({
           message: 'Contact deleted successfully!',
           placement: 'topRight',
-          duration: 4.5,
         })
         fetchContacts()
       } else {
@@ -148,7 +128,6 @@ export default function AdminContactsPage() {
         notification.error({
           message: `Failed to delete contact: ${errorData.error || 'Unknown error'}`,
           placement: 'topRight',
-          duration: 4.5,
         })
       }
     } catch (error) {
@@ -156,348 +135,319 @@ export default function AdminContactsPage() {
       notification.error({
         message: 'Failed to delete contact. Please try again.',
         placement: 'topRight',
-        duration: 4.5,
       })
     }
   }
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  const allowedRoles = ['SUPER_ADMIN', 'GAAM_ADMIN']
-  if (!session || !allowedRoles.includes(session.user.role)) {
-    return null
-  }
+  if (!session) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-primary shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-white">12Gaam Admin</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/admin" className='bg-secondary hover:bg-secondary/90 text-white px-4 py-3 rounded-lg flex items-center gap-2'>
-                <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-primary">
+    <>
+      <div className="mb-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
             Contact Management
           </h1>
-          <p className="text-gray-600 mt-3 text-lg">
-            Manage all community contacts and member information
+          <p className="text-gray-500 mt-1">
+            Browse, search and manage community members
           </p>
         </div>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">Total Contacts</p>
-                  <p className="text-3xl font-bold">{totalContacts}</p>
-                </div>
-                <div className="p-3 bg-white/20 rounded-full">
-                  <Users className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium">Active Members</p>
-                  <p className="text-3xl font-bold">{totalContacts}</p>
-                </div>
-                <div className="p-3 bg-white/20 rounded-full">
-                  <Users className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium">This Month</p>
-                  <p className="text-3xl font-bold">{totalContacts}</p>
-                </div>
-                <div className="p-3 bg-white/20 rounded-full">
-                  <Users className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-
-
-        {/* Contacts Table */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+      {/* Stats Summary Area */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="bg-white border border-gray-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-semibold text-gray-800">
-                  {filter === 'this_month' ? 'New Members This Month' : 'All Contacts'}
-                </CardTitle>
-                <CardDescription className="text-gray-600">
-                  Showing {contacts.length} of {totalContacts} contacts
-                </CardDescription>
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">Total Members</p>
+                <p className="text-2xl font-black mt-1 text-gray-900">{totalContacts}</p>
               </div>
-              <div className="flex items-center space-x-3">
-                <Select
-                  value={gaamFilter}
-                  onValueChange={(value) => {
-                    setGaamFilter(value === 'all' ? '' : value)
-                    setCurrentPage(1)
-                  }}
-                >
-                  <SelectTrigger className="w-40 bg-white">
-                    <SelectValue placeholder="Gaam Filter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Gaams</SelectItem>
-                    <SelectItem value="Pisai">Pisai</SelectItem>
-                    <SelectItem value="Puniyad">Puniyad</SelectItem>
-                    <SelectItem value="Sandha">Sandha</SelectItem>
-                    <SelectItem value="Bhekhda">Bhekhda</SelectItem>
-                    <SelectItem value="Avakhal">Avakhal</SelectItem>
-                    <SelectItem value="Kukas">Kukas</SelectItem>
-                    <SelectItem value="Manjrol">Manjrol</SelectItem>
-                    <SelectItem value="Vemar">Vemar</SelectItem>
-                    <SelectItem value="Malpur">Malpur</SelectItem>
-                    <SelectItem value="Juni Jithardi">Juni Jithardi</SelectItem>
-                    <SelectItem value="Someswarpura">Someswarpura</SelectItem>
-                    <SelectItem value="Jaferpura">Jaferpura</SelectItem>
-                    <SelectItem value="Alindra">Alindra</SelectItem>
-                    <SelectItem value="Tarsana">Tarsana</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={countryFilter}
-                  onValueChange={(value) => {
-                    setCountryFilter(value === 'all' ? '' : value)
-                    setCurrentPage(1)
-                  }}
-                >
-                  <SelectTrigger className="w-40 bg-white">
-                    <SelectValue placeholder="Country Filter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Countries</SelectItem>
-                    {countries.map((country) => (
-                      <SelectItem key={country.id} value={country.id}>
-                        {country.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search contacts..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-48 pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
-                  />
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                  {searchTerm && (
-                    <button
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 hover:text-gray-600"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-                {(filter || searchTerm || gaamFilter || countryFilter) && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setFilter('')
-                      setSearchTerm('')
-                      setGaamFilter('')
-                      setCountryFilter('')
-                      setCurrentPage(1)
-                      router.push('/admin/contacts')
-                    }}
-                    className="text-gray-500 hover:text-gray-700 font-medium"
-                  >
-                    Clear All
-                  </Button>
-                )}
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                <Users className="h-5 w-5" />
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="relative">
-            {isRefreshing && (
-              <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center backdrop-blur-[1px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            )}
-
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600 font-medium">Loading contacts...</p>
-              </div>
-            ) : contacts.length === 0 ? (
-              <div className="text-center py-20 bg-gray-50/50 rounded-xl border-2 border-dashed border-gray-200">
-                <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-xl font-medium text-gray-600">No contacts found</p>
-                <p className="text-gray-400 mt-2">Try adjusting your search or filters</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Name</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Contact</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Location</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Family</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Joined</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {contacts.map((contact) => (
-                      <tr key={contact.id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
-                        <td className="py-3 px-4">
-                          <div>
-                            <div className="font-medium">
-                              {contact.firstname} {contact.middlename} {contact.lastname}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-sm">
-                            <div>{contact.email}</div>
-                            <div className="text-gray-500">{contact.phone}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-sm">
-                            {contact.city && <div>{contact.city}</div>}
-                            {contact.state && <div className="text-gray-500">{contact.state.name}</div>}
-                            {contact.country && <div className="text-gray-500">{contact.country.name}</div>}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-sm">
-                            <div>Children: {contact.children.length}</div>
-                            <div>Siblings/Brother/sister: {contact.siblings.length}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-sm text-gray-500">
-                            {new Date(contact.createdAt).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleView(contact.id)}
-                              className="hover:bg-blue-50 hover:text-blue-600"
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
-                            {/* <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEdit(contact.id)}
-                              className="hover:bg-green-50 hover:text-green-600"
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              Edit
-                            </Button> */}
-                            {session.user.role === 'SUPER_ADMIN' && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDelete(contact.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Delete
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-4 mt-8">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-6 py-2 border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ← Previous
-                </Button>
-                <div className="flex items-center space-x-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <Button
-                      key={page}
-                      variant={currentPage === page ? "default" : "outline"}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-10 h-10 rounded-full ${currentPage === page
-                        ? 'bg-blue-600 text-white border-0'
-                        : 'border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50'
-                        } transition-all`}
-                    >
-                      {page}
-                    </Button>
-                  ))}
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-6 py-2 border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next →
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
-      </main>
-      <FooterPage />
-    </div>
+        
+        <Card className="bg-white border border-gray-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">New This Month</p>
+                <p className="text-2xl font-black mt-1 text-gray-900">
+                  {filter === 'this_month' ? totalContacts : '...'}
+                </p>
+              </div>
+              <div className="p-3 bg-green-50 text-green-600 rounded-xl">
+                <UserPlus className="h-5 w-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-gray-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">Filtered View</p>
+                <p className="text-2xl font-black mt-1 text-gray-900">{contacts.length}</p>
+              </div>
+              <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                <Search className="h-5 w-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Contacts Table */}
+      <Card className="border-0 shadow-sm bg-white overflow-hidden">
+        <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-lg font-bold text-gray-800">
+                {filter === 'this_month' ? 'New Members This Month' : 'Member Directory'}
+              </CardTitle>
+              <CardDescription>
+                Showing {contacts.length} of {totalContacts} results
+              </CardDescription>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3">
+              <Select
+                value={gaamFilter}
+                onValueChange={(value) => {
+                  setGaamFilter(value === 'all' ? '' : value)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-40 bg-white border-gray-200">
+                  <SelectValue placeholder="Gaam Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Gaams</SelectItem>
+                  {["Pisai", "Puniyad", "Sandha", "Bhekhda", "Avakhal", "Kukas", "Manjrol", "Vemar", "Malpur", "Juni Jithardi", "Someswarpura", "Jaferpura", "Alindra", "Tarsana"].map(g => (
+                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={countryFilter}
+                onValueChange={(value) => {
+                  setCountryFilter(value === 'all' ? '' : value)
+                  setCurrentPage(1)
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-44 bg-white border-gray-200">
+                  <SelectValue placeholder="Country Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Countries</SelectItem>
+                  {countries.map((country) => (
+                    <SelectItem key={country.id} value={country.id}>
+                      {country.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search members..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-10 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm transition-all shadow-sm"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {(filter || searchTerm || gaamFilter || countryFilter) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setFilter('')
+                    setSearchTerm('')
+                    setGaamFilter('')
+                    setCountryFilter('')
+                    setCurrentPage(1)
+                    router.push('/admin/contacts')
+                  }}
+                  className="text-gray-500 hover:text-blue-600 font-bold px-3 py-1"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="p-0 relative">
+          {isRefreshing && (
+            <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center backdrop-blur-[2px] transition-all">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-100 border-t-blue-600"></div>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-100 border-t-blue-600 mb-4"></div>
+              <p className="text-gray-500 font-medium">Loading membership directory...</p>
+            </div>
+          ) : contacts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+              <div className="p-6 bg-gray-50 rounded-full mb-6">
+                <Users className="h-16 w-16 text-gray-200" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">No members found</h3>
+              <p className="text-gray-500 mt-2 max-w-sm">
+                We couldn't find any members matching your current filters or search criteria.
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-6 border-blue-200 text-blue-600 hover:bg-blue-50"
+                onClick={() => {
+                  setFilter('')
+                  setSearchTerm('')
+                  setGaamFilter('')
+                  setCountryFilter('')
+                }}
+              >
+                Reset all filters
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/30">
+                    <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-widest">Name & Identity</th>
+                    <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-widest">Contact Details</th>
+                    <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-widest">Location</th>
+                    <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-widest">Family</th>
+                    <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contacts.map((contact) => (
+                    <tr key={contact.id} className="group border-b border-gray-50 hover:bg-blue-50/30 transition-all duration-200">
+                      <td className="py-5 px-6">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">
+                            {contact.firstname} {contact.middlename} {contact.lastname}
+                          </span>
+                          <span className="text-xs text-gray-400 mt-0.5">Joined {new Date(contact.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </td>
+                      <td className="py-5 px-6">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-medium text-gray-700">{contact.email}</span>
+                          <span className="text-xs text-gray-500">{contact.phone}</span>
+                        </div>
+                      </td>
+                      <td className="py-5 px-6">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-700">{contact.city || 'N/A'}</span>
+                          <span className="text-xs text-gray-500">
+                            {contact.state?.name}, {contact.country?.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-5 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="px-2 py-1 bg-gray-100 rounded text-[10px] font-bold text-gray-500 uppercase">
+                            Child: {contact.children.length}
+                          </div>
+                          <div className="px-2 py-1 bg-gray-100 rounded text-[10px] font-bold text-gray-500 uppercase">
+                            Sib: {contact.siblings.length}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-5 px-6">
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleView(contact.id)}
+                            className="h-8 px-3 text-xs bg-white border border-gray-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-none"
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1.5" />
+                            Details
+                          </Button>
+                          {session.user.role === 'SUPER_ADMIN' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(contact.id)}
+                              className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-8 border-t border-gray-50 bg-gray-50/20">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="h-9 px-4 border-gray-200 bg-white font-bold"
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    size="sm"
+                    variant={currentPage === page ? "default" : "ghost"}
+                    onClick={() => setCurrentPage(page)}
+                    className={`h-9 w-9 p-0 font-bold ${currentPage === page
+                      ? 'bg-blue-600 border-blue-600'
+                      : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
+                      }`}
+                  >
+                    {page}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="h-9 px-4 border-gray-200 bg-white font-bold"
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
   )
 }

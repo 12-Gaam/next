@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
       }, { status: 200 })
     }
 
-    // Only allow OTP for MEMBER role users with APPROVED status
-    if (user.role !== UserRole.MEMBER || user.status !== RegistrationStatus.APPROVED) {
+    // Only allow OTP for APPROVED status users
+    if (user.status !== RegistrationStatus.APPROVED) {
       return NextResponse.json({
         message: 'If the email/username exists, an OTP has been sent'
       }, { status: 200 })
