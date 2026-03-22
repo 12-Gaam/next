@@ -61,6 +61,7 @@ model CountryMaster {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   contacts  Contact[]
+  residingContacts Contact[] @relation("ResidingCountry")
   states    StateMaster[]
 }
 
@@ -111,11 +112,13 @@ model Contact {
   countryId        String?
   stateId          String?
   cityId           String?
+  zipCode          String?
   phone            String            @unique
   email            String?           @unique
   dob              DateTime?
   educationId      String?
   otherEducation   String?
+  educationDetail  String?
   professionId     String?
   otherProfession  String?
   website          String?
@@ -141,8 +144,10 @@ model Contact {
   maritalStatus    String?
   is18Plus         Boolean?          @default(false)
   countryCode      String?           @default("+1")
+  residingCountryId String?
   userId           String?
   country          CountryMaster?    @relation(fields: [countryId], references: [id])
+  residingCountry  CountryMaster?    @relation("ResidingCountry", fields: [residingCountryId], references: [id])
   education        EducationMaster?  @relation(fields: [educationId], references: [id])
   profession       ProfessionMaster? @relation(fields: [professionId], references: [id])
   state            StateMaster?      @relation(fields: [stateId], references: [id])
@@ -155,7 +160,7 @@ model ContactChild {
   id         String   @id @default(cuid())
   contactId  String
   gender     String
-  age        Int
+  dob        String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   firstName  String?  @default("")
@@ -168,7 +173,7 @@ model ContactSibling {
   id         String   @id @default(cuid())
   contactId  String
   gender     String
-  age        Int
+  dob        String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   firstName  String?  @default("")

@@ -17,16 +17,18 @@ export const contactFormSchema = z.object({
   maritalStatus: z.string().min(1, "Marital status is required"),
   is18Plus: z.boolean().optional(),
   gaam: z.string().min(1, "Gaam is required"),
+  dob: z.string().optional().or(z.literal("")),
   currentAddress: z.string().min(1, "Current address is required"),
   countryId: z.string().min(1, "Country is required"),
   stateId: z.string().min(1, "State is required"),
-  cityId: z.string().optional().or(z.literal("")),
-  phone: z.string().min(8, "Phone number must be at least 8 digits").max(12, "Phone number must be at most 12 digits"),
+  cityId: z.string().min(1, "City is required"),
+  zipCode: z.string().min(1, "Zip code is required"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").max(12, "Phone number must be at most 12 digits"),
   countryCode: z.string().optional().default("+1"),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
-  dob: z.string().optional().or(z.literal("")),
   educationId: z.string().optional().or(z.literal("")),
-  otherEducation: z.string().optional(),
+  educationDetail: z.string().optional().or(z.literal("")),
+  otherEducation: z.string().optional().or(z.literal("")),
   professionId: z.string().optional().or(z.literal("")),
   otherProfession: z.string().optional(),
   additionalProfessions: z.array(z.object({
@@ -35,8 +37,6 @@ export const contactFormSchema = z.object({
   })).default([]),
   educationalLevel: z.string().optional().or(z.literal("")),
   website: z.string().optional().or(z.literal("")),
-  profilePic: z.string().optional(),
-  familyPhoto: z.string().optional(),
   fb: z.string().optional(),
   linkedin: z.string().optional(),
   insta: z.string().optional(),
@@ -44,19 +44,22 @@ export const contactFormSchema = z.object({
   twitter: z.string().optional(),
   snapchat: z.string().optional(),
   children: z.array(z.object({
-    firstName: z.string().optional().default(""),
-    middleName: z.string().optional(),
-    lastName: z.string().optional(),
+    firstName: z.string().optional().or(z.literal("")),
+    middleName: z.string().optional().or(z.literal("")),
+    lastName: z.string().optional().or(z.literal("")),
     gender: z.string().min(1, "Gender is required"),
-    age: z.number().min(0).max(120, "Age must be between 0 and 120")
+    dob: z.string().optional().or(z.literal("")),
   })).default([]),
   siblings: z.array(z.object({
-    firstName: z.string().optional().default(""),
-    middleName: z.string().optional(),
-    lastName: z.string().optional(),
+    firstName: z.string().optional().or(z.literal("")),
+    middleName: z.string().optional().or(z.literal("")),
+    lastName: z.string().optional().or(z.literal("")),
     gender: z.string().min(1, "Gender is required"),
-    age: z.number().min(0).max(120, "Age must be between 0 and 120")
-  })).default([])
+    dob: z.string().optional().or(z.literal("")),
+  })).default([]),
+  profilePic: z.string().optional().or(z.literal("")),
+  familyPhoto: z.string().optional().or(z.literal("")),
+  residingCountryId: z.string().optional().or(z.literal("")),
 }).superRefine((data, ctx) => {
   // Check if "Other" education is selected but not specified
   if (data.educationId && data.educationId.includes('other') && (!data.otherEducation || data.otherEducation.trim().length === 0)) {

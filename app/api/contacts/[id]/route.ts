@@ -103,24 +103,27 @@ export async function PUT(
           countryId: validatedData.countryId,
           stateId: validatedData.stateId,
           cityId: validatedData.cityId,
+          zipCode: validatedData.zipCode,
           phone: validatedData.phone,
           countryCode: validatedData.countryCode,
           email: validatedData.email,
-          dob: validatedData.dob ? new Date(validatedData.dob) : null,
           educationId: validatedData.educationId,
+          educationDetail: validatedData.educationDetail,
           otherEducation: validatedData.otherEducation,
           professionId: validatedData.professionId,
           otherProfession: validatedData.otherProfession,
           website: validatedData.website,
           profilePic: validatedData.profilePic,
           familyPhoto: validatedData.familyPhoto,
+          residingCountryId: validatedData.residingCountryId,
+          dob: validatedData.dob ? new Date(validatedData.dob) : null,
           children: {
             create: validatedData.children.map(child => ({
               firstName: child.firstName || '',
               middleName: child.middleName,
               lastName: child.lastName,
               gender: child.gender as any,
-              age: child.age
+              dob: child.dob
             }))
           },
           siblings: {
@@ -129,7 +132,7 @@ export async function PUT(
               middleName: sibling.middleName,
               lastName: sibling.lastName,
               gender: sibling.gender as any,
-              age: sibling.age
+              dob: sibling.dob
             }))
           }
         } as any,

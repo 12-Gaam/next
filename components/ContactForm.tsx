@@ -133,11 +133,12 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         countryId: existingContact.countryId || undefined,
         stateId: existingContact.stateId || undefined,
         cityId: existingContact.cityId || '',
+        zipCode: existingContact.zipCode || '',
         phone: existingContact.phone || '',
         countryCode: existingContact.countryCode || '+1',
         email: existingContact.email || '',
-        dob: existingContact.dob || undefined,
         educationId: existingContact.educationId || undefined,
+        educationDetail: existingContact.educationDetail || '',
         otherEducation: existingContact.otherEducation || '',
         professionId: existingContact.professionId || undefined,
         otherProfession: existingContact.otherProfession || '',
@@ -149,7 +150,8 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         insta: existingContact.insta || '',
         tiktok: existingContact.tiktok || '',
         twitter: existingContact.twitter || '',
-        snapchat: existingContact.snapchat || ''
+        snapchat: existingContact.snapchat || '',
+        residingCountryId: existingContact.residingCountryId || undefined
       }
 
       // Set all form values
@@ -159,11 +161,11 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
 
       replaceChildren(
         (existingContact.children || []).map((child: any) => ({
-          firstName: child.firstName || '',
+          firstName: child.firstName || child.firstname || '',
           middleName: child.middleName || '',
           lastName: child.lastName || '',
           gender: child.gender || 'male',
-          age: child.age || 0
+          dob: child.dob || ''
         }))
       )
 
@@ -173,7 +175,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           middleName: sibling.middleName || '',
           lastName: sibling.lastName || '',
           gender: sibling.gender || 'male',
-          age: sibling.age || 0
+          dob: sibling.dob || ''
         }))
       )
 
@@ -400,8 +402,8 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         return step1Valid
       case 2:
         const step2Valid = formData.gaam && formData.currentAddress &&
-          formData.countryId && formData.stateId
-        console.log('Step 2 validation:', { step2Valid, formData: { gaam: formData.gaam, currentAddress: formData.currentAddress, countryId: formData.countryId, stateId: formData.stateId, cityId: formData.cityId } })
+          formData.countryId && formData.stateId && formData.cityId && formData.zipCode
+        console.log('Step 2 validation:', { step2Valid, formData: { gaam: formData.gaam, currentAddress: formData.currentAddress, countryId: formData.countryId, stateId: formData.stateId, cityId: formData.cityId, zipCode: formData.zipCode } })
         return step2Valid
       case 3:
         const step3Valid = formData.phone
@@ -414,7 +416,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         // For the final step, check if all required fields are filled
         let step5Valid: boolean = !!(formData.firstname && formData.gender &&
           formData.gaam && formData.currentAddress &&
-          formData.countryId && formData.stateId &&
+          formData.countryId && formData.stateId && formData.cityId && formData.zipCode &&
           formData.phone)
 
         // Check if spouse first name is required when married
@@ -442,11 +444,11 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
   }
 
   const addChild = () => {
-    appendChild({ firstName: '', middleName: '', lastName: '', gender: 'male', age: 0 })
+    appendChild({ firstName: '', middleName: '', lastName: '', gender: 'male', dob: '' })
   }
 
   const addSibling = () => {
-    appendSibling({ firstName: '', middleName: '', lastName: '', gender: 'male', age: 0 })
+    appendSibling({ firstName: '', middleName: '', lastName: '', gender: 'male', dob: '' })
   }
 
   const handleFieldChange = (fieldName: keyof ContactFormData, value: any) => {
@@ -925,9 +927,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
               />
             </Form.Item>
           </Col>
-          <Col xs={24} md={8}>
+          <Col xs={24} md={4}>
             <Form.Item
-              label={<span className="font-medium text-gray-700">City</span>}
+              label={<span className="font-medium text-gray-700">City <span className="text-red-500">*</span></span>}
               validateStatus={errors.cityId ? 'error' : ''}
               help={errors.cityId?.message}
               className="mb-0"
@@ -936,7 +938,23 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                 size="large"
                 value={watch('cityId') || ''}
                 onChange={(e) => handleFieldChange('cityId', e.target.value)}
-                placeholder="Enter city (optional)"
+                placeholder="Enter city"
+                className="rounded-lg"
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={4}>
+            <Form.Item
+              label={<span className="font-medium text-gray-700">Zip Code <span className="text-red-500">*</span></span>}
+              validateStatus={errors.zipCode ? 'error' : ''}
+              help={errors.zipCode?.message}
+              className="mb-0"
+            >
+              <Input
+                size="large"
+                value={watch('zipCode') || ''}
+                onChange={(e) => handleFieldChange('zipCode', e.target.value)}
+                placeholder="Enter zip code"
                 className="rounded-lg"
               />
             </Form.Item>
@@ -1078,6 +1096,39 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         </Row>
 
         <Row gutter={[20, 20]} className="mt-6">
+          <Col xs={24} md={6}>
+            <Form.Item
+              label={<span className="font-medium text-gray-700">Residing Country</span>}
+              className="mb-0"
+            >
+              <Select
+                size="large"
+                showSearch
+                value={watch('residingCountryId') || undefined}
+                onChange={(value) => handleFieldChange('residingCountryId', value)}
+                placeholder="Select residing country (optional)"
+                className="rounded-lg"
+                options={Array.isArray(masterData.countries) ? masterData.countries.map((country: any) => ({
+                  value: country.id,
+                  label: country.name
+                })) : []}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={6}>
+            <Form.Item
+              label={<span className="font-medium text-gray-700">Education Details</span>}
+              className="mb-0"
+            >
+              <Input
+                size="large"
+                value={watch('educationDetail') || ''}
+                onChange={(e) => handleFieldChange('educationDetail', e.target.value)}
+                placeholder="Enter education details"
+                className="rounded-lg"
+              />
+            </Form.Item>
+          </Col>
           <Col xs={24} md={12}>
             <Form.Item
               label={<span className="font-medium text-gray-700">Website</span>}
@@ -1531,19 +1582,17 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={3}>
-                      <Form.Item label={<span className="font-medium text-gray-700">Age</span>} className="mb-0">
+                      <Form.Item label={<span className="font-medium text-gray-700">Bday (MM/YY)</span>} className="mb-0">
                         <Input
                           size="large"
-                          type="number"
-                          value={watch(`children.${index}.age`) || ''}
+                          value={watch(`children.${index}.dob`) || ''}
                           onChange={(e) => {
-                            const value = e.target.value ? Number(e.target.value) : 0
-                            setValue(`children.${index}.age`, value)
-                            if (errors.children?.[index]?.age) {
-                              clearErrors(`children.${index}.age`)
+                            setValue(`children.${index}.dob`, e.target.value)
+                            if (errors.children?.[index]?.dob) {
+                              clearErrors(`children.${index}.dob`)
                             }
                           }}
-                          placeholder="Age"
+                          placeholder="MM/YY"
                           className="rounded-lg"
                         />
                       </Form.Item>
@@ -1668,19 +1717,17 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={3}>
-                      <Form.Item label={<span className="font-medium text-gray-700">Age</span>} className="mb-0">
+                      <Form.Item label={<span className="font-medium text-gray-700">Bday (MM/YY)</span>} className="mb-0">
                         <Input
                           size="large"
-                          type="number"
-                          value={watch(`siblings.${index}.age`) || ''}
+                          value={watch(`siblings.${index}.dob`) || ''}
                           onChange={(e) => {
-                            const value = e.target.value ? Number(e.target.value) : 0
-                            setValue(`siblings.${index}.age`, value)
-                            if (errors.siblings?.[index]?.age) {
-                              clearErrors(`siblings.${index}.age`)
+                            setValue(`siblings.${index}.dob`, e.target.value)
+                            if (errors.siblings?.[index]?.dob) {
+                              clearErrors(`siblings.${index}.dob`)
                             }
                           }}
-                          placeholder="Age"
+                          placeholder="MM/YY"
                           className="rounded-lg"
                         />
                       </Form.Item>

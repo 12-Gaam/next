@@ -43,7 +43,7 @@ export const authOptions: NextAuthOptions = {
 
           // Check if user is MEMBER with APPROVED status - use OTP
           if (user.role === UserRole.MEMBER && user.status === RegistrationStatus.APPROVED) {
-            const otp = credentials.otp || credentials.password;
+            const otp = credentials.otp;
 
             if (!otp) {
               throw new Error('OTP_REQUIRED');

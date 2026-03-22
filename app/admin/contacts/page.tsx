@@ -16,6 +16,13 @@ import {
 import Link from 'next/link'
 import { notification } from 'antd'
 import FooterPage from '@/components/common/FooterPage'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface Contact {
   id: string
@@ -44,6 +51,9 @@ export default function AdminContactsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filter, setFilter] = useState(filterParam)
+  const [gaamFilter, setGaamFilter] = useState('')
+  const [countryFilter, setCountryFilter] = useState('')
+  const [countries, setCountries] = useState<any[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalContacts, setTotalContacts] = useState(0)
@@ -72,8 +82,18 @@ export default function AdminContactsPage() {
       return
     }
 
-    fetchContacts()
-  }, [session, status, router, currentPage, debouncedSearch, filter])
+    fetchCountries()
+  }, [session, status, router, currentPage, debouncedSearch, filter, gaamFilter, countryFilter])
+
+  const fetchCountries = async () => {
+    try {
+      const response = await fetch('/api/countries')
+      const data = await response.json()
+      setCountries(data || [])
+    } catch (error) {
+      console.error('Error fetching countries:', error)
+    }
+  }
 
   const fetchContacts = async () => {
     try {
@@ -84,7 +104,7 @@ export default function AdminContactsPage() {
       }
 
       const response = await fetch(
-        `/api/contacts?page=${currentPage}&limit=10&search=${debouncedSearch}&filter=${filter}`
+        `/api/contacts?page=${currentPage}&limit=10&search=${debouncedSearch}&filter=${filter}&gaam=${gaamFilter}&countryId=${countryFilter}`
       )
       const data = await response.json()
 
@@ -247,13 +267,62 @@ export default function AdminContactsPage() {
                 </CardDescription>
               </div>
               <div className="flex items-center space-x-3">
+                <Select
+                  value={gaamFilter}
+                  onValueChange={(value) => {
+                    setGaamFilter(value === 'all' ? '' : value)
+                    setCurrentPage(1)
+                  }}
+                >
+                  <SelectTrigger className="w-40 bg-white">
+                    <SelectValue placeholder="Gaam Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Gaams</SelectItem>
+                    <SelectItem value="Pisai">Pisai</SelectItem>
+                    <SelectItem value="Puniyad">Puniyad</SelectItem>
+                    <SelectItem value="Sandha">Sandha</SelectItem>
+                    <SelectItem value="Bhekhda">Bhekhda</SelectItem>
+                    <SelectItem value="Avakhal">Avakhal</SelectItem>
+                    <SelectItem value="Kukas">Kukas</SelectItem>
+                    <SelectItem value="Manjrol">Manjrol</SelectItem>
+                    <SelectItem value="Vemar">Vemar</SelectItem>
+                    <SelectItem value="Malpur">Malpur</SelectItem>
+                    <SelectItem value="Juni Jithardi">Juni Jithardi</SelectItem>
+                    <SelectItem value="Someswarpura">Someswarpura</SelectItem>
+                    <SelectItem value="Jaferpura">Jaferpura</SelectItem>
+                    <SelectItem value="Alindra">Alindra</SelectItem>
+                    <SelectItem value="Tarsana">Tarsana</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={countryFilter}
+                  onValueChange={(value) => {
+                    setCountryFilter(value === 'all' ? '' : value)
+                    setCurrentPage(1)
+                  }}
+                >
+                  <SelectTrigger className="w-40 bg-white">
+                    <SelectValue placeholder="Country Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Countries</SelectItem>
+                    {countries.map((country) => (
+                      <SelectItem key={country.id} value={country.id}>
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Search contacts..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-64 pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    className="w-48 pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
                   />
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                   {searchTerm && (
@@ -265,12 +334,14 @@ export default function AdminContactsPage() {
                     </button>
                   )}
                 </div>
-                {(filter || searchTerm) && (
+                {(filter || searchTerm || gaamFilter || countryFilter) && (
                   <Button
                     variant="ghost"
                     onClick={() => {
                       setFilter('')
                       setSearchTerm('')
+                      setGaamFilter('')
+                      setCountryFilter('')
                       setCurrentPage(1)
                       router.push('/admin/contacts')
                     }}

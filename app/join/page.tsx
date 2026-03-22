@@ -40,6 +40,7 @@ export default function JoinPage() {
   const [isRegistering, setIsRegistering] = useState(false)
   const [showGaamList, setShowGaamList] = useState(false)
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
+  const [showPasswordField, setShowPasswordField] = useState(false)
 
   useEffect(() => {
     const reason = searchParams.get('reason')
@@ -92,7 +93,7 @@ export default function JoinPage() {
 
       if (response.ok) {
         setOtpSent(true)
-        setOtpMessage('OTP has been sent to your email. Please check your inbox.')
+        // setOtpMessage('OTP has been sent to your email. Please check your inbox.')
       } else {
         setLoginError(data.error || 'Failed to send OTP')
       }
@@ -247,7 +248,7 @@ export default function JoinPage() {
                   </CardTitle>
                   <CardDescription>
                     {activeTab === 'login'
-                      ? 'Use your username or email and the credentials provided over email to access your dashboard.'
+                      ? 'Access your dashboard using OTP (members) or password (admins).'
                       : 'Complete this form to register your family. Credentials will be sent after approval.'}
                   </CardDescription>
                 </CardHeader>
@@ -272,30 +273,41 @@ export default function JoinPage() {
 
                       {/* OTP Section for Members */}
                       {otpSent ? (
-                        <div className="space-y-2">
-                          <Label>OTP (One-Time Password)</Label>
-                          <Input
-                            type="text"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                            placeholder="Enter 6-digit OTP"
-                            maxLength={6}
-                            disabled={isLoggingIn}
-                          />
-                          <p className="text-xs text-gray-500">
-                            OTP sent to your email. Valid for 15 minutes.
-                          </p>
+                        <div className="space-y-4 animate-in slide-in-from-top duration-300">
+                          <div className="space-y-2">
+                            <Label className="text-secondary font-semibold">OTP</Label>
+                            <Input
+                              type="text"
+                              value={otp}
+                              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                              placeholder="Enter 6-digit OTP"
+                              className="text-center text-2xl tracking-[0.5em] h-14 border-secondary/30 focus:border-secondary"
+                              maxLength={6}
+                              disabled={isLoggingIn}
+                            />
+                            <p className="text-xs text-gray-500">
+                              OTP sent to your email. Valid for 15 minutes.
+                            </p>
+                          </div>
                         </div>
-                      ) : (
+                      ) : showPasswordField ? (
                         /* Password Section for Admins */
-                        <div className="space-y-2">
-                          <Label>Password</Label>
+                        <div className="space-y-2 animate-in slide-in-from-top duration-300">
+                          <div className="flex justify-between items-center">
+                            <Label>Password</Label>
+                            <button
+                              type="button"
+                              onClick={() => setShowPasswordField(false)}
+                              className="text-xs text-secondary hover:underline"
+                            >
+                              Use OTP instead
+                            </button>
+                          </div>
                           <Input
                             type="password"
                             value={password}
                             onChange={(e) => {
                               setPassword(e.target.value)
-                              // Mutual exclusivity: clear OTP if user types password
                               setOtp('')
                               setOtpSent(false)
                               setOtpMessage('')
@@ -304,29 +316,32 @@ export default function JoinPage() {
                             disabled={isLoggingIn}
                           />
                         </div>
-                      )}
+                      ) : null}
 
-                      {/* Send OTP Button for Members */}
-                      {!otpSent && !password && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleSendOtp}
-                          disabled={isSendingOtp || isLoggingIn || !identifier}
-                          className="w-full animate-in fade-in zoom-in duration-300"
-                        >
-                          {isSendingOtp ? (
-                            <span className="flex items-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Sending OTP...
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-2">
-                              <Mail className="h-4 w-4" />
-                              Send OTP to Email
-                            </span>
-                          )}
-                        </Button>
+                      {/* Send OTP Button for Members (only if not sent and no password typed/shown) */}
+                      {!otpSent && !showPasswordField && (
+                        <div className="space-y-4">
+                          <Button
+                            type="button"
+                            variant="default"
+                            onClick={handleSendOtp}
+                            disabled={isSendingOtp || isLoggingIn || !identifier}
+                            className="w-full bg-secondary hover:bg-secondary/90 text-primary font-semibold h-12 shadow-md transition-all active:scale-95"
+                          >
+                            {isSendingOtp ? (
+                              <span className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Sending OTP...
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-2">
+                                <Mail className="h-4 w-4" />
+                                Send OTP to Email
+                              </span>
+                            )}
+                          </Button>
+
+                        </div>
                       )}
 
                       {otpMessage && (
@@ -344,8 +359,8 @@ export default function JoinPage() {
                       )}
                       <Button
                         type="submit"
-                        className="w-full bg-primary hover:bg-primary/90 text-white"
-                        disabled={isLoggingIn || (otpSent ? !otp : !password && !otp)}
+                        className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-bold shadow-lg transition-all"
+                        disabled={isLoggingIn || (otpSent ? !otp : !showPasswordField || !password)}
                       >
                         {isLoggingIn ? (
                           <span className="flex items-center gap-2">
@@ -357,7 +372,7 @@ export default function JoinPage() {
                         )}
                       </Button>
                       <p className="text-xs text-gray-500 text-center">
-                        Members: Use OTP sent to email or enter your password to login.
+                        Members: Use OTP sent to email to login.
                       </p>
                     </form>
                   ) : (
