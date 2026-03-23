@@ -32,13 +32,13 @@ model User {
 }
 
 model Gaam {
-  id        String        @id @default(cuid())
-  name      String        @unique
-  slug      String        @unique
-  admins    GaamAdmin[]   @relation("GaamAdmins")
+  id        String      @id @default(cuid())
+  name      String      @unique
+  slug      String      @unique
+  admins    GaamAdmin[] @relation("GaamAdmins")
   members   User[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model GaamAdmin {
@@ -56,13 +56,12 @@ model GaamAdmin {
 }
 
 model CountryMaster {
-  id        String        @id @default(cuid())
-  name      String        @unique
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  contacts  Contact[]
-  residingContacts Contact[] @relation("ResidingCountry")
-  states    StateMaster[]
+  id               String        @id @default(cuid())
+  name             String        @unique
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  contacts         Contact[]
+  states           StateMaster[]
 }
 
 model StateMaster {
@@ -102,58 +101,62 @@ model ProfessionMaster {
 }
 
 model Contact {
-  id               String            @id @default(cuid())
-  firstname        String
-  middlename       String?
-  lastname         String?           @default("Patel")
-  gender           String
-  gaam             String
-  currentAddress   String
-  countryId        String?
-  stateId          String?
-  cityId           String?
-  zipCode          String?
-  phone            String            @unique
-  email            String?           @unique
-  dob              DateTime?
-  educationId      String?
-  otherEducation   String?
-  educationDetail  String?
-  professionId     String?
-  otherProfession  String?
-  website          String?
-  profilePic       String?
-  familyPhoto      String?
-  fb               String?
-  linkedin         String?
-  insta            String?
-  tiktok           String?
-  twitter          String?
-  snapchat         String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  spouseFirstName  String?
-  spouseMiddleName String?
-  spouseLastName   String?
-  fatherFirstName  String?           @default("")
-  fatherMiddleName String?
-  fatherLastName   String?
-  motherFirstName  String?           @default("")
-  motherMiddleName String?
-  motherLastName   String?
-  maritalStatus    String?
-  is18Plus         Boolean?          @default(false)
-  countryCode      String?           @default("+1")
+  id                String            @id @default(cuid())
+  firstname         String
+  middlename        String?
+  lastname          String?           @default("Patel")
+  gender            String
+  gaam              String
+  currentAddress    String
+  countryId         String?
+  stateId           String?
+  cityId            String?
+  zipCode           String?
+  phone             String            @unique
+  email             String?           @unique
+  dob               DateTime?
+  educationId       String?
+  otherEducation    String?
+  educationDetail   String?
+  professionId      String?
+  otherProfession   String?
+  website           String?
+  profilePic        String?
+  familyPhoto       String?
+  fb                String?
+  linkedin          String?
+  insta             String?
+  tiktok            String?
+  twitter           String?
+  snapchat          String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  spouseFirstName   String?
+  spouseMiddleName  String?
+  spouseLastName    String?
+  fatherFirstName   String?           @default("")
+  fatherMiddleName  String?
+  fatherLastName    String?
+  motherFirstName   String?           @default("")
+  motherMiddleName  String?
+  motherLastName    String?
+  maritalStatus     String?
+  is18Plus          Boolean?          @default(false)
+  countryCode       String?           @default("+1")
   residingCountryId String?
-  userId           String?
-  country          CountryMaster?    @relation(fields: [countryId], references: [id])
-  residingCountry  CountryMaster?    @relation("ResidingCountry", fields: [residingCountryId], references: [id])
-  education        EducationMaster?  @relation(fields: [educationId], references: [id])
-  profession       ProfessionMaster? @relation(fields: [professionId], references: [id])
-  state            StateMaster?      @relation(fields: [stateId], references: [id])
-  user             User?             @relation(fields: [userId], references: [id])
-  children         ContactChild[]
-  siblings         ContactSibling[]
+  userId            String?
+  country           CountryMaster?    @relation(fields: [countryId], references: [id])
+  education         EducationMaster?  @relation(fields: [educationId], references: [id])
+  profession        ProfessionMaster? @relation(fields: [professionId], references: [id])
+  state             StateMaster?      @relation(fields: [stateId], references: [id])
+  user              User?             @relation(fields: [userId], references: [id])
+  children          ContactChild[]
+  siblings          ContactSibling[]
+
+  @@index([gaam])
+  @@index([countryId])
+  @@index([createdAt])
+  @@index([userId])
 }
 
 model ContactChild {
