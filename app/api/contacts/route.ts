@@ -82,13 +82,20 @@ export async function GET(request: NextRequest) {
     const [contacts, total] = await Promise.all([
       prisma.contact.findMany({
         where,
-        include: {
-          country: true,
-          state: true,
-          education: true,
-          profession: true,
-          children: true,
-          siblings: true
+        select: {
+          id: true,
+          firstname: true,
+          middlename: true,
+          lastname: true,
+          email: true,
+          phone: true,
+          gaam: true,
+          cityId: true,
+          createdAt: true,
+          country: { select: { name: true } },
+          state: { select: { name: true } },
+          children: { select: { id: true } },
+          siblings: { select: { id: true } }
         },
         skip,
         take: limit,
@@ -225,4 +232,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

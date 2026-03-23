@@ -28,7 +28,7 @@ interface Contact {
   lastname?: string
   email: string
   phone: string
-  city?: string
+  cityId?: string
   state?: { name: string }
   country?: { name: string }
   children: any[]
@@ -54,6 +54,7 @@ export default function AdminContactsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalContacts, setTotalContacts] = useState(0)
+  const [newThisMonthCount, setNewThisMonthCount] = useState<number | string>('...')
 
   // Debounced search effect
   useEffect(() => {
@@ -67,6 +68,7 @@ export default function AdminContactsPage() {
 
   useEffect(() => {
     fetchCountries()
+    fetchStats()
   }, [])
 
   useEffect(() => {
@@ -80,6 +82,18 @@ export default function AdminContactsPage() {
       setCountries(data || [])
     } catch (error) {
       console.error('Error fetching countries:', error)
+    }
+  }
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/admin/stats')
+      const data = await response.json()
+      if (data && typeof data.newThisMonth === 'number') {
+        setNewThisMonthCount(data.newThisMonth)
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error)
     }
   }
 
@@ -123,6 +137,7 @@ export default function AdminContactsPage() {
           placement: 'topRight',
         })
         fetchContacts()
+        fetchStats()
       } else {
         const errorData = await response.json()
         notification.error({
@@ -170,7 +185,7 @@ export default function AdminContactsPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-white border border-gray-100 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
           <CardContent className="p-6">
@@ -178,7 +193,7 @@ export default function AdminContactsPage() {
               <div>
                 <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">New This Month</p>
                 <p className="text-2xl font-black mt-1 text-gray-900">
-                  {filter === 'this_month' ? totalContacts : '...'}
+                  {newThisMonthCount}
                 </p>
               </div>
               <div className="p-3 bg-green-50 text-green-600 rounded-xl">
@@ -216,7 +231,7 @@ export default function AdminContactsPage() {
                 Showing {contacts.length} of {totalContacts} results
               </CardDescription>
             </div>
-            
+
             <div className="flex flex-wrap items-center gap-3">
               <Select
                 value={gaamFilter}
@@ -295,7 +310,7 @@ export default function AdminContactsPage() {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent className="p-0 relative">
           {isRefreshing && (
             <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center backdrop-blur-[2px] transition-all">
@@ -317,8 +332,8 @@ export default function AdminContactsPage() {
               <p className="text-gray-500 mt-2 max-w-sm">
                 We couldn't find any members matching your current filters or search criteria.
               </p>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="mt-6 border-blue-200 text-blue-600 hover:bg-blue-50"
                 onClick={() => {
                   setFilter('')
@@ -361,7 +376,7 @@ export default function AdminContactsPage() {
                       </td>
                       <td className="py-5 px-6">
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-700">{contact.city || 'N/A'}</span>
+                          <span className="text-sm font-medium text-gray-700">{contact.cityId || 'N/A'}</span>
                           <span className="text-xs text-gray-500">
                             {contact.state?.name}, {contact.country?.name}
                           </span>

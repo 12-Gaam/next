@@ -248,8 +248,8 @@ export default function JoinPage() {
                   </CardTitle>
                   <CardDescription>
                     {activeTab === 'login'
-                      ? 'Access your dashboard using OTP (members) or password (admins).'
-                      : 'Complete this form to register your family. Credentials will be sent after approval.'}
+                      ? 'Access your dashboard using OTP.'
+                      : 'Register your family. Login details will be shared after approval.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0 sm:pt-2">
@@ -372,7 +372,7 @@ export default function JoinPage() {
                         )}
                       </Button>
                       <p className="text-xs text-gray-500 text-center">
-                        Members: Use OTP sent to email to login.
+                        Members: Please use the OTP sent to your email for login.
                       </p>
                     </form>
                   ) : (
