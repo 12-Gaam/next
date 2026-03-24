@@ -51,7 +51,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Case 1: OTP Authentication (Available for ALL approved users if OTP is provided)
-          if (credentials.otp) {
+          if (credentials.otp && credentials.otp !== 'undefined') {
             // Verify OTP
             if (!user.otp || user.otp !== credentials.otp) {
               console.error("Invalid OTP for user:", credentials.identifier);

@@ -93,7 +93,6 @@ export async function PATCH(
         name: updated.fullName,
         status: isApproved ? 'Approved' : 'Rejected',
         username: isApproved ? updated.username : undefined,
-        password: isApproved ? plainPassword : undefined,
         notes
       })
     } catch (emailError) {
