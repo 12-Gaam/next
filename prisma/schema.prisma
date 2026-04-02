@@ -173,16 +173,17 @@ model ContactChild {
 }
 
 model ContactSibling {
-  id         String   @id @default(cuid())
-  contactId  String
-  gender     String
-  dob        String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  firstName  String?  @default("")
-  middleName String?
-  lastName   String?
-  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  contactId      String
+  gender         String
+  dob            String?
+  currentAddress String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  firstName      String?  @default("")
+  middleName     String?
+  lastName       String?
+  contact        Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
 }
 
 enum UserRole {

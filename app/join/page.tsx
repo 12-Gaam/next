@@ -41,6 +41,8 @@ export default function JoinPage() {
   const [showGaamList, setShowGaamList] = useState(false)
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
   const [showPasswordField, setShowPasswordField] = useState(false)
+  const [acceptedDisclaimer, setAcceptedDisclaimer] = useState(false)
+  const [showConsentModal, setShowConsentModal] = useState(false)
 
   useEffect(() => {
     const reason = searchParams.get('reason')
@@ -265,7 +267,7 @@ export default function JoinPage() {
                             setOtp('')
                             setOtpMessage('')
                           }}
-                          placeholder="e.g. me@12gaam.com"
+                          placeholder="Please enter your email or username"
                           required
                           disabled={isLoggingIn}
                         />
@@ -382,7 +384,7 @@ export default function JoinPage() {
                         <Input
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          placeholder="Enter your full name"
+                          placeholder="Please enter your full name"
                           required
                           disabled={isRegistering}
                         />
@@ -393,12 +395,13 @@ export default function JoinPage() {
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder="you@example.com"
+                          placeholder="Please enter your email"
                           required
                           disabled={isRegistering}
                         />
                       </div>
                       <div className="space-y-2">
+                        <Label>Gaam</Label>
 
                         <Select
                           value={gaamId}
@@ -407,7 +410,7 @@ export default function JoinPage() {
                           disabled={isRegistering || isLoadingGaams}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select your gaam" />
+                            <SelectValue placeholder="Please select your gaam" />
                           </SelectTrigger>
                           <SelectContent>
                             {gaams.map((gaam) => (
@@ -419,6 +422,25 @@ export default function JoinPage() {
                         </Select>
 
                       </div>
+                      <div className="flex items-start space-x-2 mt-4 bg-secondary/5 p-3 rounded-lg border border-secondary/10">
+                        <input
+                          type="checkbox"
+                          id="disclaimer"
+                          checked={acceptedDisclaimer}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setShowConsentModal(true)
+                            } else {
+                              setAcceptedDisclaimer(false)
+                            }
+                          }}
+                          className="mt-1 h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary cursor-pointer"
+                        />
+                        <Label htmlFor="disclaimer" className="text-xs text-gray-600 cursor-pointer italic leading-relaxed">
+                          I hereby consent to the collection and processing of my family information for community purposes. I have read and agree to the <span className="text-secondary font-bold underline">Terms & Disclaimer</span>.
+                        </Label>
+                      </div>
+
                       {registrationError && (
                         <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
                           <AlertCircle className="h-4 w-4" />
@@ -431,24 +453,25 @@ export default function JoinPage() {
                           <span>{registrationMessage}</span>
                         </div>
                       )}
-                      <Button
-                        type="submit"
-                        className="w-full bg-secondary hover:bg-secondary/90 text-white"
-                        disabled={isRegistering}
-                      >
-                        {isRegistering ? (
-                          <span className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Submitting...
-                          </span>
-                        ) : (
-                          'Submit Registration'
-                        )}
-                      </Button>
+
+                      {acceptedDisclaimer && (
+                        <Button
+                          type="submit"
+                          className="w-full bg-secondary hover:bg-secondary/90 text-white h-12 text-lg font-bold shadow-lg transition-all animate-in zoom-in-95 duration-300"
+                          disabled={isRegistering}
+                        >
+                          {isRegistering ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Submitting...
+                            </span>
+                          ) : (
+                            'Submit Registration'
+                          )}
+                        </Button>
+                      )}
                       <p className="text-xs text-gray-500">
-                        Your registration will be sent to your gaam admin for verification.
-                        Login credentials will be emailed to you once your account is activated.
-                      </p>
+                        Your registration will be sent to your Gaam Admin for verification. You’ll receive an email once your account is activated.                      </p>
                     </form>
                   )}
                 </CardContent>
@@ -458,6 +481,59 @@ export default function JoinPage() {
         </div>
       </main>
       <FooterPage />
+
+      {/* Disclaimer/Consent Modal */}
+      {showConsentModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <Card className="max-w-2xl w-full shadow-2xl border-secondary/20 rounded-3xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <CardHeader className="bg-secondary/10 border-b border-secondary/10">
+              <CardTitle className="text-primary flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-secondary" />
+                Community Consent & Disclaimer
+              </CardTitle>
+              <CardDescription>Please review and accept our terms to proceed with registration.</CardDescription>
+            </CardHeader>
+            <CardContent className="py-6 max-h-[60vh] overflow-y-auto">
+              <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
+                <p className="font-semibold text-primary">By registering with 12Gaam Community, you agree to the following:</p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li>Your information will be visible to community members and administrators for networking purposes.</li>
+                  <li>We implement security measures for data protection against all threats.</li>
+                  <li>You are responsible for maintaining the accuracy of your family information.</li>
+                  <li>Community administrators reserve the right to verify and moderate any submitted content.</li>
+                  <li>You will receive periodic updates and notifications related to community activities.</li>
+                </ul>
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-6">
+                  <p className="text-xs text-gray-500 italic">
+                    Note: Your registration is subject to approval by your gaam administrator. Access to the dashboard will be granted only after verification.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+            <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowConsentModal(false)
+                  setAcceptedDisclaimer(false)
+                }}
+                className="rounded-full px-8"
+              >
+                Decline
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowConsentModal(false)
+                  setAcceptedDisclaimer(true)
+                }}
+                className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 shadow-lg shadow-primary/20"
+              >
+                I Accept & Consent
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

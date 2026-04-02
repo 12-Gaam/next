@@ -202,7 +202,8 @@ export async function POST(request: NextRequest) {
             middleName: sibling.middleName || null,
             lastName: sibling.lastName || null,
             gender: sibling.gender as any,
-            dob: sibling.dob || null
+            dob: sibling.dob || null,
+            currentAddress: sibling.currentAddress || null
           }) as any)
         }
       } as any,
