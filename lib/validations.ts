@@ -56,6 +56,7 @@ export const contactFormSchema = z.object({
     lastName: z.string().optional().or(z.literal("")),
     gender: z.string().min(1, "Gender is required"),
     dob: z.string().optional().or(z.literal("")),
+    currentAddress: z.string().optional().or(z.literal("")),
   })).default([]),
   profilePic: z.string().optional().or(z.literal("")),
   familyPhoto: z.string().optional().or(z.literal("")),

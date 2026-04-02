@@ -27,6 +27,8 @@ import {
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, CheckOutlined, UploadOutlined, InboxOutlined, FilePdfOutlined } from '@ant-design/icons'
 import csc from 'countries-states-cities'
 import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+dayjs.extend(customParseFormat)
 import { countryCodes, countryCodeMap } from '@/lib/country-codes'
 
 
@@ -63,7 +65,8 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
     states: [] as any[],
     cities: [] as any[],
     educations: [] as any[],
-    professions: [] as any[]
+    professions: [] as any[],
+    gaams: [] as any[]
   })
 
   const {
@@ -165,7 +168,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           middleName: child.middleName || '',
           lastName: child.lastName || '',
           gender: child.gender || 'male',
-          dob: child.dob || ''
+          dob: child.dob ? (child.dob.includes('/') && !child.dob.includes(' ') ? dayjs(child.dob, 'MM/YY').format('MMMM YYYY') : child.dob) : ''
         }))
       )
 
@@ -175,7 +178,8 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           middleName: sibling.middleName || '',
           lastName: sibling.lastName || '',
           gender: sibling.gender || 'male',
-          dob: sibling.dob || ''
+          dob: sibling.dob ? (sibling.dob.includes('/') && !sibling.dob.includes(' ') ? dayjs(sibling.dob, 'MM/YY').format('MMMM YYYY') : sibling.dob) : '',
+          currentAddress: sibling.currentAddress || ''
         }))
       )
 
@@ -262,25 +266,28 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
   const fetchMasterData = async () => {
     try {
       // Get all data from our database
-      const [countriesRes, educationsRes, professionsRes] = await Promise.all([
+      const [countriesRes, educationsRes, professionsRes, gaamsRes] = await Promise.all([
         fetch('/api/countries'),
         fetch('/api/educations'),
-        fetch('/api/professions')
+        fetch('/api/professions'),
+        fetch('/api/gaams')
       ])
 
       const countriesData = await countriesRes.json()
       const educationsData = await educationsRes.json()
       const professionsData = await professionsRes.json()
-
+      const gaamsData = await gaamsRes.json()
       // Ensure we always have arrays, handle different response structures
       const countries = Array.isArray(countriesData) ? countriesData : (countriesData?.data || countriesData?.countries || [])
       const educations = Array.isArray(educationsData) ? educationsData : (educationsData?.data || educationsData?.educations || [])
       const professions = Array.isArray(professionsData) ? professionsData : (professionsData?.data || professionsData?.professions || [])
+      const gaamsList = Array.isArray(gaamsData) ? gaamsData : (gaamsData?.data || gaamsData?.gaams || [])
 
       setMasterData({
         countries: Array.isArray(countries) ? countries : [],
         educations: Array.isArray(educations) ? educations : [],
         professions: Array.isArray(professions) ? professions : [],
+        gaams: Array.isArray(gaamsList) ? gaamsList : [],
         states: [],
         cities: []
       })
@@ -295,6 +302,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         countries: [],
         educations: [],
         professions: [],
+        gaams: [],
         states: [],
         cities: []
       })
@@ -448,7 +456,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
   }
 
   const addSibling = () => {
-    appendSibling({ firstName: '', middleName: '', lastName: '', gender: 'male', dob: '' })
+    appendSibling({ firstName: '', middleName: '', lastName: '', gender: 'male', dob: '', currentAddress: '' })
   }
 
   const handleFieldChange = (fieldName: keyof ContactFormData, value: any) => {
@@ -839,22 +847,10 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                 onChange={(value) => handleFieldChange('gaam', value)}
                 placeholder="Select gaam"
                 className="rounded-lg"
-                options={[
-                  { value: 'Pisai', label: 'Pisai' },
-                  { value: 'Puniyad', label: 'Puniyad' },
-                  { value: 'Sandha', label: 'Sandha' },
-                  { value: 'Bhekhda', label: 'Bhekhda' },
-                  { value: 'Avakhal', label: 'Avakhal' },
-                  { value: 'Kukas', label: 'Kukas' },
-                  { value: 'Manjrol', label: 'Manjrol' },
-                  { value: 'Vemar', label: 'Vemar' },
-                  { value: 'Malpur', label: 'Malpur' },
-                  { value: 'Juni Jithardi', label: 'Juni Jithardi' },
-                  { value: 'Someswarpura', label: 'Someswarpura' },
-                  { value: 'Jaferpura', label: 'Jaferpura' },
-                  { value: 'Alindra', label: 'Alindra' },
-                  { value: 'Tarsana', label: 'Tarsana' }
-                ]}
+                options={masterData.gaams.map((gaam: any) => ({
+                  value: gaam.name,
+                  label: gaam.name
+                }))}
               />
             </Form.Item>
           </Col>
@@ -1582,18 +1578,20 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={3}>
-                      <Form.Item label={<span className="font-medium text-gray-700">Bday (MM/YY)</span>} className="mb-0">
-                        <Input
+                      <Form.Item label={<span className="font-medium text-gray-700">Bday (Month YYYY)</span>} className="mb-0">
+                        <DatePicker
+                          picker="month"
                           size="large"
-                          value={watch(`children.${index}.dob`) || ''}
-                          onChange={(e) => {
-                            setValue(`children.${index}.dob`, e.target.value)
+                          value={watch(`children.${index}.dob`) ? dayjs(watch(`children.${index}.dob`), 'MMMM YYYY') : null}
+                          onChange={(date) => {
+                            setValue(`children.${index}.dob`, date ? date.format('MMMM YYYY') : '')
                             if (errors.children?.[index]?.dob) {
                               clearErrors(`children.${index}.dob`)
                             }
                           }}
-                          placeholder="MM/YY"
-                          className="rounded-lg"
+                          format="MMMM YYYY"
+                          placeholder="Select Month YYYY"
+                          className="w-full rounded-lg"
                         />
                       </Form.Item>
                     </Col>
@@ -1717,17 +1715,35 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={3}>
-                      <Form.Item label={<span className="font-medium text-gray-700">Bday (MM/YY)</span>} className="mb-0">
-                        <Input
+                      <Form.Item label={<span className="font-medium text-gray-700">Bday (Month YYYY)</span>} className="mb-0">
+                        <DatePicker
+                          picker="month"
                           size="large"
-                          value={watch(`siblings.${index}.dob`) || ''}
-                          onChange={(e) => {
-                            setValue(`siblings.${index}.dob`, e.target.value)
+                          value={watch(`siblings.${index}.dob`) ? dayjs(watch(`siblings.${index}.dob`), 'MMMM YYYY') : null}
+                          onChange={(date) => {
+                            setValue(`siblings.${index}.dob`, date ? date.format('MMMM YYYY') : '')
                             if (errors.siblings?.[index]?.dob) {
                               clearErrors(`siblings.${index}.dob`)
                             }
                           }}
-                          placeholder="MM/YY"
+                          format="MMMM YYYY"
+                          placeholder="Select Month YYYY"
+                          className="w-full rounded-lg"
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item label={<span className="font-medium text-gray-700">Current Address</span>} className="mb-0">
+                        <Input
+                          size="large"
+                          value={watch(`siblings.${index}.currentAddress`) || ''}
+                          onChange={(e) => {
+                            setValue(`siblings.${index}.currentAddress`, e.target.value)
+                            if (errors.siblings?.[index]?.currentAddress) {
+                              clearErrors(`siblings.${index}.currentAddress`)
+                            }
+                          }}
+                          placeholder="Sibling's current address"
                           className="rounded-lg"
                         />
                       </Form.Item>
@@ -1921,6 +1937,15 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       </div>
                       <div className="flex-1">
                         <Typography.Text className="text-gray-900">{formData.children?.length || 0}</Typography.Text>
+                        {formData.children && formData.children.length > 0 && (
+                          <div className="mt-2 pl-4 border-l-2 border-gray-100 space-y-1">
+                            {formData.children.map((child: any, i: number) => (
+                              <div key={i} className="text-sm text-gray-600">
+                                {child.firstName} ({child.gender}, {child.dob})
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex">
@@ -1929,6 +1954,18 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       </div>
                       <div className="flex-1">
                         <Typography.Text className="text-gray-900">{formData.siblings?.length || 0}</Typography.Text>
+                        {formData.siblings && formData.siblings.length > 0 && (
+                          <div className="mt-2 pl-4 border-l-2 border-gray-100 space-y-1">
+                            {formData.siblings.map((sibling: any, i: number) => (
+                              <div key={i} className="text-sm text-gray-600">
+                                {sibling.firstName} ({sibling.gender}, {sibling.dob})
+                                {sibling.currentAddress && (
+                                  <div className="text-xs text-gray-400 italic">Addr: {sibling.currentAddress}</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
