@@ -61,6 +61,7 @@ model CountryMaster {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   contacts         Contact[]
+  siblings         ContactSibling[]
   states           StateMaster[]
 }
 
@@ -72,6 +73,7 @@ model StateMaster {
   updatedAt DateTime      @updatedAt
   cities    CityMaster[]
   contacts  Contact[]
+  siblings  ContactSibling[]
   country   CountryMaster @relation(fields: [countryId], references: [id], onDelete: Cascade)
 }
 
@@ -90,6 +92,7 @@ model EducationMaster {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   contacts  Contact[]
+  children  ContactChild[]
 }
 
 model ProfessionMaster {
@@ -98,6 +101,7 @@ model ProfessionMaster {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   contacts  Contact[]
+  children  ContactChild[]
 }
 
 model Contact {
@@ -169,7 +173,14 @@ model ContactChild {
   firstName  String?  @default("")
   middleName String?
   lastName   String?
+  educationId     String?
+  educationDetail String?
+  otherEducation  String?
+  professionId    String?
+  otherProfession String?
   contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  education  EducationMaster?  @relation(fields: [educationId], references: [id])
+  profession ProfessionMaster? @relation(fields: [professionId], references: [id])
 }
 
 model ContactSibling {
@@ -183,7 +194,13 @@ model ContactSibling {
   firstName      String?  @default("")
   middleName     String?
   lastName       String?
+  countryId      String?
+  stateId        String?
+  cityId         String?
+  zipCode        String?
   contact        Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  country        CountryMaster?    @relation(fields: [countryId], references: [id])
+  state          StateMaster?      @relation(fields: [stateId], references: [id])
 }
 
 enum UserRole {

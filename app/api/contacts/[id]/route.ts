@@ -123,7 +123,12 @@ export async function PUT(
               middleName: child.middleName,
               lastName: child.lastName,
               gender: child.gender as any,
-              dob: child.dob
+              dob: child.dob,
+              educationId: child.educationId || null,
+              educationDetail: child.educationDetail || null,
+              otherEducation: child.otherEducation || null,
+              professionId: child.professionId || null,
+              otherProfession: child.otherProfession || null
             }))
           },
           siblings: {
@@ -132,7 +137,12 @@ export async function PUT(
               middleName: sibling.middleName,
               lastName: sibling.lastName,
               gender: sibling.gender as any,
-              dob: sibling.dob
+              dob: sibling.dob,
+              currentAddress: sibling.currentAddress,
+              countryId: sibling.countryId || null,
+              stateId: sibling.stateId || null,
+              cityId: sibling.cityId || null,
+              zipCode: sibling.zipCode || null
             }))
           }
         } as any,

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useSession } from 'next-auth/react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { contactFormSchema, type ContactFormData } from '@/lib/validations'
@@ -69,6 +70,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
     professions: [] as any[],
     gaams: [] as any[]
   })
+  const [siblingStates, setSiblingStates] = useState<Record<number, any[]>>({})
+  const [childOtherEducation, setChildOtherEducation] = useState<Record<number, boolean>>({})
+  const [childOtherProfession, setChildOtherProfession] = useState<Record<number, boolean>>({})
 
   const {
     register,
@@ -104,7 +108,15 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
   const watchedEducationId = watch('educationId')
   const watchedProfessionId = watch('professionId')
   const watchedMaritalStatus = watch('maritalStatus') as unknown as string
+  const { data: session } = useSession()
   const isEditMode = Boolean(existingContact?.id)
+
+  // Auto-fill email from session if not set
+  useEffect(() => {
+    if (session?.user?.email && !isEditMode && !watch('email')) {
+      setValue('email', session.user.email)
+    }
+  }, [session, isEditMode, setValue, watch])
 
   useEffect(() => {
     fetchMasterData()
@@ -169,7 +181,12 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           middleName: child.middleName || '',
           lastName: child.lastName || '',
           gender: child.gender || 'male',
-          dob: child.dob ? (child.dob.includes('/') && !child.dob.includes(' ') ? dayjs(child.dob, 'MM/YY').format('MMMM YYYY') : child.dob) : ''
+          dob: child.dob ? (child.dob.includes('/') && !child.dob.includes(' ') ? dayjs(child.dob, 'MM/YY').format('MMMM YYYY') : child.dob) : '',
+          educationId: child.educationId || undefined,
+          educationDetail: child.educationDetail || '',
+          otherEducation: child.otherEducation || '',
+          professionId: child.professionId || undefined,
+          otherProfession: child.otherProfession || ''
         }))
       )
 
@@ -180,7 +197,11 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           lastName: sibling.lastName || '',
           gender: sibling.gender || 'male',
           dob: sibling.dob ? (sibling.dob.includes('/') && !sibling.dob.includes(' ') ? dayjs(sibling.dob, 'MM/YY').format('MMMM YYYY') : sibling.dob) : '',
-          currentAddress: sibling.currentAddress || ''
+          currentAddress: sibling.currentAddress || '',
+          countryId: sibling.countryId || undefined,
+          stateId: sibling.stateId || undefined,
+          cityId: sibling.cityId || '',
+          zipCode: sibling.zipCode || ''
         }))
       )
 
@@ -193,12 +214,38 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
       if (existingContact.countryId) {
         setTimeout(async () => {
           await fetchStates(existingContact.countryId, existingContact.stateId)
+          // Also fetch states for siblings
+          if (existingContact.siblings && existingContact.siblings.length > 0) {
+            await Promise.all(
+              existingContact.siblings.map((sibling: any, index: number) => {
+                if (sibling.countryId) {
+                  return fetchSiblingStates(index, sibling.countryId)
+                }
+                return Promise.resolve()
+              })
+            )
+          }
           // Stop loading after states are fetched
           setIsLoadingInitialData(false)
         }, 300)
       } else {
-        // No countryId, stop loading immediately
-        setIsLoadingInitialData(false)
+        // No countryId for main user, but still fetch siblings if they have countries
+        if (existingContact.siblings && existingContact.siblings.length > 0) {
+            setTimeout(async () => {
+                await Promise.all(
+                    existingContact.siblings.map((sibling: any, index: number) => {
+                      if (sibling.countryId) {
+                        return fetchSiblingStates(index, sibling.countryId)
+                      }
+                      return Promise.resolve()
+                    })
+                )
+                setIsLoadingInitialData(false)
+            }, 300)
+        } else {
+            // No countryId anywhere, stop loading immediately
+            setIsLoadingInitialData(false)
+        }
       }
     }
   }, [existingContact, replaceChildren, replaceSiblings, replaceAdditionalProfessions, setValue, masterData.countries.length])
@@ -333,6 +380,19 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
       console.error('Error fetching states:', error)
       setMasterData(prev => ({ ...prev, states: [], cities: [] }))
       throw error
+    }
+  }
+
+  const fetchSiblingStates = async (index: number, countryId: string) => {
+    try {
+      const response = await fetch(`/api/states?countryId=${countryId}`)
+      const statesData = await response.json()
+      const states = Array.isArray(statesData) ? statesData : (statesData?.data || statesData?.states || [])
+      setSiblingStates(prev => ({ ...prev, [index]: states }))
+      return states
+    } catch (error) {
+      console.error(`Error fetching states for sibling ${index}:`, error)
+      return []
     }
   }
 
@@ -1580,6 +1640,87 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       </Form.Item>
                     </Col>
                     <Col xl={8} lg={8} md={12} sm={24} xs={24}>
+                      <Form.Item label={<span className="font-medium text-gray-700">Education Level</span>} className="mb-0">
+                        <Select
+                          size="large"
+                          value={watch(`children.${index}.educationId`) || ''}
+                          onChange={(value) => {
+                            setValue(`children.${index}.educationId`, value)
+                            const selectedEdu = masterData.educations.find(edu => edu.id === value)
+                            setChildOtherEducation(prev => ({ ...prev, [index]: selectedEdu?.name?.toLowerCase().includes('other') || false }))
+                            if (errors.children?.[index]?.educationId) {
+                              clearErrors(`children.${index}.educationId`)
+                            }
+                          }}
+                          placeholder="Select education level"
+                          className="rounded-lg"
+                          options={masterData.educations.map((edu: any) => ({
+                            value: edu.id,
+                            label: edu.name
+                          }))}
+                        />
+                      </Form.Item>
+                    </Col>
+                    {childOtherEducation[index] && (
+                      <Col xl={8} lg={8} md={12} sm={24} xs={24}>
+                        <Form.Item label={<span className="font-medium text-gray-700">Other Education</span>} className="mb-0">
+                          <Input
+                            size="large"
+                            value={watch(`children.${index}.otherEducation`) || ''}
+                            onChange={(e) => setValue(`children.${index}.otherEducation`, e.target.value)}
+                            placeholder="Specify other education"
+                            className="rounded-lg"
+                          />
+                        </Form.Item>
+                      </Col>
+                    )}
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
+                      <Form.Item label={<span className="font-medium text-gray-700">Education Detail</span>} className="mb-0">
+                        <Input
+                          size="large"
+                          value={watch(`children.${index}.educationDetail`) || ''}
+                          onChange={(e) => setValue(`children.${index}.educationDetail`, e.target.value)}
+                          placeholder="Education detail (e.g. Major)"
+                          className="rounded-lg"
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
+                      <Form.Item label={<span className="font-medium text-gray-700">Profession</span>} className="mb-0">
+                        <Select
+                          size="large"
+                          value={watch(`children.${index}.professionId`) || ''}
+                          onChange={(value) => {
+                            setValue(`children.${index}.professionId`, value)
+                            const selectedProf = masterData.professions.find(prof => prof.id === value)
+                            setChildOtherProfession(prev => ({ ...prev, [index]: selectedProf?.name?.toLowerCase().includes('other') || false }))
+                            if (errors.children?.[index]?.professionId) {
+                              clearErrors(`children.${index}.professionId`)
+                            }
+                          }}
+                          placeholder="Select profession"
+                          className="rounded-lg"
+                          options={masterData.professions.map((prof: any) => ({
+                            value: prof.id,
+                            label: prof.name
+                          }))}
+                        />
+                      </Form.Item>
+                    </Col>
+                    {childOtherProfession[index] && (
+                      <Col xl={8} lg={8} md={12} sm={24} xs={24}>
+                        <Form.Item label={<span className="font-medium text-gray-700">Other Profession</span>} className="mb-0">
+                          <Input
+                            size="large"
+                            value={watch(`children.${index}.otherProfession`) || ''}
+                            onChange={(e) => setValue(`children.${index}.otherProfession`, e.target.value)}
+                            placeholder="Specify other profession"
+                            className="rounded-lg"
+                          />
+                        </Form.Item>
+                      </Col>
+                    )}
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Bday (Month YYYY)</span>} className="mb-0">
                         <DatePicker
                           picker="month"
@@ -1744,6 +1885,90 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                             }
                           }}
                           placeholder="Sibling's current address"
+                          className="rounded-lg"
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
+                      <Form.Item label={<span className="font-medium text-gray-700">Country</span>} className="mb-0">
+                        <Select
+                          size="large"
+                          showSearch
+                          value={watch(`siblings.${index}.countryId`) || undefined}
+                          filterOption={(input, option) =>
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                          }
+                          onChange={(value) => {
+                            setValue(`siblings.${index}.countryId`, value)
+                            setValue(`siblings.${index}.stateId`, '')
+                            setValue(`siblings.${index}.cityId`, '')
+                            fetchSiblingStates(index, value)
+                            if (errors.siblings?.[index]?.countryId) {
+                              clearErrors(`siblings.${index}.countryId`)
+                            }
+                          }}
+                          placeholder="Select country"
+                          className="rounded-lg"
+                          options={masterData.countries.map((country: any) => ({
+                            value: country.id,
+                            label: country.name
+                          }))}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
+                      <Form.Item label={<span className="font-medium text-gray-700">State</span>} className="mb-0">
+                        <Select
+                          size="large"
+                          showSearch
+                          value={watch(`siblings.${index}.stateId`) || undefined}
+                          filterOption={(input, option) =>
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                          }
+                          onChange={(value) => {
+                            setValue(`siblings.${index}.stateId`, value)
+                            if (errors.siblings?.[index]?.stateId) {
+                                clearErrors(`siblings.${index}.stateId`)
+                            }
+                          }}
+                          placeholder="Select state"
+                          disabled={!watch(`siblings.${index}.countryId`)}
+                          className="rounded-lg"
+                          options={(siblingStates[index] || []).map((state: any) => ({
+                            value: state.id,
+                            label: state.name
+                          }))}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
+                      <Form.Item label={<span className="font-medium text-gray-700">City</span>} className="mb-0">
+                        <Input
+                          size="large"
+                          value={watch(`siblings.${index}.cityId`) || ''}
+                          onChange={(e) => {
+                            setValue(`siblings.${index}.cityId`, e.target.value)
+                            if (errors.siblings?.[index]?.cityId) {
+                              clearErrors(`siblings.${index}.cityId`)
+                            }
+                          }}
+                          placeholder="Enter city"
+                          className="rounded-lg"
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
+                      <Form.Item label={<span className="font-medium text-gray-700">Zip Code</span>} className="mb-0">
+                        <Input
+                          size="large"
+                          value={watch(`siblings.${index}.zipCode`) || ''}
+                          onChange={(e) => {
+                            setValue(`siblings.${index}.zipCode`, e.target.value)
+                            if (errors.siblings?.[index]?.zipCode) {
+                              clearErrors(`siblings.${index}.zipCode`)
+                            }
+                          }}
+                          placeholder="Enter zip code"
                           className="rounded-lg"
                         />
                       </Form.Item>
@@ -1937,28 +2162,49 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         <Typography.Text className="text-gray-900 font-medium">{formData.children?.length || 0}</Typography.Text>
                         {formData.children && formData.children.length > 0 && (
                           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {formData.children.map((child: any, i: number) => (
-                              <div key={i} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all duration-200">
-                                <div className="space-y-1">
-                                  <div className="flex flex-col mb-1">
-                                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
-                                    <span className="text-sm font-semibold text-gray-800 line-clamp-1">
-                                      {child.firstName} {child.middleName} {child.lastName}
-                                    </span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-50">
-                                    <div className="flex flex-col">
-                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
-                                      <span className="text-xs text-gray-700 capitalize">{child.gender}</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
-                                      <span className="text-xs text-gray-700">{child.dob || '-'}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                             {formData.children.map((child: any, i: number) => {
+                               const childEdu = masterData.educations?.find(edu => edu.id === child.educationId)
+                               const childProf = masterData.professions?.find(prof => prof.id === child.professionId)
+                               return (
+                                 <div key={i} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all duration-200">
+                                   <div className="space-y-1">
+                                     <div className="flex flex-col mb-1">
+                                       <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                                       <span className="text-sm font-semibold text-gray-800 line-clamp-1">
+                                         {child.firstName} {child.middleName} {child.lastName}
+                                       </span>
+                                     </div>
+                                     <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-50">
+                                       <div className="flex flex-col">
+                                         <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                                         <span className="text-xs text-gray-700 capitalize">{child.gender}</span>
+                                       </div>
+                                       <div className="flex flex-col">
+                                         <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                                         <span className="text-xs text-gray-700">{child.dob || '-'}</span>
+                                       </div>
+                                     </div>
+                                     {(childEdu || child.otherEducation || child.educationDetail) && (
+                                       <div className="flex flex-col mt-2 pt-2 border-t border-gray-50">
+                                         <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Education</span>
+                                         <span className="text-xs text-gray-700">
+                                           {childEdu?.name || child.otherEducation || '-'} 
+                                           {child.educationDetail ? ` (${child.educationDetail})` : ''}
+                                         </span>
+                                       </div>
+                                     )}
+                                     {(childProf || child.otherProfession) && (
+                                       <div className="flex flex-col mt-2 pt-2 border-t border-gray-50">
+                                         <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Profession</span>
+                                         <span className="text-xs text-gray-700">
+                                           {childProf?.name || child.otherProfession || '-'}
+                                         </span>
+                                       </div>
+                                     )}
+                                   </div>
+                                 </div>
+                               )
+                             })}
                           </div>
                         )}
                       </div>
@@ -1971,34 +2217,44 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         <Typography.Text className="text-gray-900 font-medium">{formData.siblings?.length || 0}</Typography.Text>
                         {formData.siblings && formData.siblings.length > 0 && (
                           <div className="mt-3 space-y-3">
-                            {formData.siblings.map((sibling: any, i: number) => (
-                              <div key={i} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all duration-200">
-                                <div className="space-y-1">
-                                  <div className="flex flex-col mb-1">
-                                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
-                                    <span className="text-sm font-semibold text-gray-800">
-                                      {sibling.firstName} {sibling.middleName} {sibling.lastName}
-                                    </span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4 mt-2 pt-2 border-t border-gray-50">
-                                    <div className="flex flex-col">
-                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
-                                      <span className="text-xs text-gray-700 capitalize">{sibling.gender}</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
-                                      <span className="text-xs text-gray-700">{sibling.dob || '-'}</span>
-                                    </div>
-                                  </div>
-                                  {sibling.currentAddress && (
-                                    <div className="flex flex-col mt-2 pt-2 border-t border-gray-50">
-                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Current Address</span>
-                                      <span className="text-xs text-gray-600 italic">{sibling.currentAddress}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
+                             {formData.siblings.map((sibling: any, i: number) => {
+                               const siblingCountry = masterData.countries?.find(c => c.id === sibling.countryId)
+                               const siblingState = siblingStates[i]?.find((s: any) => s.id === sibling.stateId)
+                               return (
+                                 <div key={i} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all duration-200">
+                                   <div className="space-y-1">
+                                     <div className="flex flex-col mb-1">
+                                       <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                                       <span className="text-sm font-semibold text-gray-800">
+                                         {sibling.firstName} {sibling.middleName} {sibling.lastName}
+                                       </span>
+                                     </div>
+                                     <div className="grid grid-cols-2 gap-4 mt-2 pt-2 border-t border-gray-50">
+                                       <div className="flex flex-col">
+                                         <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                                         <span className="text-xs text-gray-700 capitalize">{sibling.gender}</span>
+                                       </div>
+                                       <div className="flex flex-col">
+                                         <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                                         <span className="text-xs text-gray-700">{sibling.dob || '-'}</span>
+                                       </div>
+                                     </div>
+                                     {(sibling.currentAddress || siblingCountry || sibling.cityId) && (
+                                       <div className="flex flex-col mt-2 pt-2 border-t border-gray-50">
+                                         <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Address</span>
+                                         <span className="text-xs text-gray-600 italic">
+                                           {sibling.currentAddress}{sibling.currentAddress ? ', ' : ''}
+                                           {sibling.cityId}{sibling.cityId ? ', ' : ''}
+                                           {siblingState?.name}{siblingState?.name ? ', ' : ''}
+                                           {siblingCountry?.name}{siblingCountry?.name ? ' - ' : ''}
+                                           {sibling.zipCode}
+                                         </span>
+                                       </div>
+                                     )}
+                                   </div>
+                                 </div>
+                               )
+                             })}
                           </div>
                         )}
                       </div>
