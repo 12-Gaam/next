@@ -64,6 +64,12 @@ export default function UserDashboard() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [contact, setContact] = useState<Contact | null>(null)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'family'>('dashboard')
+  const [masterData, setMasterData] = useState({
+    countries: [] as any[],
+    states: [] as any[],
+    educations: [] as any[],
+    professions: [] as any[]
+  })
   
   // Initialize hasAutoShownForm from localStorage (persists across reloads)
   const [hasAutoShownForm, setHasAutoShownFormState] = useState(false)
@@ -101,7 +107,35 @@ export default function UserDashboard() {
     }
 
     fetchMyContact()
+    fetchMasterData()
   }, [session, status, router])
+
+  const fetchMasterData = async () => {
+    try {
+      const [countriesRes, educationsRes, professionsRes] = await Promise.all([
+        fetch('/api/countries'),
+        fetch('/api/educations'),
+        fetch('/api/professions')
+      ])
+
+      const countriesData = await countriesRes.json()
+      const educationsData = await educationsRes.json()
+      const professionsData = await professionsRes.json()
+
+      const countries = Array.isArray(countriesData) ? countriesData : (countriesData?.data || countriesData?.countries || [])
+      const educations = Array.isArray(educationsData) ? educationsData : (educationsData?.data || educationsData?.educations || [])
+      const professions = Array.isArray(professionsData) ? professionsData : (professionsData?.data || professionsData?.professions || [])
+
+      setMasterData(prev => ({
+        ...prev,
+        countries: Array.isArray(countries) ? countries : [],
+        educations: Array.isArray(educations) ? educations : [],
+        professions: Array.isArray(professions) ? professions : []
+      }))
+    } catch (error) {
+      console.error('Error fetching master data:', error)
+    }
+  }
 
   useEffect(() => {
     // Function to update active tab based on hash
@@ -729,30 +763,49 @@ export default function UserDashboard() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {contact.children.map((child: any, index: number) => (
-                  <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
-                    <div className="space-y-3">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
-                        <p className="font-semibold text-gray-900">
-                          {[child.firstName || child.firstname, child.middleName, child.lastName]
-                            .filter(Boolean)
-                            .join(' ') || 'Unnamed'}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                {contact.children.map((child: any, index: number) => {
+                  const childEdu = masterData.educations?.find(edu => edu.id === child.educationId)
+                  const childProf = masterData.professions?.find(prof => prof.id === child.professionId)
+                  return (
+                    <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                      <div className="space-y-3">
                         <div className="flex flex-col">
-                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
-                          <p className="text-sm text-gray-700 capitalize">{child.gender || '-'}</p>
+                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                          <p className="font-semibold text-gray-900">
+                            {[child.firstName || child.firstname, child.middleName, child.lastName]
+                              .filter(Boolean)
+                              .join(' ') || 'Unnamed'}
+                          </p>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
-                          <p className="text-sm text-gray-700">{child.dob || '-'}</p>
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                            <p className="text-sm text-gray-700 capitalize">{child.gender || '-'}</p>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                            <p className="text-sm text-gray-700">{child.dob || '-'}</p>
+                          </div>
                         </div>
+                        {(childEdu || child.otherEducation || child.educationDetail) && (
+                          <div className="flex flex-col pt-2 border-t border-gray-50">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Education</span>
+                            <p className="text-sm text-gray-700">
+                              {childEdu?.name || child.otherEducation || '-'}
+                              {child.educationDetail ? ` (${child.educationDetail})` : ''}
+                            </p>
+                          </div>
+                        )}
+                        {(childProf || child.otherProfession) && (
+                          <div className="flex flex-col pt-2 border-t border-gray-50">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Profession</span>
+                            <p className="text-sm text-gray-700">{childProf?.name || child.otherProfession || '-'}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </CardContent>
           </Card>
@@ -768,38 +821,43 @@ export default function UserDashboard() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
-                {contact.siblings.map((sibling: any, index: number) => (
-                  <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
-                    <div className="space-y-3">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
-                        <p className="font-semibold text-gray-900">
-                          {[sibling.firstName, sibling.middleName, sibling.lastName]
-                            .filter(Boolean)
-                            .join(' ') || sibling.name || 'Unnamed'}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                {contact.siblings.map((sibling: any, index: number) => {
+                  const siblingCountry = masterData.countries?.find(c => c.id === sibling.countryId)
+                  return (
+                    <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                      <div className="space-y-3">
                         <div className="flex flex-col">
-                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
-                          <p className="text-sm text-gray-700 capitalize">{sibling.gender || '-'}</p>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
-                          <p className="text-sm text-gray-700">{sibling.dob || '-'}</p>
-                        </div>
-                      </div>
-                      {sibling.currentAddress && (
-                        <div className="flex flex-col pt-2 border-t border-gray-50">
-                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Current Address</span>
-                          <p className="text-sm text-gray-600 italic leading-relaxed">
-                            {sibling.currentAddress}
+                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                          <p className="font-semibold text-gray-900">
+                            {[sibling.firstName, sibling.middleName, sibling.lastName]
+                              .filter(Boolean)
+                              .join(' ') || sibling.name || 'Unnamed'}
                           </p>
                         </div>
-                      )}
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                            <p className="text-sm text-gray-700 capitalize">{sibling.gender || '-'}</p>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                            <p className="text-sm text-gray-700">{sibling.dob || '-'}</p>
+                          </div>
+                        </div>
+                        {(sibling.currentAddress || sibling.countryId || sibling.cityId) && (
+                          <div className="flex flex-col pt-2 border-t border-gray-50">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Address</span>
+                            <p className="text-sm text-gray-600 italic leading-relaxed">
+                              {[sibling.currentAddress, sibling.cityId, sibling.stateId, siblingCountry?.name || sibling.countryId, sibling.zipCode]
+                                .filter(Boolean)
+                                .join(', ')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </CardContent>
           </Card>

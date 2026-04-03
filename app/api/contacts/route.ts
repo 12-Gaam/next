@@ -193,7 +193,12 @@ export async function POST(request: NextRequest) {
             middleName: child.middleName || null,
             lastName: child.lastName || null,
             gender: child.gender as any,
-            dob: child.dob || null
+            dob: child.dob || null,
+            educationId: child.educationId || null,
+            educationDetail: child.educationDetail || null,
+            otherEducation: child.otherEducation || null,
+            professionId: child.professionId || null,
+            otherProfession: child.otherProfession || null
           }) as any)
         },
         siblings: {
@@ -203,7 +208,11 @@ export async function POST(request: NextRequest) {
             lastName: sibling.lastName || null,
             gender: sibling.gender as any,
             dob: sibling.dob || null,
-            currentAddress: sibling.currentAddress || null
+            currentAddress: sibling.currentAddress || null,
+            countryId: sibling.countryId || null,
+            stateId: sibling.stateId || null,
+            cityId: sibling.cityId || null,
+            zipCode: sibling.zipCode || null
           }) as any)
         }
       } as any,
