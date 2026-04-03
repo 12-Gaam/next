@@ -720,25 +720,35 @@ export default function UserDashboard() {
         )}
 
         {contact.children && contact.children.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Baby className="h-5 w-5" />
+          <Card className="shadow-md border-0">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+              <CardTitle className="flex items-center text-blue-800">
+                <Baby className="h-5 w-5 mr-3" />
                 <span>Children ({contact.children.length})</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {contact.children.map((child: any, index: number) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-lg">
-                          {child.firstName} {child.middleName} {child.lastName}
+                  <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                    <div className="space-y-3">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                        <p className="font-semibold text-gray-900">
+                          {[child.firstName || child.firstname, child.middleName, child.lastName]
+                            .filter(Boolean)
+                            .join(' ') || 'Unnamed'}
                         </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {child.gender === 'male' ? 'Male' : 'Female'} • Age: {child.age} years
-                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                          <p className="text-sm text-gray-700 capitalize">{child.gender || '-'}</p>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                          <p className="text-sm text-gray-700">{child.dob || '-'}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -749,26 +759,44 @@ export default function UserDashboard() {
         )}
 
         {contact.siblings && contact.siblings.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Users className="h-5 w-5" />
+          <Card className="shadow-md border-0">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200">
+              <CardTitle className="flex items-center text-purple-800">
+                <Users className="h-5 w-5 mr-3" />
                 <span>Siblings ({contact.siblings.length})</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="p-6">
+              <div className="space-y-4">
                 {contact.siblings.map((sibling: any, index: number) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-lg">
-                          {sibling.firstName} {sibling.middleName} {sibling.lastName}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {sibling.gender === 'male' ? 'Male' : 'Female'} • Age: {sibling.age} years
+                  <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                    <div className="space-y-3">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                        <p className="font-semibold text-gray-900">
+                          {[sibling.firstName, sibling.middleName, sibling.lastName]
+                            .filter(Boolean)
+                            .join(' ') || sibling.name || 'Unnamed'}
                         </p>
                       </div>
+                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                          <p className="text-sm text-gray-700 capitalize">{sibling.gender || '-'}</p>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                          <p className="text-sm text-gray-700">{sibling.dob || '-'}</p>
+                        </div>
+                      </div>
+                      {sibling.currentAddress && (
+                        <div className="flex flex-col pt-2 border-t border-gray-50">
+                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Current Address</span>
+                          <p className="text-sm text-gray-600 italic leading-relaxed">
+                            {sibling.currentAddress}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
