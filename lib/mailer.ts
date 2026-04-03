@@ -83,27 +83,24 @@ export async function sendRegistrationStatusEmail(payload: RegistrationStatusPay
       <p>Hi ${payload.name},</p>
       <p>Your registration status has been <strong>${payload.status}</strong>.</p>
       
-      ${
-        isApproved && payload.username && payload.password
-          ? `
+      ${isApproved && payload.username && payload.password
+        ? `
           <p>Here are your login credentials:</p>
           <ul>
             <li><strong>Username:</strong> ${payload.username}</li>
             <li><strong>Password:</strong> ${payload.password}</li>
           </ul>
           `
-          : ''
+        : ''
       }
 
-      ${
-        payload.notes
-          ? `<p>Notes from the admin: ${payload.notes}</p>`
-          : ''
+      ${payload.notes
+        ? `<p>Notes from the admin: ${payload.notes}</p>`
+        : ''
       }
-      ${
-        isApproved
-          ? `<p>You can now sign in at <a href="${process.env.NEXTAUTH_URL}/join">https://12gaam.com/join</a>. As a member, you will use OTP-based login.</p>`
-          : `<p>You can sign in at <a href="${process.env.NEXTAUTH_URL}/join">https://12gaam.com/join</a> once approved.</p>`
+      ${isApproved
+        ? `<p>You can now sign in at <a href="${process.env.NEXTAUTH_URL}/join">https://12gaam.com/join#registration</a>. As a member, you will use OTP-based login.</p>`
+        : `<p>You can sign in at <a href="${process.env.NEXTAUTH_URL}/join">https://12gaam.com/join#registration</a> once approved.</p>`
       }
       <p>Regards,<br />12Gaam Team</p>
     `
