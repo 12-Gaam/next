@@ -72,7 +72,7 @@ export const contactFormSchema = z.object({
   residingCountryId: z.string().optional().or(z.literal("")),
 }).superRefine((data, ctx) => {
   // Check if "Other" education is selected but not specified
-  if (data.educationId && data.educationId.includes('other') && (!data.otherEducation || data.otherEducation.trim().length === 0)) {
+  if (data.educationId && typeof data.educationId === 'string' && data.educationId.toLowerCase().includes('other') && (!data.otherEducation || data.otherEducation.trim().length === 0)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Please specify your education",
@@ -81,7 +81,7 @@ export const contactFormSchema = z.object({
   }
   
   // Check if "Other" profession is selected but not specified
-  if (data.professionId && data.professionId.includes('other') && (!data.otherProfession || data.otherProfession.trim().length === 0)) {
+  if (data.professionId && typeof data.professionId === 'string' && data.professionId.toLowerCase().includes('other') && (!data.otherProfession || data.otherProfession.trim().length === 0)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Please specify your profession",
