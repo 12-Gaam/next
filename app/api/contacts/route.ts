@@ -24,8 +24,18 @@ export async function GET(request: NextRequest) {
           state: true,
           education: true,
           profession: true,
-          children: true,
-          siblings: true
+          children: {
+            include: {
+              education: true,
+              profession: true
+            }
+          },
+          siblings: {
+            include: {
+              country: true,
+              state: true
+            }
+          }
         }
       });
 
@@ -171,14 +181,14 @@ export async function POST(request: NextRequest) {
         countryCode: validatedData.countryCode || '+1',
         email: validatedData.email || '',
         dob: validatedData.dob ? new Date(validatedData.dob) : null,
-        educationId: validatedData.educationId,
+        educationId: validatedData.educationId || null,
         educationDetail: validatedData.educationDetail || null,
-        otherEducation: validatedData.otherEducation || undefined,
-        professionId: validatedData.professionId || undefined,
-        otherProfession: validatedData.otherProfession || undefined,
-        website: validatedData.website || undefined,
-        profilePic: validatedData.profilePic || undefined,
-        familyPhoto: validatedData.familyPhoto || undefined,
+        otherEducation: validatedData.otherEducation || null,
+        professionId: validatedData.professionId || null,
+        otherProfession: validatedData.otherProfession || null,
+        website: validatedData.website || null,
+        profilePic: validatedData.profilePic || null,
+        familyPhoto: validatedData.familyPhoto || null,
         fb: validatedData.fb || undefined,
         linkedin: validatedData.linkedin || undefined,
         insta: validatedData.insta || undefined,
