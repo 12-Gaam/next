@@ -25,7 +25,7 @@ export const contactFormSchema = z.object({
   zipCode: z.string().min(1, "Zip code is required"),
   phone: z.string().min(10, "Phone number must be at least 10 digits").max(12, "Phone number must be at most 12 digits"),
   countryCode: z.string().optional().default("+1"),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
   educationId: z.string().optional().or(z.literal("")),
   educationDetail: z.string().optional().or(z.literal("")),
   otherEducation: z.string().optional().or(z.literal("")),
