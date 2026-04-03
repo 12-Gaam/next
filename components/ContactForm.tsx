@@ -1934,12 +1934,29 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         <Typography.Text strong className="text-gray-700">Children:</Typography.Text>
                       </div>
                       <div className="flex-1">
-                        <Typography.Text className="text-gray-900">{formData.children?.length || 0}</Typography.Text>
+                        <Typography.Text className="text-gray-900 font-medium">{formData.children?.length || 0}</Typography.Text>
                         {formData.children && formData.children.length > 0 && (
-                          <div className="mt-2 pl-4 border-l-2 border-gray-100 space-y-1">
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {formData.children.map((child: any, i: number) => (
-                              <div key={i} className="text-sm text-gray-600">
-                                {child.firstName} {child.middleName} {child.lastName} ({child.gender}, {child.dob})
+                              <div key={i} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all duration-200">
+                                <div className="space-y-1">
+                                  <div className="flex flex-col mb-1">
+                                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                                    <span className="text-sm font-semibold text-gray-800 line-clamp-1">
+                                      {child.firstName} {child.middleName} {child.lastName}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-50">
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                                      <span className="text-xs text-gray-700 capitalize">{child.gender}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                                      <span className="text-xs text-gray-700">{child.dob || '-'}</span>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -1951,15 +1968,35 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         <Typography.Text strong className="text-gray-700">Siblings:</Typography.Text>
                       </div>
                       <div className="flex-1">
-                        <Typography.Text className="text-gray-900">{formData.siblings?.length || 0}</Typography.Text>
+                        <Typography.Text className="text-gray-900 font-medium">{formData.siblings?.length || 0}</Typography.Text>
                         {formData.siblings && formData.siblings.length > 0 && (
-                          <div className="mt-2 pl-4 border-l-2 border-gray-100 space-y-1">
+                          <div className="mt-3 space-y-3">
                             {formData.siblings.map((sibling: any, i: number) => (
-                              <div key={i} className="text-sm text-gray-600">
-                                {sibling.firstName} {sibling.middleName} {sibling.lastName} ({sibling.gender}, {sibling.dob})
-                                {sibling.currentAddress && (
-                                  <div className="text-xs text-gray-400 italic">Addr: {sibling.currentAddress}</div>
-                                )}
+                              <div key={i} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm transition-all duration-200">
+                                <div className="space-y-1">
+                                  <div className="flex flex-col mb-1">
+                                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                                    <span className="text-sm font-semibold text-gray-800">
+                                      {sibling.firstName} {sibling.middleName} {sibling.lastName}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4 mt-2 pt-2 border-t border-gray-50">
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                                      <span className="text-xs text-gray-700 capitalize">{sibling.gender}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                                      <span className="text-xs text-gray-700">{sibling.dob || '-'}</span>
+                                    </div>
+                                  </div>
+                                  {sibling.currentAddress && (
+                                    <div className="flex flex-col mt-2 pt-2 border-t border-gray-50">
+                                      <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Current Address</span>
+                                      <span className="text-xs text-gray-600 italic">{sibling.currentAddress}</span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
