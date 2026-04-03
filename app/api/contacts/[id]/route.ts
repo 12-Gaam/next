@@ -22,8 +22,18 @@ export async function GET(
         state: true,
         education: true,
         profession: true,
-        children: true,
-        siblings: true
+        children: {
+          include: {
+            education: true,
+            profession: true
+          }
+        },
+        siblings: {
+          include: {
+            country: true,
+            state: true
+          }
+        }
       }
     });
 
@@ -87,47 +97,65 @@ export async function PUT(
           middlename: validatedData.middlename,
           lastname: validatedData.lastname,
           spouseFirstName: validatedData.spouseFirstName,
-          spouseMiddleName: validatedData.spouseMiddleName,
-          spouseLastName: validatedData.spouseLastName,
-          fatherFirstName: validatedData.fatherFirstName,
-          fatherMiddleName: validatedData.fatherMiddleName,
-          fatherLastName: validatedData.fatherLastName,
-          motherFirstName: validatedData.motherFirstName,
-          motherMiddleName: validatedData.motherMiddleName,
-          motherLastName: validatedData.motherLastName,
+          spouseFirstName: validatedData.spouseFirstName || null,
+          spouseMiddleName: validatedData.spouseMiddleName || null,
+          spouseLastName: validatedData.spouseLastName || null,
+          fatherFirstName: validatedData.fatherFirstName || '',
+          fatherMiddleName: validatedData.fatherMiddleName || null,
+          fatherLastName: validatedData.fatherLastName || null,
+          motherFirstName: validatedData.motherFirstName || '',
+          motherMiddleName: validatedData.motherMiddleName || null,
+          motherLastName: validatedData.motherLastName || null,
           gender: validatedData.gender as any,
-          maritalStatus: validatedData.maritalStatus,
-          is18Plus: validatedData.is18Plus,
+          maritalStatus: validatedData.maritalStatus || null,
+          is18Plus: validatedData.is18Plus || false,
           gaam: validatedData.gaam,
-          currentAddress: validatedData.currentAddress,
-          countryId: validatedData.countryId,
-          stateId: validatedData.stateId,
-          cityId: validatedData.cityId,
-          zipCode: validatedData.zipCode,
+          currentAddress: validatedData.currentAddress || '',
+          countryId: validatedData.countryId || null,
+          stateId: validatedData.stateId || null,
+          cityId: validatedData.cityId || null,
+          zipCode: validatedData.zipCode || null,
           phone: validatedData.phone,
-          countryCode: validatedData.countryCode,
-          email: validatedData.email,
-          educationId: validatedData.educationId,
-          educationDetail: validatedData.educationDetail,
-          otherEducation: validatedData.otherEducation,
-          professionId: validatedData.professionId,
-          otherProfession: validatedData.otherProfession,
-          website: validatedData.website,
-          profilePic: validatedData.profilePic,
-          familyPhoto: validatedData.familyPhoto,
-          residingCountryId: validatedData.residingCountryId,
+          countryCode: validatedData.countryCode || '+1',
+          email: validatedData.email || '',
+          educationId: validatedData.educationId || null,
+          educationDetail: validatedData.educationDetail || null,
+          otherEducation: validatedData.otherEducation || null,
+          professionId: validatedData.professionId || null,
+          otherProfession: validatedData.otherProfession || null,
+          website: validatedData.website || null,
+          profilePic: validatedData.profilePic || null,
+          familyPhoto: validatedData.familyPhoto || null,
+          residingCountryId: validatedData.residingCountryId || null,
           dob: validatedData.dob ? new Date(validatedData.dob) : null,
           children: {
             create: validatedData.children.map(child => ({
               firstName: child.firstName || '',
-              middleName: child.middleName,
-              lastName: child.lastName,
+              middleName: child.middleName || null,
+              lastName: child.lastName || null,
               gender: child.gender as any,
-              dob: child.dob,
+              dob: child.dob || null,
               educationId: child.educationId || null,
               educationDetail: child.educationDetail || null,
               otherEducation: child.otherEducation || null,
               professionId: child.professionId || null,
+              otherProfession: child.otherProfession || null
+            }))
+          },
+          siblings: {
+            create: validatedData.siblings.map(sibling => ({
+              firstName: sibling.firstName || '',
+              middleName: sibling.middleName || null,
+              lastName: sibling.lastName || null,
+              gender: sibling.gender as any,
+              dob: sibling.dob || null,
+              currentAddress: sibling.currentAddress || null,
+              countryId: sibling.countryId || null,
+              stateId: sibling.stateId || null,
+              cityId: sibling.cityId || null,
+              zipCode: sibling.zipCode || null
+            }))
+          }
               otherProfession: child.otherProfession || null
             }))
           },

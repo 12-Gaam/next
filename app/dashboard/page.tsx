@@ -112,25 +112,24 @@ export default function UserDashboard() {
 
   const fetchMasterData = async () => {
     try {
-      const [countriesRes, educationsRes, professionsRes] = await Promise.all([
+      const [countriesRes, educationsRes, professionsRes, statesRes] = await Promise.all([
         fetch('/api/countries'),
         fetch('/api/educations'),
-        fetch('/api/professions')
+        fetch('/api/professions'),
+        fetch('/api/states') // Fetch states globally if possible, or we'll fetch per country
       ])
 
       const countriesData = await countriesRes.json()
       const educationsData = await educationsRes.json()
       const professionsData = await professionsRes.json()
-
-      const countries = Array.isArray(countriesData) ? countriesData : (countriesData?.data || countriesData?.countries || [])
-      const educations = Array.isArray(educationsData) ? educationsData : (educationsData?.data || educationsData?.educations || [])
-      const professions = Array.isArray(professionsData) ? professionsData : (professionsData?.data || professionsData?.professions || [])
+      const statesData = await statesRes.json()
 
       setMasterData(prev => ({
         ...prev,
-        countries: Array.isArray(countries) ? countries : [],
-        educations: Array.isArray(educations) ? educations : [],
-        professions: Array.isArray(professions) ? professions : []
+        countries: Array.isArray(countriesData) ? countriesData : (countriesData?.data || countriesData?.countries || []),
+        educations: Array.isArray(educationsData) ? educationsData : (educationsData?.data || educationsData?.educations || []),
+        professions: Array.isArray(professionsData) ? professionsData : (professionsData?.data || professionsData?.professions || []),
+        states: Array.isArray(statesData) ? statesData : (statesData?.data || statesData?.states || [])
       }))
     } catch (error) {
       console.error('Error fetching master data:', error)
@@ -764,8 +763,8 @@ export default function UserDashboard() {
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {contact.children.map((child: any, index: number) => {
-                  const childEdu = masterData.educations?.find(edu => edu.id === child.educationId)
-                  const childProf = masterData.professions?.find(prof => prof.id === child.professionId)
+                  const educationName = child.education?.name || child.otherEducation || '-'
+                  const professionName = child.profession?.name || child.otherProfession || '-'
                   return (
                     <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
                       <div className="space-y-3">
@@ -787,19 +786,19 @@ export default function UserDashboard() {
                             <p className="text-sm text-gray-700">{child.dob || '-'}</p>
                           </div>
                         </div>
-                        {(childEdu || child.otherEducation || child.educationDetail) && (
+                        {(educationName !== '-' || child.educationDetail) && (
                           <div className="flex flex-col pt-2 border-t border-gray-50">
                             <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Education</span>
                             <p className="text-sm text-gray-700">
-                              {childEdu?.name || child.otherEducation || '-'}
+                              {educationName}
                               {child.educationDetail ? ` (${child.educationDetail})` : ''}
                             </p>
                           </div>
                         )}
-                        {(childProf || child.otherProfession) && (
+                        {professionName !== '-' && (
                           <div className="flex flex-col pt-2 border-t border-gray-50">
                             <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Profession</span>
-                            <p className="text-sm text-gray-700">{childProf?.name || child.otherProfession || '-'}</p>
+                            <p className="text-sm text-gray-700">{professionName}</p>
                           </div>
                         )}
                       </div>
@@ -822,7 +821,6 @@ export default function UserDashboard() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 {contact.siblings.map((sibling: any, index: number) => {
-                  const siblingCountry = masterData.countries?.find(c => c.id === sibling.countryId)
                   return (
                     <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
                       <div className="space-y-3">
@@ -848,7 +846,13 @@ export default function UserDashboard() {
                           <div className="flex flex-col pt-2 border-t border-gray-50">
                             <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Address</span>
                             <p className="text-sm text-gray-600 italic leading-relaxed">
-                              {[sibling.currentAddress, sibling.cityId, sibling.stateId, siblingCountry?.name || sibling.countryId, sibling.zipCode]
+                              {[
+                                sibling.currentAddress,
+                                sibling.cityId,
+                                sibling.state?.name || masterData.states?.find((s: any) => s.id === sibling.stateId)?.name || sibling.stateId,
+                                sibling.country?.name || masterData.countries?.find((c: any) => c.id === sibling.countryId)?.name || sibling.countryId,
+                                sibling.zipCode
+                              ]
                                 .filter(Boolean)
                                 .join(', ')}
                             </p>
