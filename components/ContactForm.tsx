@@ -22,7 +22,8 @@ import {
   message,
   Image,
   Flex,
-  Spin
+  Spin,
+  Tooltip
 } from 'antd'
 import { PlusOutlined, DeleteOutlined, LeftOutlined, RightOutlined, CheckOutlined, UploadOutlined, InboxOutlined, FilePdfOutlined } from '@ant-design/icons'
 import csc from 'countries-states-cities'
@@ -1509,7 +1510,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
               {childrenFields.map((field, index) => (
                 <Card key={field.id} className="border border-gray-200 shadow-sm" style={{ borderRadius: '12px' }}>
                   <Row gutter={[20, 20]} align="bottom">
-                    <Col xs={24} md={5}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">First Name</span>} className="mb-0">
                         <Input
                           size="large"
@@ -1525,7 +1526,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={5}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Middle Name</span>} className="mb-0">
                         <Input
                           size="large"
@@ -1541,7 +1542,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={5}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Last Name</span>} className="mb-0">
                         <Input
                           size="large"
@@ -1557,7 +1558,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={4}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Gender</span>} className="mb-0">
                         <Select
                           size="large"
@@ -1577,7 +1578,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={3}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Bday (Month YYYY)</span>} className="mb-0">
                         <DatePicker
                           picker="month"
@@ -1595,18 +1596,16 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={2}>
-                      <Form.Item className="mb-0">
-                        <Button
-                          size="large"
-                          type="text"
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() => removeChild(index)}
-                          className="w-full"
-                        />
-                      </Form.Item>
-                    </Col>
+                    <Tooltip title="Delete">
+                      <Button
+                        size="large"
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => removeChild(index)}
+                        className="delete_card_btn absolute top-[0px] right-[0px]"
+                      />
+                    </Tooltip>
                   </Row>
                 </Card>
               ))}
@@ -1646,7 +1645,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
               {siblingsFields.map((field, index) => (
                 <Card key={field.id} className="border border-gray-200 shadow-sm" style={{ borderRadius: '12px' }}>
                   <Row gutter={[20, 20]} align="bottom">
-                    <Col xs={24} md={5}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">First Name</span>} className="mb-0">
                         <Input
                           size="large"
@@ -1662,7 +1661,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={5}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Middle Name</span>} className="mb-0">
                         <Input
                           size="large"
@@ -1678,7 +1677,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={5}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Last Name</span>} className="mb-0">
                         <Input
                           size="large"
@@ -1694,7 +1693,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={4}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Gender</span>} className="mb-0">
                         <Select
                           size="large"
@@ -1714,7 +1713,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={3}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Bday (Month YYYY)</span>} className="mb-0">
                         <DatePicker
                           picker="month"
@@ -1732,7 +1731,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={12}>
+                    <Col xl={8} lg={8} md={12} sm={24} xs={24}>
                       <Form.Item label={<span className="font-medium text-gray-700">Current Address</span>} className="mb-0">
                         <Input
                           size="large"
@@ -1748,18 +1747,16 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         />
                       </Form.Item>
                     </Col>
-                    <Col xs={24} md={2}>
-                      <Form.Item className="mb-0">
-                        <Button
-                          size="large"
-                          type="text"
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() => removeSibling(index)}
-                          className="w-full"
-                        />
-                      </Form.Item>
-                    </Col>
+                    <Tooltip title="Delete">
+                      <Button
+                        size="large"
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => removeSibling(index)}
+                        className="delete_card_btn absolute top-[0px] right-[0px]"
+                      />
+                    </Tooltip>
                   </Row>
                 </Card>
               ))}
