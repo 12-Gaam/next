@@ -411,8 +411,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         return step1Valid
       case 2:
         const step2Valid = formData.gaam && formData.currentAddress &&
-          formData.countryId && formData.stateId && formData.cityId && formData.zipCode
-        console.log('Step 2 validation:', { step2Valid, formData: { gaam: formData.gaam, currentAddress: formData.currentAddress, countryId: formData.countryId, stateId: formData.stateId, cityId: formData.cityId, zipCode: formData.zipCode } })
+          formData.countryId && formData.stateId && formData.cityId && formData.zipCode &&
+          formData.email && !errors.email
+        console.log('Step 2 validation:', { step2Valid, formData: { gaam: formData.gaam, currentAddress: formData.currentAddress, countryId: formData.countryId, stateId: formData.stateId, cityId: formData.cityId, zipCode: formData.zipCode, email: formData.email } })
         return step2Valid
       case 3:
         const step3Valid = formData.phone
@@ -426,7 +427,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         let step5Valid: boolean = !!(formData.firstname && formData.gender &&
           formData.gaam && formData.currentAddress &&
           formData.countryId && formData.stateId && formData.cityId && formData.zipCode &&
-          formData.phone)
+          formData.phone && formData.email && !errors.email)
 
         // Check if spouse first name is required when married
         if (watchedMaritalStatus === 'married' && (!formData.spouseFirstName || formData.spouseFirstName.trim().length === 0)) {
@@ -857,7 +858,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           </Col>
           <Col xs={24} md={6}>
             <Form.Item
-              label={<span className="font-medium text-gray-700">Email</span>}
+              label={<span className="font-medium text-gray-700">Email <span className="text-red-500">*</span></span>}
               validateStatus={errors.email ? 'error' : ''}
               help={errors.email?.message}
               className="mb-0"
@@ -867,7 +868,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                 value={watch('email') || ''}
                 onChange={(e) => handleFieldChange('email', e.target.value)}
                 type="email"
-                placeholder="Enter email address (optional)"
+                placeholder="Enter email address"
                 className="rounded-lg"
               />
             </Form.Item>
@@ -1860,7 +1861,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                         <Typography.Text strong className="text-gray-700">Email:</Typography.Text>
                       </div>
                       <div className="flex-1">
-                        <Typography.Text className="text-gray-900">{formData.email || 'Not specified'}</Typography.Text>
+                        <Typography.Text className="text-gray-900">{formData.email}</Typography.Text>
                       </div>
                     </div>
                     <div className="flex">
@@ -1938,7 +1939,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                           <div className="mt-2 pl-4 border-l-2 border-gray-100 space-y-1">
                             {formData.children.map((child: any, i: number) => (
                               <div key={i} className="text-sm text-gray-600">
-                                {child.firstName} ({child.gender}, {child.dob})
+                                {child.firstName} {child.middleName} {child.lastName} ({child.gender}, {child.dob})
                               </div>
                             ))}
                           </div>
@@ -1955,7 +1956,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                           <div className="mt-2 pl-4 border-l-2 border-gray-100 space-y-1">
                             {formData.siblings.map((sibling: any, i: number) => (
                               <div key={i} className="text-sm text-gray-600">
-                                {sibling.firstName} ({sibling.gender}, {sibling.dob})
+                                {sibling.firstName} {sibling.middleName} {sibling.lastName} ({sibling.gender}, {sibling.dob})
                                 {sibling.currentAddress && (
                                   <div className="text-xs text-gray-400 italic">Addr: {sibling.currentAddress}</div>
                                 )}
