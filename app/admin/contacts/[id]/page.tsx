@@ -455,19 +455,27 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
               <CardContent className="p-6">
                 <div className="space-y-3">
                   {contact.children.map((child: any, index: number) => (
-                    <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                    <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                       <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {child.firstName || child.middleName || child.lastName
-                              ? [child.firstName || child.firstname, child.middleName, child.lastName]
-                                  .filter(Boolean)
-                                  .join(' ')
-                              : child.firstname || 'Unnamed'}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {child.gender} • Bday {child.dob || child.age}
-                          </p>
+                        <div className="space-y-3 w-full">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                            <p className="font-semibold text-gray-900">
+                              {[child.firstName || child.firstname, child.middleName, child.lastName]
+                                .filter(Boolean)
+                                .join(' ') || 'Unnamed'}
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                              <p className="text-sm text-gray-700 capitalize">{child.gender || '-'}</p>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                              <p className="text-sm text-gray-700">{child.dob || child.age || '-'}</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -489,19 +497,35 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
               <CardContent className="p-6">
                 <div className="space-y-3">
                   {contact.siblings.map((sibling: any, index: number) => (
-                    <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                    <div key={index} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                       <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {sibling.firstName || sibling.middleName || sibling.lastName
-                              ? [sibling.firstName, sibling.middleName, sibling.lastName]
-                                  .filter(Boolean)
-                                  .join(' ')
-                              : sibling.name || 'Unnamed'}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {sibling.gender} • Bday {sibling.dob || sibling.age}
-                          </p>
+                        <div className="space-y-3 w-full">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Full Name</span>
+                            <p className="font-semibold text-gray-900">
+                              {[sibling.firstName, sibling.middleName, sibling.lastName]
+                                .filter(Boolean)
+                                .join(' ') || sibling.name || 'Unnamed'}
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Gender</span>
+                              <p className="text-sm text-gray-700 capitalize">{sibling.gender || '-'}</p>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
+                              <p className="text-sm text-gray-700">{sibling.dob || sibling.age || '-'}</p>
+                            </div>
+                          </div>
+                          {sibling.currentAddress && (
+                            <div className="flex flex-col pt-2 border-t border-gray-50">
+                              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Current Address</span>
+                              <p className="text-sm text-gray-600 italic leading-relaxed">
+                                {sibling.currentAddress}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
