@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertCircle, Loader2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { formatDate } from '@/lib/utils'
 
 interface Registration {
   id: string
@@ -205,11 +206,7 @@ export default function RegistrationApprovalsPage() {
                           <div className="min-w-0">
                             <p className="text-xs text-gray-500 mb-1">Submitted</p>
                             <p className="text-sm text-gray-700 font-medium">
-                              {new Date(registration.createdAt).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric'
-                              })}
+                              {formatDate(registration.createdAt)}
                             </p>
                           </div>
                           {registration.verifiedBy && (

@@ -23,6 +23,7 @@ import {
   ArrowLeft
 } from 'lucide-react'
 import Link from 'next/link'
+import { formatDate } from '@/lib/utils'
 
 interface Admin {
   id: string
@@ -439,11 +440,7 @@ export default function SuperAdminAdminsPage() {
                             <div>
                               <p className="text-xs text-gray-500 mb-1.5">Created</p>
                               <p className="text-sm text-gray-700 font-medium">
-                                {new Date(admin.createdAt).toLocaleDateString('en-GB', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric'
-                                })}
+                                {formatDate(admin.createdAt)}
                               </p>
                             </div>
                            

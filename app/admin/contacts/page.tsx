@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { formatDate } from '@/lib/utils'
 
 interface Contact {
   id: string
@@ -365,7 +366,7 @@ export default function AdminContactsPage() {
                           <span className="font-bold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">
                             {contact.firstname} {contact.middlename} {contact.lastname}
                           </span>
-                          <span className="text-xs text-gray-400 mt-0.5">Joined {new Date(contact.createdAt).toLocaleDateString()}</span>
+                          <span className="text-xs text-gray-400 mt-0.5">Joined {formatDate(contact.createdAt)}</span>
                         </div>
                       </td>
                       <td className="py-5 px-6">
