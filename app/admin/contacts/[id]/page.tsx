@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import FooterPage from '@/components/common/FooterPage'
+import { formatDate } from '@/lib/utils'
 
 interface Contact {
   id: string
@@ -269,7 +270,7 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                 <div>
                   <label className="text-sm font-medium text-gray-500">Date of Birth</label>
                   <p className="text-gray-900">
-                    {contact.dob ? new Date(contact.dob).toLocaleDateString() : '-'}
+                    {formatDate(contact.dob)}
                   </p>
                 </div>
                 <div>
@@ -516,7 +517,7 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
-                                <p className="text-sm text-gray-700">{child.dob || child.age || '-'}</p>
+                                <p className="text-sm text-gray-700">{formatDate(child.dob) || child.age || '-'}</p>
                               </div>
                             </div>
                             {(educationName !== '-' || child.educationDetail) && (
@@ -575,7 +576,7 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Bday</span>
-                                <p className="text-sm text-gray-700">{sibling.dob || sibling.age || '-'}</p>
+                                <p className="text-sm text-gray-700">{formatDate(sibling.dob) || sibling.age || '-'}</p>
                               </div>
                             </div>
                             {(sibling.currentAddress || sibling.countryId || sibling.cityId) && (
@@ -665,7 +666,7 @@ export default function ContactViewPage({ params }: { params: { id: string } }) 
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Contact created on {new Date(contact.createdAt).toLocaleDateString()}</p>
+          <p>Contact created on {formatDate(contact.createdAt)}</p>
         </div>
       </main>
 

@@ -9,6 +9,7 @@ import { FileText, Plus, User, Users, Baby, UserCog, Mail, Phone, MapPin, Calend
 import ContactForm from '@/components/ContactForm'
 import HeaderPage from '@/components/common/HeaderPage'
 import FooterPage from '@/components/common/FooterPage'
+import { formatDate } from '@/lib/utils'
 
 interface Contact {
   id: string
@@ -225,18 +226,6 @@ export default function UserDashboard() {
 
   const isApproved = session.user.status === 'APPROVED'
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Not provided'
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })
-    } catch {
-      return dateString
-    }
-  }
 
   const renderDashboardView = () => {
     if (!hasContact || !contact) {

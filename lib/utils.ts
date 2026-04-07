@@ -26,3 +26,17 @@ export function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '')
 }
+export function formatDate(date: string | Date | null | undefined) {
+  if (!date) return 'Not provided'
+  try {
+    const d = new Date(date)
+    if (isNaN(d.getTime())) return 'Invalid Date'
+    return d.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  } catch {
+    return 'Invalid Date'
+  }
+}
