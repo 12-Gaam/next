@@ -17,19 +17,19 @@ export default function PrivacyPolicy() {
             <h1 className="text-4xl font-black tracking-tight text-primary mb-4">
               Privacy <span className="text-secondary">Policy</span>
             </h1>
-            <p className="text-slate-500 text-lg">Last updated: April 14, 2026</p>
+            <p className="text-slate-500 text-lg">Last updated: April 17, 2026</p>
           </div>
 
           {/* Content Sections */}
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-200">
             <section className="bg-white/80 backdrop-blur-sm p-8 md:p-12 rounded-3xl border border-white shadow-sm text-slate-700 leading-relaxed space-y-6">
               <div className="space-y-2 text-sm text-slate-500 mb-8 border-b border-slate-100 pb-4">
-                <p><strong>Effective Date:</strong> April 14, 2026</p>
-                <p><strong>Last Updated:</strong> April 14, 2026</p>
+                <p><strong>Effective Date:</strong> April 17, 2026</p>
+                <p><strong>Last Updated:</strong> April 17, 2026</p>
               </div>
 
               <p>
-                [Legal Entity Name], doing business as 12Gaam.com (“12Gaam,” “we,” “us,” or “our”), operates a private community member directory and related services (collectively, the “Platform”). This Privacy Policy explains how we collect, use, disclose, retain, and protect personal information in connection with the Platform.
+                12Gaam.com, doing business as 12Gaam.com (“12Gaam,” “we,” “us,” or “our”), operates a private community member directory and related services (collectively, the “Platform”). This Privacy Policy explains how we collect, use, disclose, retain, and protect personal information in connection with the Platform.
               </p>
               <p>
                 By accessing or using the Platform, creating an account, submitting information, or otherwise interacting with us, you acknowledge this Privacy Policy.
@@ -50,10 +50,8 @@ export default function PrivacyPolicy() {
 
               <h2 className="text-xl font-bold text-primary pt-4">2. Who We Are</h2>
               <ul className="space-y-2">
-                <li><strong>Operator:</strong> [Full Legal Entity Name]</li>
-                <li><strong>Mailing Address:</strong> [Business Mailing Address]</li>
-                <li><strong>Email:</strong> [Privacy Contact Email]</li>
-                <li><strong>Phone:</strong> [Phone Number, if applicable]</li>
+                <li><strong>Operator:</strong> 12Gaam.com</li>
+                <li><strong>Email:</strong> <a href='mailto:12gaamsamaj@gmail.com'>12gaamsamaj@gmail.com</a></li>
               </ul>
 
               <h2 className="text-xl font-bold text-primary pt-4">3. Personal Information We Collect</h2>
@@ -217,7 +215,7 @@ export default function PrivacyPolicy() {
                 We may need to verify your identity before acting on certain requests. We may also deny or limit requests where permitted by law, such as where retention is necessary for security, legal compliance, fraud prevention, or internal recordkeeping.
               </p>
               <p>
-                To submit a request, contact us at [Privacy Contact Email].
+                To submit a request, contact us at <a href='mailto:12gaamsamaj@gmail.com'>12gaamsamaj@gmail.com</a>.
               </p>
 
               <h2 className="text-xl font-bold text-primary pt-4">14. Children’s Privacy</h2>
@@ -252,10 +250,9 @@ export default function PrivacyPolicy() {
 
               <h2 className="text-xl font-bold text-primary pt-4">19. Contact Us</h2>
               <p>
-                [Legal Entity Name]<br />
-                [Mailing Address]<br />
-                [Privacy Contact Email]<br />
-                [Phone Number, if applicable]
+                Effective Date: April 17, 2026<br />
+                Entity Name: 12Gaam.com<br />
+                Email: <a href='mailto:12gaamsamaj@gmail.com'>12gaamsamaj@gmail.com</a>
               </p>
             </section>
           </div>

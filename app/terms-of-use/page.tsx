@@ -17,19 +17,19 @@ export default function TermsAndConditions() {
             <h1 className="text-4xl font-black tracking-tight text-primary mb-4">
               Terms of <span className="text-secondary">Use</span>
             </h1>
-            <p className="text-slate-500 text-lg">Last updated: April 14, 2026</p>
+            <p className="text-slate-500 text-lg">Last updated: April 17, 2026</p>
           </div>
 
           {/* Content Sections */}
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-200">
             <section className="bg-white/80 backdrop-blur-sm p-8 md:p-12 rounded-3xl border border-white shadow-sm text-slate-700 leading-relaxed space-y-6">
               <div className="space-y-2 text-sm text-slate-500 mb-8 border-b border-slate-100 pb-4">
-                <p><strong>Effective Date:</strong> April 14, 2026</p>
-                <p><strong>Last Updated:</strong> April 14, 2026</p>
+                <p><strong>Effective Date:</strong> April 17, 2026</p>
+                <p><strong>Last Updated:</strong> April 17, 2026</p>
               </div>
               
               <p>
-                These Terms of Use (“Terms”) govern your access to and use of 12Gaam.com and related services (collectively, the “Platform”), operated by [Legal Entity Name] (“12Gaam,” “we,” “us,” or “our”). By creating an account, accessing the Platform, or using any part of the Platform, you agree to be bound by these Terms. If you do not agree, do not use the Platform.
+                These Terms of Use (“Terms”) govern your access to and use of 12Gaam.com and related services (collectively, the “Platform”), operated by 12Gaam.com (“12Gaam,” “we,” “us,” or “our”). By creating an account, accessing the Platform, or using any part of the Platform, you agree to be bound by these Terms. If you do not agree, do not use the Platform.
               </p>
 
               <h2 className="text-xl font-bold text-primary pt-4">1. Nature of the Platform</h2>
@@ -130,7 +130,7 @@ export default function TermsAndConditions() {
 
               <h2 className="text-xl font-bold text-primary pt-4">14. Limitation of Liability</h2>
               <p className="uppercase">
-                TO THE MAXIMUM EXTENT PERMITTED BY LAW, [LEGAL ENTITY NAME], ITS OFFICERS, DIRECTORS, ADMINISTRATORS, AFFILIATES, CONTRACTORS, AND AGENTS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, DATA, GOODWILL, OR BUSINESS OPPORTUNITY, ARISING OUT OF OR RELATED TO THE PLATFORM OR THESE TERMS.
+                TO THE MAXIMUM EXTENT PERMITTED BY LAW, 12Gaam.com, ITS OFFICERS, DIRECTORS, ADMINISTRATORS, AFFILIATES, CONTRACTORS, AND AGENTS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, DATA, GOODWILL, OR BUSINESS OPPORTUNITY, ARISING OUT OF OR RELATED TO THE PLATFORM OR THESE TERMS.
               </p>
               <p className="uppercase">
                 TO THE MAXIMUM EXTENT PERMITTED BY LAW, OUR TOTAL LIABILITY FOR ALL CLAIMS ARISING OUT OF OR RELATING TO THE PLATFORM OR THESE TERMS SHALL NOT EXCEED THE GREATER OF: (A) THE AMOUNT YOU PAID US, IF ANY, IN THE TWELVE MONTHS PRECEDING THE CLAIM; OR (B) US$100.
@@ -138,7 +138,7 @@ export default function TermsAndConditions() {
 
               <h2 className="text-xl font-bold text-primary pt-4">15. Indemnification</h2>
               <p>
-                You agree to defend, indemnify, and hold harmless [Legal Entity Name], its officers, directors, administrators, affiliates, contractors, and agents from and against any claims, liabilities, damages, judgments, losses, costs, and expenses, including reasonable attorneys’ fees, arising out of or related to your use or misuse of the Platform, your violation of these Terms, your violation of any law or third-party right, or content or information you submit or disclose through the Platform.
+                You agree to defend, indemnify, and hold harmless 12Gaam.com, its officers, directors, administrators, affiliates, contractors, and agents from and against any claims, liabilities, damages, judgments, losses, costs, and expenses, including reasonable attorneys’ fees, arising out of or related to your use or misuse of the Platform, your violation of these Terms, your violation of any law or third-party right, or content or information you submit or disclose through the Platform.
               </p>
 
               <h2 className="text-xl font-bold text-primary pt-4">16. Governing Law and Venue</h2>
@@ -166,10 +166,9 @@ export default function TermsAndConditions() {
 
               <h2 className="text-xl font-bold text-primary pt-4">20. Contact Information</h2>
               <p>
-                [Legal Entity Name]<br />
-                [Mailing Address]<br />
-                [Privacy or Support Email]<br />
-                [Phone Number, if applicable]
+                Effective Date: April 17, 2026<br />
+                Entity Name: 12Gaam.com<br />
+                Email: <a href='mailto:12gaamsamaj@gmail.com'>12gaamsamaj@gmail.com</a>
               </p>
             </section>
           </div>
