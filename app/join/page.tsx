@@ -246,7 +246,7 @@ export default function JoinPage() {
                 <CardHeader className="pb-2 sm:pb-4">
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-2xl justify-center">
                     {activeTab === 'login' ? (
-                      <LogIn className="text-primary h-5 w-5" />
+                      <LogIn className="text-secondary h-5 w-5" />
                     ) : (
                       <UserPlus2 className="text-secondary h-5 w-5" />
                     )}
@@ -379,9 +379,6 @@ export default function JoinPage() {
                           )}
                         </Button>
                       )}
-                      <p className="text-xs text-gray-500 text-center">
-                        Members: Please use the OTP sent to your email for login.
-                      </p>
                     </form>
                   ) : (
                     <form onSubmit={handleRegistration} className="space-y-4">
@@ -476,8 +473,6 @@ export default function JoinPage() {
                           )}
                         </Button>
                       )}
-                      <p className="text-xs text-gray-500">
-                        Your registration will be sent to your Gaam Admin for verification. You’ll receive an email once your account is activated.                      </p>
                     </form>
                   )}
                 </CardContent>
