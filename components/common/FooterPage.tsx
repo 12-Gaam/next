@@ -24,8 +24,12 @@ function FooterPage() {
                             Home
                         </Link>
                         <span className="w-1 h-1 bg-white/20 rounded-full"></span>
-                        <Link href="/terms-and-conditions" className="text-blue-100/80 hover:text-white transition-colors">
-                            Terms & Conditions
+                        <Link href="/terms-of-use" className="text-blue-100/80 hover:text-white transition-colors">
+                            Terms of Use
+                        </Link>
+                        <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+                        <Link href="/privacy-policy" className="text-blue-100/80 hover:text-white transition-colors">
+                            Privacy Policy
                         </Link>
                     </nav>
                 </div>

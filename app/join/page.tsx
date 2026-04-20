@@ -43,6 +43,10 @@ export default function JoinPage() {
   const [showPasswordField, setShowPasswordField] = useState(false)
   const [acceptedDisclaimer, setAcceptedDisclaimer] = useState(false)
   const [showConsentModal, setShowConsentModal] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [acceptDirectory, setAcceptDirectory] = useState(false)
+  const [acceptEmails, setAcceptEmails] = useState(false)
+  const [acceptTexts, setAcceptTexts] = useState(false)
 
   useEffect(() => {
     const reason = searchParams.get('reason')
@@ -240,25 +244,25 @@ export default function JoinPage() {
 
               <Card className="border-0 rounded-none shadow-none">
                 <CardHeader className="pb-2 sm:pb-4">
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-2xl">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-2xl justify-center">
                     {activeTab === 'login' ? (
-                      <LogIn className="text-primary h-5 w-5" />
+                      <LogIn className="text-secondary h-5 w-5" />
                     ) : (
                       <UserPlus2 className="text-secondary h-5 w-5" />
                     )}
                     {activeTab === 'login' ? 'Existing Member Login' : 'New Family Registration'}
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-center">
                     {activeTab === 'login'
                       ? 'Access your dashboard using OTP.'
                       : 'Register your family. Login details will be shared after approval.'}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="pt-0 sm:pt-2">
+                <CardContent className="pt-0 sm:pt-4">
                   {activeTab === 'login' ? (
                     <form onSubmit={handleLogin} className="space-y-4">
                       <div className="space-y-2">
-                        <Label>Email or Username</Label>
+                        <Label>Email or Username<sup className='text-red-500' title='Mandatory'>*</sup></Label>
                         <Input
                           value={identifier}
                           onChange={(e) => {
@@ -359,28 +363,27 @@ export default function JoinPage() {
                           <span>{loginError}</span>
                         </div>
                       )}
-                      <Button
-                        type="submit"
-                        className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-bold shadow-lg transition-all"
-                        disabled={isLoggingIn || (otpSent ? !otp : !showPasswordField || !password)}
-                      >
-                        {isLoggingIn ? (
-                          <span className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Signing In...
-                          </span>
-                        ) : (
-                          'Sign In'
-                        )}
-                      </Button>
-                      <p className="text-xs text-gray-500 text-center">
-                        Members: Please use the OTP sent to your email for login.
-                      </p>
+                      {(otpSent || showPasswordField) && (
+                        <Button
+                          type="submit"
+                          className="w-full bg-secondary hover:bg-secondary/90 text-white h-12 text-lg font-bold shadow-lg transition-all animate-in zoom-in-95 duration-300"
+                          disabled={isLoggingIn || (otpSent ? !otp : !password)}
+                        >
+                          {isLoggingIn ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Signing In...
+                            </span>
+                          ) : (
+                            'Sign In'
+                          )}
+                        </Button>
+                      )}
                     </form>
                   ) : (
                     <form onSubmit={handleRegistration} className="space-y-4">
                       <div className="space-y-2">
-                        <Label>Full Name</Label>
+                        <Label>Full Name<sup className='text-red-500' title='Mandatory'>*</sup></Label>
                         <Input
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
@@ -390,7 +393,7 @@ export default function JoinPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Email</Label>
+                        <Label>Email<sup className='text-red-500' title='Mandatory'>*</sup></Label>
                         <Input
                           type="email"
                           value={email}
@@ -401,7 +404,7 @@ export default function JoinPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Gaam</Label>
+                        <Label>Gaam<sup className='text-red-500' title='Mandatory'>*</sup></Label>
 
                         <Select
                           value={gaamId}
@@ -470,8 +473,6 @@ export default function JoinPage() {
                           )}
                         </Button>
                       )}
-                      <p className="text-xs text-gray-500">
-                        Your registration will be sent to your Gaam Admin for verification. You’ll receive an email once your account is activated.                      </p>
                     </form>
                   )}
                 </CardContent>
@@ -495,18 +496,53 @@ export default function JoinPage() {
             </CardHeader>
             <CardContent className="py-6 max-h-[60vh] overflow-y-auto">
               <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
-                <p className="font-semibold text-primary">By registering with 12Gaam Community, you agree to the following:</p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Your information will be visible to community members and administrators for networking purposes.</li>
-                  <li>We implement security measures for data protection against all threats.</li>
-                  <li>You are responsible for maintaining the accuracy of your family information.</li>
-                  <li>Community administrators reserve the right to verify and moderate any submitted content.</li>
-                  <li>You will receive periodic updates and notifications related to community activities.</li>
-                </ul>
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-6">
-                  <p className="text-xs text-gray-500 italic">
-                    Note: Your registration is subject to approval by your gaam administrator. Access to the dashboard will be granted only after verification.
-                  </p>
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="consentTerms"
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary cursor-pointer shrink-0"
+                  />
+                  <Label htmlFor="consentTerms" className="text-sm font-normal cursor-pointer leading-relaxed -mt-0.5">
+                    I have read and agree to the Terms of Use and Privacy Policy. <sup title='Mandatory' className="text-red-500">*</sup>
+                  </Label>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="consentDirectory"
+                    checked={acceptDirectory}
+                    onChange={(e) => setAcceptDirectory(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary cursor-pointer shrink-0"
+                  />
+                  <Label htmlFor="consentDirectory" className="text-sm font-normal cursor-pointer leading-relaxed -mt-0.5">
+                    I understand that profile information I choose to provide may be visible to other approved members within the private directory. <sup title='Mandatory' className="text-red-500">*</sup>
+                  </Label>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="consentEmails"
+                    checked={acceptEmails}
+                    onChange={(e) => setAcceptEmails(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary cursor-pointer shrink-0"
+                  />
+                  <Label htmlFor="consentEmails" className="text-sm font-normal cursor-pointer leading-relaxed -mt-0.5">
+                    I agree to receive promotional or community marketing emails from 12Gaam.com. I understand I can unsubscribe at any time.
+                  </Label>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="consentTexts"
+                    checked={acceptTexts}
+                    onChange={(e) => setAcceptTexts(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-secondary focus:ring-secondary cursor-pointer shrink-0"
+                  />
+                  <Label htmlFor="consentTexts" className="text-sm font-normal cursor-pointer leading-relaxed -mt-0.5">
+                    If marketing texts are used: I agree to receive promotional or community marketing text messages from 12Gaam.com at the number I provided. Consent is not a condition of membership. Message and data rates may apply. Reply STOP to opt out.
+                  </Label>
                 </div>
               </div>
             </CardContent>
@@ -516,6 +552,10 @@ export default function JoinPage() {
                 onClick={() => {
                   setShowConsentModal(false)
                   setAcceptedDisclaimer(false)
+                  setAcceptTerms(false)
+                  setAcceptDirectory(false)
+                  setAcceptEmails(false)
+                  setAcceptTexts(false)
                 }}
                 className="rounded-full px-8"
               >
@@ -526,7 +566,8 @@ export default function JoinPage() {
                   setShowConsentModal(false)
                   setAcceptedDisclaimer(true)
                 }}
-                className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 shadow-lg shadow-primary/20"
+                disabled={!acceptTerms || !acceptDirectory}
+                className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 I Accept & Consent
               </Button>
