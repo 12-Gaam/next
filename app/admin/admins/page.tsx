@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
@@ -20,7 +20,8 @@ import {
   Users,
   X,
   LogOut,
-  ArrowLeft
+  ArrowLeft,
+  User
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils'
@@ -33,6 +34,7 @@ interface Admin {
   role: string
   status: string
   createdAt: string
+  profilePic?: string | null
   gaamsManaged: Array<{
     id: string
     name: string
@@ -59,6 +61,7 @@ export default function SuperAdminAdminsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   // Form state for creating admin
   const [formData, setFormData] = useState({
@@ -410,136 +413,179 @@ export default function SuperAdminAdminsPage() {
                 <p className="text-gray-600">No admins found. Create your first admin above.</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {admins.map((admin) => (
-                  <Card key={admin.id} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                        <div className="flex-1 min-w-0">
-                          <div className="mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-1">{admin.fullName}</h3>
-                            <p className="text-sm text-gray-600 truncate">{admin.email}</p>
-                            <p className="text-xs text-gray-500 mt-1">@{admin.username}</p>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1.5">Assigned GAAMs</p>
-                              {admin.gaamsManaged && admin.gaamsManaged.length > 0 ? (
-                                <div className="flex flex-wrap gap-2">
-                                  {admin.gaamsManaged.map((gaam) => (
-                                    <span key={gaam.id} className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
-                                      {gaam.name}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-sm text-gray-500">No GAAM assigned</span>
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1.5">Created</p>
-                              <p className="text-sm text-gray-700 font-medium">
-                                {formatDate(admin.createdAt)}
-                              </p>
-                            </div>
-                           
-                           
-                          </div>
-
-                          {/* Edit GAAM Assignment */}
-                          {editingAdminId === admin.id && (
-                            <div className="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200">
-                              <div className="space-y-3">
-                                <div>
-                                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                                    Assign GAAMs (Multiple selection allowed):
-                                  </Label>
-                                  <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-md p-3 bg-white">
-                                    {getAvailableGaams().length === 0 ? (
-                                      <p className="text-sm text-gray-500">No GAAMs available</p>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        {getAvailableGaams().map((gaam) => {
-                                          const isSelected = (gaamAssignment[admin.id] || []).includes(gaam.id)
-                                          return (
-                                            <label
-                                              key={gaam.id}
-                                              className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer"
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() => toggleGaamSelection(admin.id, gaam.id)}
-                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                              />
-                                              <span className="text-sm text-gray-700">{gaam.name}</span>
-                                            </label>
-                                          )
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <p className="text-xs text-gray-500 mt-2">
-                                    Selected: {(gaamAssignment[admin.id] || []).length} GAAM(s)
-                                  </p>
-                                </div>
-                                <div className="flex gap-3">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleUpdateGaamAssignment(admin.id)}
-                                    disabled={isSubmitting}
-                                    className="bg-secondary hover:bg-secondary/90"
-                                  >
-                                    {isSubmitting ? 'Saving...' : 'Save'}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      setEditingAdminId(null)
-                                      // Reset to original value (array of gaam IDs)
-                                      const originalGaams = admin.gaamsManaged && admin.gaamsManaged.length > 0
-                                        ? admin.gaamsManaged.map(g => g.id)
-                                        : []
-                                      setGaamAssignment({ ...gaamAssignment, [admin.id]: originalGaams })
-                                    }}
-                                  >
-                                    Cancel
-                                  </Button>
-                                </div>
+              <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-xl border border-gray-200 shadow-sm relative scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50/95 backdrop-blur-sm sticky top-0 z-10 shadow-sm border-b border-gray-200">
+                    <tr>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Admin Profile</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned GAAMs</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created Date</th>
+                      <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {admins.map((admin) => (
+                      <React.Fragment key={admin.id}>
+                        <tr className="hover:bg-gray-50/50 transition-colors group">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-4">
+                              <div 
+                                className={`flex-shrink-0 h-12 w-12 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gray-100 flex items-center justify-center transition-all ${admin.profilePic ? 'cursor-zoom-in hover:ring-2 hover:ring-blue-400' : ''}`}
+                                onClick={() => admin.profilePic && setPreviewImage(admin.profilePic)}
+                              >
+                                {admin.profilePic ? (
+                                  <img className="h-full w-full object-cover" src={admin.profilePic} alt={admin.fullName} />
+                                ) : (
+                                  <User className="h-6 w-6 text-gray-400" />
+                                )}
+                              </div>
+                              <div>
+                                <div className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{admin.fullName}</div>
+                                <div className="text-sm text-gray-500">{admin.email}</div>
+                                {admin.username !== admin.email && (
+                                  <div className="text-xs font-medium text-gray-400 mt-0.5">@{admin.username}</div>
+                                )}
                               </div>
                             </div>
-                          )}
-                        </div>
-                        {editingAdminId !== admin.id && (
-                          <div className="flex-shrink-0 lg:self-start">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setEditingAdminId(admin.id)
-                                // Initialize with current assignment (array of gaam IDs)
-                                const currentGaams = admin.gaamsManaged && admin.gaamsManaged.length > 0
-                                  ? admin.gaamsManaged.map(g => g.id)
-                                  : []
-                                setGaamAssignment({ ...gaamAssignment, [admin.id]: currentGaams })
-                              }}
-                              className="w-full lg:w-auto whitespace-nowrap"
-                            >
-                              {admin.gaamsManaged && admin.gaamsManaged.length > 0 ? 'Edit ' : 'Assign'}
-                            </Button>
-                          </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            {admin.gaamsManaged && admin.gaamsManaged.length > 0 ? (
+                              <div className="flex flex-wrap gap-2 max-w-[250px]">
+                                {admin.gaamsManaged.map((gaam) => (
+                                  <span key={gaam.id} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                    {gaam.name}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                                Unassigned
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
+                            {formatDate(admin.createdAt)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {editingAdminId !== admin.id && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingAdminId(admin.id)
+                                  const currentGaams = admin.gaamsManaged && admin.gaamsManaged.length > 0
+                                    ? admin.gaamsManaged.map(g => g.id)
+                                    : []
+                                  setGaamAssignment({ ...gaamAssignment, [admin.id]: currentGaams })
+                                }}
+                                className="hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors"
+                              >
+                                {admin.gaamsManaged && admin.gaamsManaged.length > 0 ? 'Edit GAAMs' : 'Assign GAAMs'}
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                        
+                        {/* Edit GAAM Assignment Row */}
+                        {editingAdminId === admin.id && (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-6 bg-blue-50/30 border-y border-blue-100">
+                              <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl border border-blue-100 shadow-sm">
+                                <h4 className="text-base font-semibold text-gray-900 mb-4">Manage Assignments for {admin.fullName}</h4>
+                                <div className="space-y-4">
+                                  <div>
+                                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                                      Select GAAMs to Assign
+                                    </Label>
+                                    <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50/50">
+                                      {getAvailableGaams().length === 0 ? (
+                                        <p className="text-sm text-gray-500 text-center py-4">No GAAMs available to assign</p>
+                                      ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                          {getAvailableGaams().map((gaam) => {
+                                            const isSelected = (gaamAssignment[admin.id] || []).includes(gaam.id)
+                                            return (
+                                              <label
+                                                key={gaam.id}
+                                                className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all border ${isSelected ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-gray-200 hover:border-blue-300'}`}
+                                              >
+                                                <input
+                                                  type="checkbox"
+                                                  checked={isSelected}
+                                                  onChange={() => toggleGaamSelection(admin.id, gaam.id)}
+                                                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                />
+                                                <span className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-700'}`}>{gaam.name}</span>
+                                              </label>
+                                            )
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-blue-600 mt-2 font-medium">
+                                      {((gaamAssignment[admin.id] || []).length)} GAAM(s) currently selected
+                                    </p>
+                                  </div>
+                                  <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        setEditingAdminId(null)
+                                        const originalGaams = admin.gaamsManaged && admin.gaamsManaged.length > 0
+                                          ? admin.gaamsManaged.map(g => g.id)
+                                          : []
+                                        setGaamAssignment({ ...gaamAssignment, [admin.id]: originalGaams })
+                                      }}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleUpdateGaamAssignment(admin.id)}
+                                      disabled={isSubmitting}
+                                      className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                                    >
+                                      {isSubmitting ? 'Saving Changes...' : 'Save Assignments'}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
                         )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </CardContent>
         </Card>
       </main>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 cursor-zoom-out animate-in fade-in duration-200"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
+            <button 
+              className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors p-2"
+              onClick={() => setPreviewImage(null)}
+            >
+              <X className="h-8 w-8" />
+            </button>
+            <img 
+              src={previewImage} 
+              alt="Profile Preview" 
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl cursor-default"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

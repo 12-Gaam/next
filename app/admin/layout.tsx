@@ -2,9 +2,9 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { LogOut, LayoutDashboard, Users, UserPlus, Shield } from 'lucide-react'
+import { LogOut, LayoutDashboard, Users, UserPlus, Shield, User } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AdminLayout({
@@ -15,6 +15,7 @@ export default function AdminLayout({
   const { data: session, status } = useSession()
   const router = useRouter()
   const pathname = usePathname()
+  const [profilePic, setProfilePic] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -27,6 +28,15 @@ export default function AdminLayout({
     const allowedRoles = ['SUPER_ADMIN', 'GAAM_ADMIN']
     if (!allowedRoles.includes(session.user.role)) {
       router.push('/dashboard')
+    } else {
+      fetch('/api/admin/profile')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.profilePic) {
+            setProfilePic(data.profilePic)
+          }
+        })
+        .catch(console.error)
     }
   }, [session, status, router])
 
@@ -45,6 +55,7 @@ export default function AdminLayout({
     { name: 'Contacts', href: '/admin/contacts', icon: Users },
     { name: 'Registrations', href: '/admin/registrations', icon: UserPlus },
     ...(session.user.role === 'SUPER_ADMIN' ? [{ name: 'Admins', href: '/admin/admins', icon: Shield }] : []),
+    { name: 'Profile', href: '/admin/profile', icon: User },
   ]
 
   return (
@@ -80,10 +91,19 @@ export default function AdminLayout({
             </div>
 
             <div className="flex items-center space-x-6">
-              <div className="hidden sm:block text-right">
-                <p className="text-xs text-white/50 uppercase tracking-wider font-semibold mb-0">Logged in as</p>
-                <p className="text-sm font-bold text-white mb-0">{session.user.username}</p>
-              </div>
+              <Link href="/admin/profile" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                <div className="hidden sm:block text-right">
+                  <p className="text-xs text-white/50 uppercase tracking-wider font-semibold mb-0">Logged in as</p>
+                  <p className="text-sm font-bold text-white mb-0">{session.user.username}</p>
+                </div>
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 bg-white/10 flex items-center justify-center">
+                  {profilePic ? (
+                    <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-5 h-5 text-white/70" />
+                  )}
+                </div>
+              </Link>
               <Button
                 onClick={() => signOut({ callbackUrl: '/auth/signin' })}
                 variant="ghost"
