@@ -179,81 +179,85 @@ export default function RegistrationApprovalsPage() {
           </Card>
         ) : (
           <>
-            <div className="space-y-4">
-              {registrations.map((registration) => (
-                <Card key={registration.id} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4 mb-4">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-lg font-semibold text-gray-800 truncate">{registration.fullName}</p>
-                            <p className="text-sm text-gray-600 mt-1 truncate">{registration.email}</p>
-                          </div>
-                          <div className="flex-shrink-0">
-                            {renderStatusBadge(registration.status)}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                          <div className="min-w-0">
-                            <p className="text-xs text-gray-500 mb-1">Username</p>
-                            <p className="text-sm text-gray-700 font-medium truncate">{registration.username}</p>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs text-gray-500 mb-1">Gaam</p>
-                            <p className="text-sm text-gray-700 font-medium truncate">{registration.gaam?.name || 'Unassigned'}</p>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs text-gray-500 mb-1">Submitted</p>
-                            <p className="text-sm text-gray-700 font-medium">
-                              {formatDate(registration.createdAt)}
-                            </p>
-                          </div>
-                          {registration.verifiedBy && (
-                            <div className="min-w-0">
-                              <p className="text-xs text-gray-500 mb-1">Verified by</p>
-                              <p className="text-sm text-gray-700 font-medium truncate">{registration.verifiedBy.fullName}</p>
+            <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-xl border border-gray-200 shadow-sm relative scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50/95 backdrop-blur-sm sticky top-0 z-10 shadow-sm border-b border-gray-200">
+                  <tr>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Applicant Details</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned GAAM</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Submission Date</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {registrations.map((registration) => (
+                    <tr key={registration.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <div className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{registration.fullName}</div>
+                          <div className="text-sm text-gray-500">{registration.email}</div>
+                          {registration.username !== registration.email && (
+                            <div className="text-xs font-medium text-gray-400 mt-0.5">@{registration.username}</div>
+                          )}
+                          {registration.verificationNotes && (
+                            <div className="mt-2 p-2 bg-yellow-50/50 border border-yellow-100 rounded text-xs text-yellow-800 max-w-sm whitespace-normal">
+                              <span className="font-semibold">Notes:</span> {registration.verificationNotes}
                             </div>
                           )}
                         </div>
-                        {registration.verificationNotes && (
-                          <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
-                            <p className="text-xs text-gray-500 mb-1">Notes</p>
-                            <p className="text-sm text-gray-700 break-words">{registration.verificationNotes}</p>
-                          </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                          {registration.gaam?.name || 'Unassigned'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-700 font-medium">{formatDate(registration.createdAt)}</div>
+                        {registration.verifiedBy && (
+                          <div className="text-xs text-gray-500 mt-1">Verified by: {registration.verifiedBy.fullName}</div>
                         )}
-                      </div>
-                      {registration.status === 'PENDING' && (
-                        <div className="flex flex-row gap-3 flex-shrink-0">
-                          <Button
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                            disabled={actionInProgress?.startsWith(registration.id)}
-                            onClick={() => handleAction(registration.id, 'APPROVED')}
-                          >
-                            {actionInProgress === `${registration.id}-APPROVED` ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              'Approve'
-                            )}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="border-red-500 text-red-600 hover:bg-red-50"
-                            disabled={actionInProgress?.startsWith(registration.id)}
-                            onClick={() => handleAction(registration.id, 'REJECTED')}
-                          >
-                            {actionInProgress === `${registration.id}-REJECTED` ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              'Reject'
-                            )}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {renderStatusBadge(registration.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        {registration.status === 'PENDING' ? (
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white transition-colors"
+                              disabled={actionInProgress?.startsWith(registration.id)}
+                              onClick={() => handleAction(registration.id, 'APPROVED')}
+                            >
+                              {actionInProgress === `${registration.id}-APPROVED` ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                'Approve'
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
+                              disabled={actionInProgress?.startsWith(registration.id)}
+                              onClick={() => handleAction(registration.id, 'REJECTED')}
+                            >
+                              {actionInProgress === `${registration.id}-REJECTED` ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                'Reject'
+                              )}
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400 italic">No actions available</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             {/* Pagination */}
