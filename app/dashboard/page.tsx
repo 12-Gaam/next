@@ -63,7 +63,11 @@ export default function UserDashboard() {
   const [showForm, setShowForm] = useState(false)
   const [isAddingFamilyMembers, setIsAddingFamilyMembers] = useState(false)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
-  const [contact, setContact] = useState<Contact | null>(null)
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [activeContactId, setActiveContactId] = useState<string | null>(null)
+  
+  const isCreatingNew = activeContactId === 'new'
+  const contact = isCreatingNew ? null : (contacts.find(c => c.id === activeContactId) || contacts[0] || null)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'family'>('dashboard')
   const [masterData, setMasterData] = useState({
     countries: [] as any[],
@@ -202,8 +206,14 @@ export default function UserDashboard() {
       setIsLoadingProfile(true)
       const response = await fetch('/api/contacts?ownership=me')
       const data = await response.json()
-      const hasContactData = Boolean(data.contact)
-      setContact(data.contact || null)
+      const fetchedContacts = data.contacts || []
+      const hasContactData = fetchedContacts.length > 0
+      
+      setContacts(fetchedContacts)
+      if (fetchedContacts.length > 0 && !activeContactId) {
+        setActiveContactId(fetchedContacts[0].id)
+      }
+      
       // Clear auto-show flag when contact is created (user completed profile)
       if (hasContactData && session?.user?.id) {
         const key = `hasAutoShownForm_${session.user.id}`
@@ -263,23 +273,55 @@ export default function UserDashboard() {
                   <div className="bg-secondary p-2 rounded-lg">
                     <User className="h-6 w-6 text-primary" />
                   </div>
-                  <span>Your Family Profile</span>
+                  <span>Family Profiles</span>
                 </CardTitle>
                 <CardDescription className="mt-2 text-base">
-                  Keep your family&rsquo;s details updated whenever something changes.
+                  Keep your family details updated. You can manage multiple profiles.
                 </CardDescription>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setIsAddingFamilyMembers(false)
-                  setShowForm(true)
-                }}
-                className="border-2 hover:bg-secondary hover:text-primary transition-all"
-              >
-                <UserCog className="h-4 w-4 mr-2" />
-                Edit Profile
-              </Button>
+              <div className="flex flex-col items-end space-y-2">
+                {contacts.length > 1 && (
+                  <select 
+                    className="border-2 rounded-md px-3 py-1 text-sm bg-white"
+                    value={activeContactId || ''}
+                    onChange={(e) => setActiveContactId(e.target.value)}
+                  >
+                    {contacts.map((c, idx) => (
+                      <option key={c.id} value={c.id}>
+                        {c.firstname} {c.lastname} {idx === 0 ? '(Primary)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsAddingFamilyMembers(false)
+                      // We need to clear the active contact for a NEW form?
+                      // Wait, we can pass null to ContactForm. But the logic below uses 'contact' for existingContact.
+                      // Let's set activeContactId to null briefly, but wait, the 'contact' variable is derived.
+                      // We will modify the form later if needed. For now, let's keep the edit button.
+                      setShowForm(true)
+                    }}
+                    className="border-2 hover:bg-secondary hover:text-primary transition-all"
+                  >
+                    <UserCog className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      // Pass a flag or nullify the existing contact when opening form
+                      setActiveContactId('new')
+                      setShowForm(true)
+                    }}
+                    className="bg-secondary hover:bg-secondary/90 text-primary transition-all"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Profile
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-6">
@@ -902,11 +944,17 @@ export default function UserDashboard() {
                       onSuccess={() => {
                         setShowForm(false)
                         setIsAddingFamilyMembers(false)
+                        if (isCreatingNew) {
+                          setActiveContactId(null) // Revert back to latest/primary after creating
+                        }
                         fetchMyContact()
                       }}
                       onCancel={() => {
                         setShowForm(false)
                         setIsAddingFamilyMembers(false)
+                        if (isCreatingNew) {
+                          setActiveContactId(null)
+                        }
                       }}
                     />
                   </CardContent>

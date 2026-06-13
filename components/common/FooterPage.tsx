@@ -31,6 +31,10 @@ function FooterPage() {
                         <Link href="/privacy-policy" className="text-blue-100/80 hover:text-white transition-colors">
                             Privacy Policy
                         </Link>
+                        <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+                        <Link href="/volunteers" className="text-blue-100/80 hover:text-white transition-colors">
+                            Volunteers
+                        </Link>
                     </nav>
                 </div>
 

@@ -17,8 +17,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
-      const contact = await prisma.contact.findFirst({
+      const contacts = await prisma.contact.findMany({
         where: { userId: session.user.id },
+        orderBy: { createdAt: 'asc' },
         include: {
           country: true,
           state: true,
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      return NextResponse.json({ contact });
+      return NextResponse.json({ contacts });
     }
 
     if (!session || !isAdminRole(session.user.role)) {
@@ -142,16 +143,7 @@ export async function POST(request: NextRequest) {
 
     const validatedData = contactFormSchema.parse(body);
     if (session?.user?.id) {
-      const existingContact = await prisma.contact.findFirst({
-        where: { userId: session.user.id }
-      });
-
-      if (existingContact) {
-        return NextResponse.json(
-          { error: 'Family profile already exists for this user' },
-          { status: 400 }
-        );
-      }
+      // Allow multiple profiles per user
     }
 
     const contact = await prisma.contact.create({
