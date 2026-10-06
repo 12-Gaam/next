@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { contactFormSchema } from '@/lib/validations';
 import { isAdminRole, isSuperAdmin } from '@/lib/rbac';
+import { Prisma } from '@prisma/client';
 
 export async function GET(
   request: NextRequest,
@@ -173,6 +174,14 @@ export async function PUT(
       const formattedErrors = zodError.errors.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ');
       return NextResponse.json(
         { error: 'Validation error', details: formattedErrors },
+        { status: 400 }
+      );
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      const target = Array.isArray(error.meta?.target) ? (error.meta.target as string[]).join(', ') : 'email/phone';
+      return NextResponse.json(
+        { error: `A profile with this ${target} already exists. Please use a different value.` },
         { status: 400 }
       );
     }

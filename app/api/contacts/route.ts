@@ -237,6 +237,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      const target = Array.isArray(error.meta?.target) ? (error.meta.target as string[]).join(', ') : 'email/phone';
+      return NextResponse.json(
+        { error: `A profile with this ${target} already exists. Please use a different value.` },
+        { status: 400 }
+      );
+    }
+
     console.error('Error creating contact:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(

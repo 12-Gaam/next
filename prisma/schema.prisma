@@ -117,8 +117,8 @@ model Contact {
   stateId           String?
   cityId            String?
   zipCode           String?
-  phone             String            @unique
-  email             String?           @unique
+  phone             String
+  email             String?
   dob               DateTime?
   educationId       String?
   otherEducation    String?
@@ -162,6 +162,8 @@ model Contact {
   @@index([countryId])
   @@index([createdAt])
   @@index([userId])
+  @@index([email])
+  @@index([phone])
 }
 
 model ContactChild {
