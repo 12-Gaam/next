@@ -1399,9 +1399,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       return Upload.LIST_IGNORE;
                     }
 
-                    const isLt15M = file.size / 1024 / 1024 < 15;
-                    if (!isLt15M) {
-                      message.error("File must be smaller than 15MB!");
+                    const isLt10M = file.size / 1024 / 1024 < 10;
+                    if (!isLt10M) {
+                      message.error("File must be smaller than 10MB!");
                       return Upload.LIST_IGNORE;
                     }
                     return true;
@@ -1489,7 +1489,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                 </Upload>
                 <div className="mt-3 p-3 bg-amber-50/70 rounded-lg border border-amber-200/60 text-xs text-gray-600 space-y-1">
                   <p className="mb-0 font-medium text-gray-800">
-                    Allowed formats: JPG, PNG, WEBP, PDF (Max size: 15MB)
+                    Allowed formats: JPG, PNG, WEBP, PDF (Max size: 10MB)
                   </p>
                   <p className="mb-0 text-gray-500">
                     Photos are automatically resized & optimized on upload.
@@ -1530,9 +1530,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       return Upload.LIST_IGNORE;
                     }
 
-                    const isLt15M = file.size / 1024 / 1024 < 15;
-                    if (!isLt15M) {
-                      message.error("File must be smaller than 15MB!");
+                    const isLt10M = file.size / 1024 / 1024 < 10;
+                    if (!isLt10M) {
+                      message.error("File must be smaller than 10MB!");
                       return Upload.LIST_IGNORE;
                     }
                     return true;
@@ -1620,7 +1620,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                 </Upload>
                 <div className="mt-3 p-3 bg-amber-50/70 rounded-lg border border-amber-200/60 text-xs text-gray-600 space-y-1">
                   <p className="mb-0 font-medium text-gray-800">
-                    Allowed formats: JPG, PNG, WEBP, PDF (Max size: 15MB)
+                    Allowed formats: JPG, PNG, WEBP, PDF (Max size: 10MB)
                   </p>
                   <p className="mb-0 text-gray-500">
                     Photos are automatically resized & optimized on upload.

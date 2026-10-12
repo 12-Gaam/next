@@ -232,11 +232,8 @@ function buildEmailTemplate({
           <!-- Footer -->
           <tr>
             <td style="padding: 24px 32px; background-color: #f8fafc; text-align: center; color: #64748b; font-size: 12px; line-height: 1.5;">
-              <p style="margin: 0 0 6px 0; font-weight: 600; color: #475569;">
+              <p style="margin: 0 0 8px 0; font-weight: 600; color: #475569;">
                 12 Gaam Samaj Community Portal
-              </p>
-              <p style="margin: 0 0 10px 0;">
-                Connecting our 12 villages &bull; Vadodara, Gujarat
               </p>
               <p style="margin: 0; color: #94a3b8; font-size: 11px;">
                 &copy; ${currentYear} 12Gaam Samaj. All rights reserved.<br>
@@ -549,7 +546,7 @@ export async function sendAdminNewRegistrationNotification(payload: AdminNewRegi
         </tr>
         <tr>
           <td style="padding: 6px 0; color: #64748b;"><strong>Submitted:</strong></td>
-          <td style="padding: 6px 0; color: #475569;">${formattedDate} (MM/DD/YY)</td>
+          <td style="padding: 6px 0; color: #475569;">${formattedDate}</td>
         </tr>
       </table>
     </div>
