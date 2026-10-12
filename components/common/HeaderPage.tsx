@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import React from 'react'
 
 function HeaderPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const pathname = usePathname()
   const [activeTab, setActiveTab] = React.useState<string>('dashboard')
 
@@ -63,17 +63,28 @@ function HeaderPage() {
               </Link>
             </div>
             <div className="flex items-center gap-3">
-              {session ? (
-                <button
-                  onClick={() => {
-                    const isAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'GAAM_ADMIN'
-                    signOut({ callbackUrl: isAdmin ? '/auth/signin' : '/dashboard' })
-                  }}
-                  className="bg-transparent hover:bg-white hover:text-primary text-white px-4 py-3 rounded-lg flex items-center gap-2"
-                >
-                  <LogOut size={20} />
-                  Sign Out
-                </button>
+              {status === 'loading' ? (
+                <div className="w-24 h-10 animate-pulse bg-white/10 rounded-lg" />
+              ) : session ? (
+                <>
+                  <Link
+                    href={session.user.role === 'SUPER_ADMIN' || session.user.role === 'GAAM_ADMIN' ? '/admin' : '/dashboard'}
+                    className="bg-white/10 hover:bg-white hover:text-primary text-white px-4 py-2.5 rounded-lg flex items-center gap-2 font-medium text-sm transition-all"
+                  >
+                    <LayoutDashboard size={18} />
+                    <span>{session.user.role === 'SUPER_ADMIN' || session.user.role === 'GAAM_ADMIN' ? 'Admin Portal' : 'Dashboard'}</span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      const isAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'GAAM_ADMIN'
+                      signOut({ callbackUrl: isAdmin ? '/auth/signin' : '/' })
+                    }}
+                    className="bg-transparent hover:bg-white hover:text-primary text-white px-4 py-2.5 rounded-lg flex items-center gap-2 font-medium text-sm transition-all"
+                  >
+                    <LogOut size={18} />
+                    <span>Sign Out</span>
+                  </button>
+                </>
               ) : (
                 pathname !== '/join' && (
                   <Link href="/join#login" className="bg-secondary hover:bg-secondary/90 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-semibold shadow-lg shadow-secondary/20 transition-all hover:scale-105 active:scale-95">

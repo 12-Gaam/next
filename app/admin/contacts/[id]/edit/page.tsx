@@ -390,8 +390,8 @@ export default function ContactEditPage({ params }: { params: { id: string } }) 
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Form.Item label="Date of Birth" name="dob">
-                      <DatePicker style={{ width: '100%' }} placeholder="Select date of birth (optional)" />
+                    <Form.Item label="Date of Birth (MM/DD/YY)" name="dob">
+                      <DatePicker style={{ width: '100%' }} format="MM/DD/YY" placeholder="MM/DD/YY" />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={12}>

@@ -56,22 +56,35 @@ export default function JoinPage() {
   }, [searchParams])
 
   useEffect(() => {
-    const fetchGaams = async () => {
+    let isMounted = true
+    const fetchGaamsWithRetry = async (retries = 3, delay = 800) => {
       try {
         setIsLoadingGaams(true)
         const response = await fetch('/api/gaams')
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
         const data = await response.json()
         const list = Array.isArray(data) ? data : Array.isArray(data?.gaams) ? data.gaams : []
-        setGaams(list)
+        if (list.length === 0 && retries > 0) {
+          throw new Error('Empty gaams list returned')
+        }
+        if (isMounted) setGaams(list)
       } catch (error) {
-        console.error('Failed to fetch gaams', error)
-        setGaams([])
+        console.error('Failed to fetch gaams, retries left:', retries, error)
+        if (retries > 0) {
+          setTimeout(() => {
+            if (isMounted) fetchGaamsWithRetry(retries - 1, delay * 1.5)
+          }, delay)
+          return
+        }
+        if (isMounted) setGaams([])
       } finally {
-        setIsLoadingGaams(false)
+        if (isMounted && retries <= 0) setIsLoadingGaams(false)
+        else if (isMounted) setIsLoadingGaams(false)
       }
     }
 
-    fetchGaams()
+    fetchGaamsWithRetry()
+    return () => { isMounted = false }
   }, [])
 
   const handleSendOtp = async (e: React.MouseEvent) => {

@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma'
 import { slugify } from '@/lib/utils'
 import { isSuperAdmin } from '@/lib/rbac'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET() {
   try {
     const gaams = await prisma.gaam.findMany({

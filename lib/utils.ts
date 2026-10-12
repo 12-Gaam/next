@@ -30,12 +30,14 @@ export function formatDate(date: string | Date | null | undefined) {
   if (!date) return 'Not provided'
   try {
     const d = new Date(date)
-    if (isNaN(d.getTime())) return 'Invalid Date'
-    return d.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    })
+    if (isNaN(d.getTime())) {
+      // Return raw string if already formatted
+      return String(date)
+    }
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const year = String(d.getFullYear()).slice(-2)
+    return `${month}/${day}/${year}`
   } catch {
     return 'Invalid Date'
   }

@@ -49,6 +49,63 @@ const steps = [
   { id: 5, title: 'Review & Submit', description: 'Review all information before submitting' }
 ]
 
+const compressImageFile = async (file: File, maxWidth = 1600, quality = 0.85): Promise<File> => {
+  if (typeof window === 'undefined') return file
+  if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') {
+    return file
+  }
+
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new window.Image()
+      img.src = event.target?.result as string
+      img.onload = () => {
+        let width = img.width
+        let height = img.height
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width)
+          width = maxWidth
+        }
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          resolve(file)
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => {
+            if (!blob || blob.size >= file.size) {
+              resolve(file)
+            } else {
+              const compressedFile = new File(
+                [blob],
+                file.name.replace(/\.[^/.]+$/, '') + '.jpg',
+                {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                }
+              )
+              resolve(compressedFile)
+            }
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+      img.onerror = () => resolve(file)
+    }
+    reader.onerror = () => resolve(file)
+  })
+}
 
 export default function ContactForm({ onSuccess, onCancel, existingContact, initialStep = 1 }: ContactFormProps) {
   const [currentStep, setCurrentStep] = useState(initialStep)
@@ -111,12 +168,21 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
   const { data: session } = useSession()
   const isEditMode = Boolean(existingContact?.id)
 
-  // Auto-fill email from session if not set
+  // Auto-fill email and gaam from session if not set
   useEffect(() => {
     if (session?.user?.email && !isEditMode && !watch('email')) {
       setValue('email', session.user.email)
     }
   }, [session, isEditMode, setValue, watch])
+
+  useEffect(() => {
+    if (session?.user?.gaamId && !isEditMode && !watch('gaam') && masterData.gaams.length > 0) {
+      const userGaam = masterData.gaams.find((g: any) => g.id === session.user.gaamId)
+      if (userGaam?.name) {
+        setValue('gaam', userGaam.name)
+      }
+    }
+  }, [session, isEditMode, masterData.gaams, setValue, watch])
 
   useEffect(() => {
     fetchMasterData()
@@ -153,6 +219,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         phone: existingContact.phone || '',
         countryCode: existingContact.countryCode || '+1',
         email: existingContact.email || '',
+        dob: existingContact.dob ? (dayjs(existingContact.dob).isValid() ? dayjs(existingContact.dob).format('MM/DD/YY') : existingContact.dob) : '',
         educationId: existingContact.educationId || undefined,
         educationDetail: existingContact.educationDetail || '',
         otherEducation: existingContact.otherEducation || '',
@@ -181,7 +248,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           middleName: child.middleName || '',
           lastName: child.lastName || '',
           gender: child.gender || 'male',
-          dob: child.dob ? (child.dob.includes('/') && !child.dob.includes(' ') ? dayjs(child.dob, 'MM/YY').format('MMMM YYYY') : child.dob) : '',
+          dob: child.dob ? (dayjs(child.dob).isValid() ? dayjs(child.dob).format('MM/DD/YY') : child.dob) : '',
           educationId: child.educationId || undefined,
           educationDetail: child.educationDetail || '',
           otherEducation: child.otherEducation || '',
@@ -196,7 +263,7 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
           middleName: sibling.middleName || '',
           lastName: sibling.lastName || '',
           gender: sibling.gender || 'male',
-          dob: sibling.dob ? (sibling.dob.includes('/') && !sibling.dob.includes(' ') ? dayjs(sibling.dob, 'MM/YY').format('MMMM YYYY') : sibling.dob) : '',
+          dob: sibling.dob ? (dayjs(sibling.dob).isValid() ? dayjs(sibling.dob).format('MM/DD/YY') : sibling.dob) : '',
           currentAddress: sibling.currentAddress || '',
           countryId: sibling.countryId || undefined,
           stateId: sibling.stateId || undefined,
@@ -311,25 +378,29 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
     }
   }, [watchedCountryId, masterData.countries])
 
-  const fetchMasterData = async () => {
+  const fetchMasterData = async (retries = 2) => {
     try {
-      // Get all data from our database
-      const [countriesRes, educationsRes, professionsRes, gaamsRes] = await Promise.all([
-        fetch('/api/countries'),
-        fetch('/api/educations'),
-        fetch('/api/professions'),
-        fetch('/api/gaams')
+      const results = await Promise.allSettled([
+        fetch('/api/countries').then(r => r.ok ? r.json() : []),
+        fetch('/api/educations').then(r => r.ok ? r.json() : []),
+        fetch('/api/professions').then(r => r.ok ? r.json() : []),
+        fetch('/api/gaams').then(r => r.ok ? r.json() : [])
       ])
 
-      const countriesData = await countriesRes.json()
-      const educationsData = await educationsRes.json()
-      const professionsData = await professionsRes.json()
-      const gaamsData = await gaamsRes.json()
-      // Ensure we always have arrays, handle different response structures
+      const countriesData = results[0].status === 'fulfilled' ? results[0].value : []
+      const educationsData = results[1].status === 'fulfilled' ? results[1].value : []
+      const professionsData = results[2].status === 'fulfilled' ? results[2].value : []
+      const gaamsData = results[3].status === 'fulfilled' ? results[3].value : []
+
       const countries = Array.isArray(countriesData) ? countriesData : (countriesData?.data || countriesData?.countries || [])
       const educations = Array.isArray(educationsData) ? educationsData : (educationsData?.data || educationsData?.educations || [])
       const professions = Array.isArray(professionsData) ? professionsData : (professionsData?.data || professionsData?.professions || [])
       const gaamsList = Array.isArray(gaamsData) ? gaamsData : (gaamsData?.data || gaamsData?.gaams || [])
+
+      if (gaamsList.length === 0 && retries > 0) {
+        setTimeout(() => fetchMasterData(retries - 1), 1000)
+        return
+      }
 
       setMasterData({
         countries: Array.isArray(countries) ? countries : [],
@@ -340,20 +411,15 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
         cities: []
       })
 
-      // If not in edit mode, stop loading. Otherwise, wait for existing data to load
       if (!existingContact) {
         setIsLoadingInitialData(false)
       }
     } catch (error) {
       console.error('Error fetching master data:', error)
-      setMasterData({
-        countries: [],
-        educations: [],
-        professions: [],
-        gaams: [],
-        states: [],
-        cities: []
-      })
+      if (retries > 0) {
+        setTimeout(() => fetchMasterData(retries - 1), 1000)
+        return
+      }
       setIsLoadingInitialData(false)
     }
   }
@@ -663,10 +729,11 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
             >
               <DatePicker
                 size="large"
-                value={watch('dob') ? (typeof watch('dob') === 'string' ? dayjs(watch('dob')) : dayjs(watch('dob'))) : null}
-                onChange={(date) => handleFieldChange('dob', date ? date.format('YYYY-MM-DD') : undefined)}
+                format="MM/DD/YY"
+                value={watch('dob') ? (dayjs(watch('dob'), ['MM/DD/YY', 'MM/DD/YYYY', 'YYYY-MM-DD']).isValid() ? dayjs(watch('dob'), ['MM/DD/YY', 'MM/DD/YYYY', 'YYYY-MM-DD']) : null) : null}
+                onChange={(date) => handleFieldChange('dob', date ? date.format('MM/DD/YY') : undefined)}
                 style={{ width: '100%', borderRadius: '8px' }}
-                placeholder="Select date of birth"
+                placeholder="MM/DD/YY"
                 className="rounded-lg"
               />
             </Form.Item>
@@ -1341,8 +1408,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                   }}
                   customRequest={async ({ file, onSuccess, onError }) => {
                     try {
+                      const processedFile = await compressImageFile(file as File);
                       const formData = new FormData();
-                      formData.append("file", file);
+                      formData.append("file", processedFile);
                       formData.append("folder", "profile-photos");
 
                       const response = await fetch("/api/upload", {
@@ -1419,6 +1487,25 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                     )}
                   </div>
                 </Upload>
+                <div className="mt-3 p-3 bg-amber-50/70 rounded-lg border border-amber-200/60 text-xs text-gray-600 space-y-1">
+                  <p className="mb-0 font-medium text-gray-800">
+                    Allowed formats: JPG, PNG, WEBP, PDF (Max size: 15MB)
+                  </p>
+                  <p className="mb-0 text-gray-500">
+                    Photos are automatically resized & optimized on upload.
+                  </p>
+                  <p className="mb-0">
+                    Need to reduce photo size manually?{' '}
+                    <a
+                      href="https://tinypng.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-secondary underline font-semibold"
+                    >
+                      Click here to compress photo &rarr;
+                    </a>
+                  </p>
+                </div>
               </Form.Item>
             </Card>
           </Col>
@@ -1452,8 +1539,9 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                   }}
                   customRequest={async ({ file, onSuccess, onError }) => {
                     try {
+                      const processedFile = await compressImageFile(file as File);
                       const formData = new FormData();
-                      formData.append("file", file);
+                      formData.append("file", processedFile);
                       formData.append("folder", "family-photos");
 
                       const response = await fetch("/api/upload", {
@@ -1530,6 +1618,25 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                     )}
                   </div>
                 </Upload>
+                <div className="mt-3 p-3 bg-amber-50/70 rounded-lg border border-amber-200/60 text-xs text-gray-600 space-y-1">
+                  <p className="mb-0 font-medium text-gray-800">
+                    Allowed formats: JPG, PNG, WEBP, PDF (Max size: 15MB)
+                  </p>
+                  <p className="mb-0 text-gray-500">
+                    Photos are automatically resized & optimized on upload.
+                  </p>
+                  <p className="mb-0">
+                    Need to reduce photo size manually?{' '}
+                    <a
+                      href="https://tinypng.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-secondary underline font-semibold"
+                    >
+                      Click here to compress photo &rarr;
+                    </a>
+                  </p>
+                </div>
               </Form.Item>
             </Card>
           </Col>
@@ -1721,19 +1828,18 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       </Col>
                     )}
                     <Col xl={8} lg={8} md={12} sm={24} xs={24}>
-                      <Form.Item label={<span className="font-medium text-gray-700">Bday (Month YYYY)</span>} className="mb-0">
+                      <Form.Item label={<span className="font-medium text-gray-700">Date of Birth (MM/DD/YY)</span>} className="mb-0">
                         <DatePicker
-                          picker="month"
                           size="large"
-                          value={watch(`children.${index}.dob`) ? dayjs(watch(`children.${index}.dob`), 'MMMM YYYY') : null}
+                          format="MM/DD/YY"
+                          placeholder="MM/DD/YY"
+                          value={watch(`children.${index}.dob`) ? (dayjs(watch(`children.${index}.dob`), ['MM/DD/YY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'MMMM YYYY']).isValid() ? dayjs(watch(`children.${index}.dob`), ['MM/DD/YY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'MMMM YYYY']) : null) : null}
                           onChange={(date) => {
-                            setValue(`children.${index}.dob`, date ? date.format('MMMM YYYY') : '')
+                            setValue(`children.${index}.dob`, date ? date.format('MM/DD/YY') : '')
                             if (errors.children?.[index]?.dob) {
                               clearErrors(`children.${index}.dob`)
                             }
                           }}
-                          format="MMMM YYYY"
-                          placeholder="Select Month YYYY"
                           className="w-full rounded-lg"
                         />
                       </Form.Item>
@@ -1856,19 +1962,18 @@ export default function ContactForm({ onSuccess, onCancel, existingContact, init
                       </Form.Item>
                     </Col>
                     <Col xl={8} lg={8} md={12} sm={24} xs={24}>
-                      <Form.Item label={<span className="font-medium text-gray-700">Bday (Month YYYY)</span>} className="mb-0">
+                      <Form.Item label={<span className="font-medium text-gray-700">Date of Birth (MM/DD/YY)</span>} className="mb-0">
                         <DatePicker
-                          picker="month"
                           size="large"
-                          value={watch(`siblings.${index}.dob`) ? dayjs(watch(`siblings.${index}.dob`), 'MMMM YYYY') : null}
+                          format="MM/DD/YY"
+                          placeholder="MM/DD/YY"
+                          value={watch(`siblings.${index}.dob`) ? (dayjs(watch(`siblings.${index}.dob`), ['MM/DD/YY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'MMMM YYYY']).isValid() ? dayjs(watch(`siblings.${index}.dob`), ['MM/DD/YY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'MMMM YYYY']) : null) : null}
                           onChange={(date) => {
-                            setValue(`siblings.${index}.dob`, date ? date.format('MMMM YYYY') : '')
+                            setValue(`siblings.${index}.dob`, date ? date.format('MM/DD/YY') : '')
                             if (errors.siblings?.[index]?.dob) {
                               clearErrors(`siblings.${index}.dob`)
                             }
                           }}
-                          format="MMMM YYYY"
-                          placeholder="Select Month YYYY"
                           className="w-full rounded-lg"
                         />
                       </Form.Item>
