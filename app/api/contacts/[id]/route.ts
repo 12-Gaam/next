@@ -126,7 +126,7 @@ export async function PUT(
           profilePic: validatedData.profilePic || null,
           familyPhoto: validatedData.familyPhoto || null,
           residingCountryId: validatedData.residingCountryId || null,
-          dob: validatedData.dob ? new Date(validatedData.dob) : null,
+          dob: validatedData.dob && !isNaN(new Date(validatedData.dob).getTime()) ? new Date(validatedData.dob) : null,
           children: {
             create: validatedData.children.map(child => ({
               firstName: child.firstName || '',

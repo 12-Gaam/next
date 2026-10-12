@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
         phone: validatedData.phone,
         countryCode: validatedData.countryCode || '+1',
         email: validatedData.email || null,
-        dob: validatedData.dob ? new Date(validatedData.dob) : null,
+        dob: validatedData.dob && !isNaN(new Date(validatedData.dob).getTime()) ? new Date(validatedData.dob) : null,
         educationId: validatedData.educationId || null,
         educationDetail: validatedData.educationDetail || null,
         otherEducation: validatedData.otherEducation || null,
