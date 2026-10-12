@@ -1,12 +1,19 @@
+'use client'
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowRight, Mail, UsersRound, UserRound } from 'lucide-react'
+import { ArrowRight, Mail, UsersRound, UserRound, LayoutDashboard } from 'lucide-react'
 import Image from 'next/image'
 import FooterPage from '@/components/common/FooterPage';
 import HeaderPage from '@/components/common/HeaderPage'
+import { useSession } from 'next-auth/react'
 
 export default function HomePage() {
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'GAAM_ADMIN'
+  const dashboardHref = isAdmin ? '/admin' : '/dashboard'
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <HeaderPage />
@@ -27,10 +34,18 @@ export default function HomePage() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/join#registration" className="bg-secondary hover:bg-secondary/90 text-white px-6 py-4 rounded-lg flex items-center gap-2 justify-center">
-                    Get Started
-                    <ArrowRight />
-                  </Link>
+                  {session ? (
+                    <Link href={dashboardHref} className="bg-secondary hover:bg-secondary/90 text-white px-6 py-4 rounded-lg flex items-center gap-2 justify-center font-semibold transition-all hover:scale-105">
+                      <LayoutDashboard size={20} />
+                      Go to {isAdmin ? 'Admin Portal' : 'Dashboard'}
+                      <ArrowRight size={20} />
+                    </Link>
+                  ) : (
+                    <Link href="/join#registration" className="bg-secondary hover:bg-secondary/90 text-white px-6 py-4 rounded-lg flex items-center gap-2 justify-center font-semibold transition-all hover:scale-105">
+                      Get Started
+                      <ArrowRight size={20} />
+                    </Link>
+                  )}
                 </div>
               </div>
 

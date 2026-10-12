@@ -4,10 +4,13 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { registrationSchema } from '@/lib/validations'
 import { generateRandomPassword, usernameFromEmail } from '@/lib/utils'
-import { sendRegistrationCredentialsEmail } from '@/lib/mailer'
+import { sendRegistrationCredentialsEmail, sendAdminNewRegistrationNotification } from '@/lib/mailer'
 import { isAdminRole, isSuperAdmin } from '@/lib/rbac'
 import { RegistrationStatus, UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
@@ -148,8 +151,54 @@ export async function POST(request: NextRequest) {
         name: user.fullName
       })
     } catch (emailError) {
-      console.error('Failed to send registration email:', emailError)
+      console.error('Failed to send registration email to user:', emailError)
       // Don't fail the whole request if email delivery fails
+    }
+
+    // Notify assigned gaam admin(s) and super admin(s)
+    try {
+      const gaamAdmins = await prisma.gaamAdmin.findMany({
+        where: { gaamId: validatedData.gaamId },
+        include: {
+          admin: {
+            select: { id: true, email: true, fullName: true }
+          }
+        }
+      })
+
+      const superAdmins = await prisma.user.findMany({
+        where: { role: UserRole.SUPER_ADMIN },
+        select: { id: true, email: true, fullName: true }
+      })
+
+      // Combine admin recipients uniquely by email
+      const adminMap = new Map<string, { email: string; fullName: string }>()
+      for (const ga of gaamAdmins) {
+        if (ga.admin?.email) {
+          adminMap.set(ga.admin.email.toLowerCase(), ga.admin)
+        }
+      }
+      for (const sa of superAdmins) {
+        if (sa?.email) {
+          adminMap.set(sa.email.toLowerCase(), sa)
+        }
+      }
+
+      for (const admin of Array.from(adminMap.values())) {
+        try {
+          await sendAdminNewRegistrationNotification({
+            to: admin.email,
+            adminName: admin.fullName || 'Admin',
+            memberName: user.fullName,
+            memberEmail: user.email,
+            gaamName: gaam.name
+          })
+        } catch (adminMailErr) {
+          console.error(`Failed to send registration notification to admin ${admin.email}:`, adminMailErr)
+        }
+      }
+    } catch (notifyErr) {
+      console.error('Error notifying admins about new registration:', notifyErr)
     }
 
     return NextResponse.json({ message: 'Registration submitted successfully' }, { status: 201 })
