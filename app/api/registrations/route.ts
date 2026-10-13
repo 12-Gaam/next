@@ -39,9 +39,33 @@ export async function GET(request: NextRequest) {
         gaamFilter = [gaamParam]
       }
     } else {
+      // Safely resolve admin ID (fallback to email if session token id is missing)
+      let adminId = session.user.id
+      if (!adminId && session.user.email) {
+        const adminUser = await prisma.user.findFirst({
+          where: { email: { equals: session.user.email, mode: 'insensitive' } },
+          select: { id: true }
+        })
+        if (adminUser) {
+          adminId = adminUser.id
+        }
+      }
+
+      if (!adminId) {
+        return NextResponse.json({
+          registrations: [],
+          pagination: {
+            page: 1,
+            limit,
+            total: 0,
+            pages: 0
+          }
+        })
+      }
+
       // Get all gaams where this admin is assigned
       const gaamAdmins = await prisma.gaamAdmin.findMany({
-        where: { adminId: session.user.id },
+        where: { adminId },
         select: { gaamId: true }
       })
       gaamFilter = gaamAdmins.map((ga) => ga.gaamId)
@@ -95,7 +119,11 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching registrations:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({
+      error: 'Internal server error',
+      message: errorMessage
+    }, { status: 500 })
   }
 }
 

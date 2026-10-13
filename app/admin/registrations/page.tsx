@@ -59,7 +59,7 @@ export default function RegistrationApprovalsPage() {
       const response = await fetch(`/api/registrations?${params.toString()}`)
       const data = await response.json()
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to load registrations')
+        throw new Error(data.message || data.error || 'Failed to load registrations')
       }
       setRegistrations(data.registrations || [])
       setTotalPages(data.pagination?.pages || 1)
@@ -85,7 +85,7 @@ export default function RegistrationApprovalsPage() {
       })
       const data = await response.json()
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update registration')
+        throw new Error(data.message || data.error || 'Failed to update registration')
       }
       await fetchRegistrations()
     } catch (error) {
