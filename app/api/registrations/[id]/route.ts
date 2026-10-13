@@ -46,12 +46,27 @@ export async function PATCH(
       return NextResponse.json({ error: 'Registration missing gaam assignment' }, { status: 400 })
     }
 
+    let adminId = session.user.id
+    if (!adminId && session.user.email) {
+      const adminUser = await prisma.user.findFirst({
+        where: { email: { equals: session.user.email, mode: 'insensitive' } },
+        select: { id: true }
+      })
+      if (adminUser) {
+        adminId = adminUser.id
+      }
+    }
+
     if (!isSuperAdmin(session.user.role)) {
+      if (!adminId) {
+        return NextResponse.json({ error: 'Admin identity could not be verified' }, { status: 403 })
+      }
+
       // Check if the admin is assigned to this gaam
       const gaamAdmin = await prisma.gaamAdmin.findFirst({
         where: {
           gaamId: registration.gaamId,
-          adminId: session.user.id
+          adminId
         }
       })
 
@@ -73,7 +88,7 @@ export async function PATCH(
         status,
         verificationNotes: notes,
         verifiedAt: new Date(),
-        verifiedById: session.user.id,
+        verifiedById: adminId || null,
         ...(isApproved ? { password: await bcrypt.hash(plainPassword, 12) } : {})
       },
       include: {
@@ -103,7 +118,11 @@ export async function PATCH(
     return NextResponse.json({ registration: updated })
   } catch (error) {
     console.error('Error updating registration:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({
+      error: 'Internal server error',
+      message: errorMessage
+    }, { status: 500 })
   }
 }
 
